@@ -1,0 +1,21 @@
+{
+  "name": "digimon-championship-local-prototype",
+  "version": "0.23.0",
+  "private": true,
+  "scripts": {
+    "test": "node tests/farm-core.cjs",
+    "test:evolution": "node tests/evolution-core.cjs",
+    "test:legacy": "node tests/regression.cjs",
+    "test:browser": "node tests/browser.cjs",
+    "test:cages": "node tests/cage-training.cjs",
+    "test:hunt": "node tests/hunt-core.cjs",
+    "test:hunt-browser": "python tests/hunt-browser.py",
+    "test:battle": "node tests/battle-core.cjs",
+    "test:championship": "node tests/championship-core.cjs",
+    "test:championship-browser": "python tests/championship-browser.py"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3",
+    "playwright": "1.62.1"
+  }
+}

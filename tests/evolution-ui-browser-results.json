@@ -1,0 +1,16 @@
+[
+  {
+    "viewport_width": 390,
+    "tree_navigation": "PASS",
+    "sprite_preview": "PASS",
+    "search": "PASS",
+    "js_errors": []
+  },
+  {
+    "viewport_width": 1280,
+    "tree_navigation": "PASS",
+    "sprite_preview": "PASS",
+    "search": "PASS",
+    "js_errors": []
+  }
+]

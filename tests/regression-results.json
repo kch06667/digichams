@@ -1,0 +1,50 @@
+{
+  "method": "jsdom with mocked canvas/RAF",
+  "tests": [
+    {
+      "name": "startup",
+      "status": "PASS"
+    },
+    {
+      "name": "XP thresholds and carry",
+      "status": "PASS"
+    },
+    {
+      "name": "training failure grants no XP/money",
+      "status": "PASS"
+    },
+    {
+      "name": "live reward levels and pays once",
+      "status": "PASS"
+    },
+    {
+      "name": "skill preview never pays",
+      "status": "PASS"
+    },
+    {
+      "name": "victory preview never pays",
+      "status": "PASS"
+    },
+    {
+      "name": "knockback frame-rate invariance in production update",
+      "status": "PASS"
+    },
+    {
+      "name": "overlap hit produces knockback",
+      "status": "PASS"
+    },
+    {
+      "name": "boundary positions clamped",
+      "status": "PASS"
+    },
+    {
+      "name": "legacy migration idempotent preserves unrelated data",
+      "status": "PASS"
+    },
+    {
+      "name": "evolution unavailable retains state",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

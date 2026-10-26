@@ -1,0 +1,46 @@
+[
+  {
+    "page": "index.html",
+    "status": "PASS",
+    "details": {
+      "battle_evolution": {
+        "name": "아구몬",
+        "battles": 3,
+        "wins": 2,
+        "saveVersion": 4
+      },
+      "time_evolution": {
+        "name": "가루몬",
+        "stageDays": 0
+      },
+      "json_roundtrip": "PASS",
+      "real_canvas_battles": {
+        "name": "아구몬",
+        "battles": 3,
+        "wins": 2
+      }
+    }
+  },
+  {
+    "page": "standalone.html",
+    "status": "PASS",
+    "details": {
+      "battle_evolution": {
+        "name": "아구몬",
+        "battles": 3,
+        "wins": 2,
+        "saveVersion": 4
+      },
+      "time_evolution": {
+        "name": "가루몬",
+        "stageDays": 0
+      },
+      "json_roundtrip": "PASS",
+      "real_canvas_battles": {
+        "name": "아구몬",
+        "battles": 3,
+        "wins": 2
+      }
+    }
+  }
+]

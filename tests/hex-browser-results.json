@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "new hex board retains live battle & ROM UI",
+      "status": "PASS"
+    },
+    {
+      "name": "move then repeated training updates owned Digimon exactly once",
+      "status": "PASS"
+    },
+    {
+      "name": "food on ground consumed and rest works",
+      "status": "PASS"
+    },
+    {
+      "name": "pause/resume and 4x simulation clock",
+      "status": "PASS"
+    },
+    {
+      "name": "existing live battle modal preserved",
+      "status": "PASS"
+    },
+    {
+      "name": "UI target-stat training stops automatically",
+      "status": "PASS"
+    },
+    {
+      "name": "purchased peripheral plots receive actual walking Digimon",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile has horizontally scrollable board but no page overflow",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

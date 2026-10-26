@@ -1,0 +1,18 @@
+[
+  {
+    "html": "index.html",
+    "width": 1280,
+    "status": "PASS",
+    "dragonAp": 6,
+    "cagePurchase": true,
+    "controls": 11
+  },
+  {
+    "html": "standalone.html",
+    "width": 390,
+    "status": "PASS",
+    "dragonAp": 6,
+    "cagePurchase": true,
+    "controls": 11
+  }
+]

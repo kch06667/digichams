@@ -1,0 +1,32 @@
+[
+  {
+    "html": "index.html",
+    "width": 1280,
+    "status": "PASS",
+    "treatment": {
+      "sick": false,
+      "penalties": 3,
+      "credits": 420
+    },
+    "season": "겨울",
+    "save": {
+      "penalties": 3,
+      "treatments": 2
+    }
+  },
+  {
+    "html": "standalone.html",
+    "width": 390,
+    "status": "PASS",
+    "treatment": {
+      "sick": false,
+      "penalties": 3,
+      "credits": 420
+    },
+    "season": "겨울",
+    "save": {
+      "penalties": 3,
+      "treatments": 2
+    }
+  }
+]

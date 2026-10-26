@@ -1,0 +1,10 @@
+{
+  "checkpoint": "17",
+  "version": "0.23.0",
+  "date": "2026-10-27",
+  "based_on": "v0.22.0",
+  "feature": "championship event calendar, 1v1/2v2/3v3 cups, semifinal/final, trophy and rank, one-time rewards, existing battle integration and save resume/forfeit",
+  "source": "src/championship-core.js",
+  "tests": "TEST_REPORT_v0.23.0.md",
+  "provenance": "temporary_balance, not ROM verified"
+}

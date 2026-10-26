@@ -1,0 +1,21 @@
+const assert=require('node:assert/strict');
+const H=require('../src/hunt-core.js');
+const results=[];
+function test(name,fn){try{fn();results.push({name,status:'PASS'});}catch(e){results.push({name,status:'FAIL',error:e.message});}}
+const mon={name:'코로몬',stage:'유년기 II',diff:5};
+const ring=(cx,cy,r=.12,n=60,close=true)=>Array.from({length:n+1},(_,i)=>{const a=(i/n)*(close?2*Math.PI:Math.PI*1.4);return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r};});
+test('one complete circle enclosing target binds',()=>assert.equal(H.lasso(ring(.5,.5),{x:.5,y:.5}).ok,true));
+test('short arc cannot capture',()=>assert.equal(H.lasso(ring(.5,.5,.12,60,false),{x:.5,y:.5}).ok,false));
+test('circle outside target cannot capture',()=>assert.equal(H.lasso(ring(.2,.2),{x:.5,y:.5}).ok,false));
+test('few points cannot capture',()=>assert.equal(H.lasso(ring(.5,.5,.15,3),{x:.5,y:.5}).ok,false));
+test('new encounter starts wild, no rope spent',()=>{let e=H.encounter(mon,()=>.5);assert.equal(e.mode,'wild');assert.equal(e.ropeSpent,false)});
+test('tied only once',()=>{let e=H.encounter(mon,()=>.5);assert.equal(H.bind(e),true);assert.equal(H.bind(e),false)});
+test('short pulls do not decrease HP',()=>{let e=H.encounter(mon,()=>.5);H.bind(e);assert.equal(H.pull(e,{x:.5,y:.5},{x:.52,y:.5}).ok,false);assert.equal(e.hp,e.maxHp)});
+test('opposing direction drains more HP',()=>{const a=H.encounter(mon,()=>.5),b=H.encounter(mon,()=>.5);H.bind(a);H.bind(b);H.pull(a,{x:.5,y:.5},{x:.28,y:.5});H.pull(b,{x:.5,y:.5},{x:.72,y:.5});assert(a.hp<b.hp)});
+test('several moderate pulls stun',()=>{let e=H.encounter(mon,()=>.5);H.bind(e);for(let i=0;i<8&&e.mode==='tied';i++)H.pull(e,{x:.5,y:.5},{x:.27,y:.5});assert.equal(e.mode,'stunned');assert.equal(e.hp,0)});
+test('grab before stun is forbidden',()=>{let e=H.encounter(mon,()=>.5);H.bind(e);assert.equal(H.capture(e),false)});
+test('stunned mon is caught once',()=>{let e=H.encounter(mon,()=>.5);H.bind(e);e.hp=0;e.mode='stunned';assert.equal(H.capture(e),true);assert.equal(H.capture(e),false)});
+test('overlong pull breaks rope and escapes',()=>{let e=H.encounter(mon,()=>.5);H.bind(e);let r=H.pull(e,{x:.5,y:.5},{x:.99,y:.99});assert.equal(r.broken,true);assert.equal(e.mode,'escaped')});
+test('runaway on timer',()=>{let e=H.encounter(mon,()=>.5);e.time=.05;H.tick(e,.1);assert.equal(e.mode,'escaped')});
+test('stunned mon does not escape with time',()=>{let e=H.encounter(mon,()=>.5);e.mode='stunned';e.time=.01;H.tick(e,.2);assert.equal(e.mode,'stunned')});
+console.log(JSON.stringify({passed:results.filter(x=>x.status==='PASS').length,total:results.length,results},null,2));if(results.some(x=>x.status==='FAIL'))process.exitCode=1;

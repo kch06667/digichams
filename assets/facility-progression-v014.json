@@ -1,0 +1,63 @@
+{
+  "note": "Web-edition provisional balance, not authoritative ROM rules",
+  "currency": "Bit",
+  "income": {
+    "train": 20,
+    "day": 35,
+    "battle_win": 180
+  },
+  "rank": {
+    "bronze": {
+      "wins": 2,
+      "day": 3
+    },
+    "silver": {
+      "wins": 5,
+      "day": 5,
+      "team": 2
+    },
+    "gold": {
+      "wins": 9,
+      "day": 10,
+      "team": 3
+    }
+  },
+  "facilities": [
+    {
+      "id": "training",
+      "pos": -1,
+      "cost": 220,
+      "requires": "DAY2"
+    },
+    {
+      "id": "rest",
+      "pos": 1,
+      "cost": 310,
+      "requires": "DAY2 + 1승"
+    },
+    {
+      "id": "garden",
+      "pos": -2,
+      "cost": 640,
+      "requires": "브론즈 + 2승"
+    },
+    {
+      "id": "clinic",
+      "pos": 2,
+      "cost": 570,
+      "requires": "브론즈 + 휴식실"
+    },
+    {
+      "id": "track",
+      "pos": -3,
+      "cost": 1000,
+      "requires": "실버 + 5승"
+    },
+    {
+      "id": "forest",
+      "pos": 3,
+      "cost": 900,
+      "requires": "실버 + 치료실"
+    }
+  ]
+}

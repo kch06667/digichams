@@ -1,0 +1,1064 @@
+[
+ {
+  "name": "battle/battle_bg_sub",
+  "path": "rom_images/battle_battle_bg_sub.png",
+  "group": "battle",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 22843
+ },
+ {
+  "name": "battle/bg_battle_sub_bg01",
+  "path": "rom_images/battle_bg_battle_sub_bg01.png",
+  "group": "battle",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2898
+ },
+ {
+  "name": "battle/bg_battle_sub_bg02",
+  "path": "rom_images/battle_bg_battle_sub_bg02.png",
+  "group": "battle",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2821
+ },
+ {
+  "name": "battle/bg_battle_sub_bg03",
+  "path": "rom_images/battle_bg_battle_sub_bg03.png",
+  "group": "battle",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2271
+ },
+ {
+  "name": "battle/bg_battle_top_main_bg01",
+  "path": "rom_images/battle_bg_battle_top_main_bg01.png",
+  "group": "battle",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2283
+ },
+ {
+  "name": "cage_edit/desktop_top",
+  "path": "rom_images/cage_edit_desktop_top.png",
+  "group": "cage_edit",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 40525
+ },
+ {
+  "name": "cage_edit/desktop_under",
+  "path": "rom_images/cage_edit_desktop_under.png",
+  "group": "cage_edit",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 44569
+ },
+ {
+  "name": "database/bg_database_main",
+  "path": "rom_images/database_bg_database_main.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 11469
+ },
+ {
+  "name": "database/bg_database_sub",
+  "path": "rom_images/database_bg_database_sub.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 8559
+ },
+ {
+  "name": "database/database_bg_main",
+  "path": "rom_images/database_database_bg_main.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 46267
+ },
+ {
+  "name": "database/database_bg_sub",
+  "path": "rom_images/database_database_bg_sub.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 25570
+ },
+ {
+  "name": "database/database_top_bg_sub",
+  "path": "rom_images/database_database_top_bg_sub.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 38966
+ },
+ {
+  "name": "database/prize_bg_main",
+  "path": "rom_images/database_prize_bg_main.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 15885
+ },
+ {
+  "name": "database/prize_bg_sub",
+  "path": "rom_images/database_prize_bg_sub.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 12241
+ },
+ {
+  "name": "database/zukan_bg1_sub",
+  "path": "rom_images/database_zukan_bg1_sub.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 3550
+ },
+ {
+  "name": "database/zukan_bg2_sub",
+  "path": "rom_images/database_zukan_bg2_sub.png",
+  "group": "database",
+  "width": 512,
+  "height": 768,
+  "layer": false,
+  "size": 8300
+ },
+ {
+  "name": "database/zukan_bg_main",
+  "path": "rom_images/database_zukan_bg_main.png",
+  "group": "database",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 1772
+ },
+ {
+  "name": "field/battle_01_01",
+  "path": "rom_images/field_battle_01_01.png",
+  "group": "field",
+  "width": 384,
+  "height": 288,
+  "layer": false,
+  "size": 78096
+ },
+ {
+  "name": "field/battle_08_01",
+  "path": "rom_images/field_battle_08_01.png",
+  "group": "field",
+  "width": 384,
+  "height": 288,
+  "layer": false,
+  "size": 78063
+ },
+ {
+  "name": "field/battle_15_01",
+  "path": "rom_images/field_battle_15_01.png",
+  "group": "field",
+  "width": 384,
+  "height": 288,
+  "layer": false,
+  "size": 84262
+ },
+ {
+  "name": "field/field_bm00_00",
+  "path": "rom_images/field_field_bm00_00.png",
+  "group": "field",
+  "width": 384,
+  "height": 288,
+  "layer": false,
+  "size": 155556
+ },
+ {
+  "name": "field/field_bm01_01",
+  "path": "rom_images/field_field_bm01_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 70063
+ },
+ {
+  "name": "field/field_bm02_01",
+  "path": "rom_images/field_field_bm02_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 80347
+ },
+ {
+  "name": "field/field_bm03_01",
+  "path": "rom_images/field_field_bm03_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 143142
+ },
+ {
+  "name": "field/field_bm04_01",
+  "path": "rom_images/field_field_bm04_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 52652
+ },
+ {
+  "name": "field/field_bm05_01",
+  "path": "rom_images/field_field_bm05_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 49853
+ },
+ {
+  "name": "field/field_bm06_01",
+  "path": "rom_images/field_field_bm06_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 84692
+ },
+ {
+  "name": "field/field_bm07_01",
+  "path": "rom_images/field_field_bm07_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 91627
+ },
+ {
+  "name": "field/field_bm08_01",
+  "path": "rom_images/field_field_bm08_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 125722
+ },
+ {
+  "name": "field/field_bm09_01",
+  "path": "rom_images/field_field_bm09_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 81870
+ },
+ {
+  "name": "field/field_bm10_01",
+  "path": "rom_images/field_field_bm10_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 106028
+ },
+ {
+  "name": "field/field_bm11_01",
+  "path": "rom_images/field_field_bm11_01.png",
+  "group": "field",
+  "width": 416,
+  "height": 272,
+  "layer": false,
+  "size": 137521
+ },
+ {
+  "name": "shop/shop_bg_main",
+  "path": "rom_images/shop_shop_bg_main.png",
+  "group": "shop",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 46267
+ },
+ {
+  "name": "shop/shop_bg_sub",
+  "path": "rom_images/shop_shop_bg_sub.png",
+  "group": "shop",
+  "width": 256,
+  "height": 512,
+  "layer": false,
+  "size": 58002
+ },
+ {
+  "name": "training/bg_training_cageedit_main_bg02",
+  "path": "rom_images/training_bg_training_cageedit_main_bg02.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 1701
+ },
+ {
+  "name": "training/bg_training_cageedit_main_bg03",
+  "path": "rom_images/training_bg_training_cageedit_main_bg03.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 6343
+ },
+ {
+  "name": "training/bg_training_cageedit_sub_bg01",
+  "path": "rom_images/training_bg_training_cageedit_sub_bg01.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 911
+ },
+ {
+  "name": "training/bg_training_cageedit_sub_bg02",
+  "path": "rom_images/training_bg_training_cageedit_sub_bg02.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 3674
+ },
+ {
+  "name": "training/bg_training_cageedit_sub_bg03",
+  "path": "rom_images/training_bg_training_cageedit_sub_bg03.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 6345
+ },
+ {
+  "name": "training/BG_training_main",
+  "path": "rom_images/training_BG_training_main.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 6345
+ },
+ {
+  "name": "training/BG_training_sub_bg2",
+  "path": "rom_images/training_BG_training_sub_bg2.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 7002
+ },
+ {
+  "name": "training/BG_training_sub_bg3",
+  "path": "rom_images/training_BG_training_sub_bg3.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 6301
+ },
+ {
+  "name": "training/cage_edit_bg_main",
+  "path": "rom_images/training_cage_edit_bg_main.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 3321
+ },
+ {
+  "name": "training/cage_edit_bg_main14",
+  "path": "rom_images/training_cage_edit_bg_main14.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2943
+ },
+ {
+  "name": "training/cage_edit_bg_main16",
+  "path": "rom_images/training_cage_edit_bg_main16.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2895
+ },
+ {
+  "name": "training/cage_edit_bg_main18",
+  "path": "rom_images/training_cage_edit_bg_main18.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2895
+ },
+ {
+  "name": "training/cage_edit_bg_main20",
+  "path": "rom_images/training_cage_edit_bg_main20.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 2729
+ },
+ {
+  "name": "training/cage_edit_bg_sub",
+  "path": "rom_images/training_cage_edit_bg_sub.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 4442
+ },
+ {
+  "name": "training/cageBG416",
+  "path": "rom_images/training_cageBG416.png",
+  "group": "training",
+  "width": 1008,
+  "height": 192,
+  "layer": true,
+  "size": 124655
+ },
+ {
+  "name": "training/cageBG416_2",
+  "path": "rom_images/training_cageBG416_2.png",
+  "group": "training",
+  "width": 1008,
+  "height": 192,
+  "layer": true,
+  "size": 10314
+ },
+ {
+  "name": "training/cageBG_A",
+  "path": "rom_images/training_cageBG_A.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": true,
+  "size": 10774
+ },
+ {
+  "name": "training/cageBG_B",
+  "path": "rom_images/training_cageBG_B.png",
+  "group": "training",
+  "width": 512,
+  "height": 128,
+  "layer": true,
+  "size": 517
+ },
+ {
+  "name": "training/cageBG_C",
+  "path": "rom_images/training_cageBG_C.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": true,
+  "size": 22385
+ },
+ {
+  "name": "training/cageBG_D",
+  "path": "rom_images/training_cageBG_D.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": true,
+  "size": 17610
+ },
+ {
+  "name": "training/cageBG_E",
+  "path": "rom_images/training_cageBG_E.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": true,
+  "size": 11568
+ },
+ {
+  "name": "training/field_cm01_01",
+  "path": "rom_images/training_field_cm01_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 7243
+ },
+ {
+  "name": "training/field_cm02_01",
+  "path": "rom_images/training_field_cm02_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 200,
+  "layer": true,
+  "size": 21357
+ },
+ {
+  "name": "training/field_cm03_01",
+  "path": "rom_images/training_field_cm03_01.png",
+  "group": "training",
+  "width": 288,
+  "height": 200,
+  "layer": true,
+  "size": 17141
+ },
+ {
+  "name": "training/field_cm04_01",
+  "path": "rom_images/training_field_cm04_01.png",
+  "group": "training",
+  "width": 288,
+  "height": 112,
+  "layer": true,
+  "size": 13464
+ },
+ {
+  "name": "training/field_cm05_01",
+  "path": "rom_images/training_field_cm05_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 17076
+ },
+ {
+  "name": "training/field_cm06_01",
+  "path": "rom_images/training_field_cm06_01.png",
+  "group": "training",
+  "width": 336,
+  "height": 200,
+  "layer": true,
+  "size": 27368
+ },
+ {
+  "name": "training/field_cm07_01",
+  "path": "rom_images/training_field_cm07_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 27568
+ },
+ {
+  "name": "training/field_cm08_01",
+  "path": "rom_images/training_field_cm08_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 20184
+ },
+ {
+  "name": "training/field_cm09_01",
+  "path": "rom_images/training_field_cm09_01.png",
+  "group": "training",
+  "width": 288,
+  "height": 200,
+  "layer": true,
+  "size": 16900
+ },
+ {
+  "name": "training/field_cm10_01",
+  "path": "rom_images/training_field_cm10_01.png",
+  "group": "training",
+  "width": 288,
+  "height": 200,
+  "layer": true,
+  "size": 29557
+ },
+ {
+  "name": "training/field_cm11_01",
+  "path": "rom_images/training_field_cm11_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 28407
+ },
+ {
+  "name": "training/field_cm12_01",
+  "path": "rom_images/training_field_cm12_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 30141
+ },
+ {
+  "name": "training/field_cm13_01",
+  "path": "rom_images/training_field_cm13_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 200,
+  "layer": true,
+  "size": 23352
+ },
+ {
+  "name": "training/field_cm14_01",
+  "path": "rom_images/training_field_cm14_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": false,
+  "size": 27775
+ },
+ {
+  "name": "training/field_cm15_01",
+  "path": "rom_images/training_field_cm15_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 14083
+ },
+ {
+  "name": "training/field_cm16_01",
+  "path": "rom_images/training_field_cm16_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 6954
+ },
+ {
+  "name": "training/field_cm17_01",
+  "path": "rom_images/training_field_cm17_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 200,
+  "layer": true,
+  "size": 19587
+ },
+ {
+  "name": "training/field_cm18_01",
+  "path": "rom_images/training_field_cm18_01.png",
+  "group": "training",
+  "width": 144,
+  "height": 200,
+  "layer": true,
+  "size": 22027
+ },
+ {
+  "name": "training/field_cm19_01",
+  "path": "rom_images/training_field_cm19_01.png",
+  "group": "training",
+  "width": 384,
+  "height": 112,
+  "layer": true,
+  "size": 37255
+ },
+ {
+  "name": "training/field_cm20_01",
+  "path": "rom_images/training_field_cm20_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 17204
+ },
+ {
+  "name": "training/field_cm21_01",
+  "path": "rom_images/training_field_cm21_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 25782
+ },
+ {
+  "name": "training/field_cm22_01",
+  "path": "rom_images/training_field_cm22_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 200,
+  "layer": true,
+  "size": 19146
+ },
+ {
+  "name": "training/field_cm23_01",
+  "path": "rom_images/training_field_cm23_01.png",
+  "group": "training",
+  "width": 144,
+  "height": 200,
+  "layer": true,
+  "size": 13478
+ },
+ {
+  "name": "training/field_cm24_01",
+  "path": "rom_images/training_field_cm24_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 6158
+ },
+ {
+  "name": "training/field_cm25_01",
+  "path": "rom_images/training_field_cm25_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 112,
+  "layer": true,
+  "size": 14080
+ },
+ {
+  "name": "training/field_cm26_01",
+  "path": "rom_images/training_field_cm26_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 24961
+ },
+ {
+  "name": "training/field_cm27_01",
+  "path": "rom_images/training_field_cm27_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 200,
+  "layer": true,
+  "size": 26377
+ },
+ {
+  "name": "training/field_cm28_01",
+  "path": "rom_images/training_field_cm28_01.png",
+  "group": "training",
+  "width": 240,
+  "height": 200,
+  "layer": true,
+  "size": 14922
+ },
+ {
+  "name": "training/field_cm29_01",
+  "path": "rom_images/training_field_cm29_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 1257
+ },
+ {
+  "name": "training/field_cm30_01",
+  "path": "rom_images/training_field_cm30_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 6774
+ },
+ {
+  "name": "training/field_cm31_01",
+  "path": "rom_images/training_field_cm31_01.png",
+  "group": "training",
+  "width": 192,
+  "height": 112,
+  "layer": true,
+  "size": 8623
+ },
+ {
+  "name": "training/field_cm32_01",
+  "path": "rom_images/training_field_cm32_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 12848
+ },
+ {
+  "name": "training/field_cm33_01",
+  "path": "rom_images/training_field_cm33_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 8346
+ },
+ {
+  "name": "training/field_cm34_01",
+  "path": "rom_images/training_field_cm34_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 5481
+ },
+ {
+  "name": "training/field_cm35_01",
+  "path": "rom_images/training_field_cm35_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 9942
+ },
+ {
+  "name": "training/field_cm36_01",
+  "path": "rom_images/training_field_cm36_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 4186
+ },
+ {
+  "name": "training/field_cm37_01",
+  "path": "rom_images/training_field_cm37_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 6911
+ },
+ {
+  "name": "training/field_cm38_01",
+  "path": "rom_images/training_field_cm38_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 6191
+ },
+ {
+  "name": "training/field_cm39_01",
+  "path": "rom_images/training_field_cm39_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 1484
+ },
+ {
+  "name": "training/field_cm40_01",
+  "path": "rom_images/training_field_cm40_01.png",
+  "group": "training",
+  "width": 96,
+  "height": 112,
+  "layer": true,
+  "size": 9338
+ },
+ {
+  "name": "training/tamer_info_main",
+  "path": "rom_images/training_tamer_info_main.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 23982
+ },
+ {
+  "name": "training/tamer_info_sub",
+  "path": "rom_images/training_tamer_info_sub.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 22419
+ },
+ {
+  "name": "training/training_bg_top",
+  "path": "rom_images/training_training_bg_top.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 14042
+ },
+ {
+  "name": "training/training_bg_top1",
+  "path": "rom_images/training_training_bg_top1.png",
+  "group": "training",
+  "width": 256,
+  "height": 512,
+  "layer": false,
+  "size": 8461
+ },
+ {
+  "name": "training/training_bg_wall",
+  "path": "rom_images/training_training_bg_wall.png",
+  "group": "training",
+  "width": 96,
+  "height": 40,
+  "layer": false,
+  "size": 139
+ },
+ {
+  "name": "training/traning_top",
+  "path": "rom_images/training_traning_top.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 42979
+ },
+ {
+  "name": "training/traning_under",
+  "path": "rom_images/training_traning_under.png",
+  "group": "training",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 42736
+ },
+ {
+  "name": "ui/comming_01",
+  "path": "rom_images/ui_comming_01.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 57461
+ },
+ {
+  "name": "ui/comming_02",
+  "path": "rom_images/ui_comming_02.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 38220
+ },
+ {
+  "name": "ui/common_bg_bottom",
+  "path": "rom_images/ui_common_bg_bottom.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 29883
+ },
+ {
+  "name": "ui/common_bg_top",
+  "path": "rom_images/ui_common_bg_top.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 28562
+ },
+ {
+  "name": "ui/list_bg_sub",
+  "path": "rom_images/ui_list_bg_sub.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 5996
+ },
+ {
+  "name": "ui/opening_txt",
+  "path": "rom_images/ui_opening_txt.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 10932
+ },
+ {
+  "name": "ui/screen_wipe_bg_in",
+  "path": "rom_images/ui_screen_wipe_bg_in.png",
+  "group": "ui",
+  "width": 512,
+  "height": 512,
+  "layer": false,
+  "size": 7696
+ },
+ {
+  "name": "ui/screen_wipe_bg_out",
+  "path": "rom_images/ui_screen_wipe_bg_out.png",
+  "group": "ui",
+  "width": 512,
+  "height": 512,
+  "layer": false,
+  "size": 8018
+ },
+ {
+  "name": "ui/winner_top_bg1",
+  "path": "rom_images/ui_winner_top_bg1.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 15593
+ },
+ {
+  "name": "ui/winner_top_bg2",
+  "path": "rom_images/ui_winner_top_bg2.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 30364
+ },
+ {
+  "name": "ui/hunt/hunting/hunting_bg_sub",
+  "path": "rom_images/ui_hunt_hunting_hunting_bg_sub.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 18358
+ },
+ {
+  "name": "ui/hunt/setting/bg_gear_setting_sub",
+  "path": "rom_images/ui_hunt_setting_bg_gear_setting_sub.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": true,
+  "size": 669
+ },
+ {
+  "name": "ui/hunt/setting/setting_bg_sub_bg1",
+  "path": "rom_images/ui_hunt_setting_setting_bg_sub_bg1.png",
+  "group": "ui",
+  "width": 512,
+  "height": 256,
+  "layer": false,
+  "size": 40653
+ },
+ {
+  "name": "ui/hunt/setting/setting_bg_sub_bg2",
+  "path": "rom_images/ui_hunt_setting_setting_bg_sub_bg2.png",
+  "group": "ui",
+  "width": 512,
+  "height": 256,
+  "layer": false,
+  "size": 1817
+ },
+ {
+  "name": "ui/hunt/setting/setting_bg_sub_bg3",
+  "path": "rom_images/ui_hunt_setting_setting_bg_sub_bg3.png",
+  "group": "ui",
+  "width": 512,
+  "height": 256,
+  "layer": false,
+  "size": 4650
+ },
+ {
+  "name": "ui/hunt/world/world_bg_sub",
+  "path": "rom_images/ui_hunt_world_world_bg_sub.png",
+  "group": "ui",
+  "width": 256,
+  "height": 256,
+  "layer": false,
+  "size": 5023
+ }
+]

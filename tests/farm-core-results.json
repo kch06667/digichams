@@ -1,0 +1,122 @@
+[
+  {
+    "name": "first migration and unique actor",
+    "status": "PASS"
+  },
+  {
+    "name": "no training reward before walking + animation",
+    "status": "PASS"
+  },
+  {
+    "name": "stop cancels reward",
+    "status": "PASS"
+  },
+  {
+    "name": "pause and 1x/2x/4x time",
+    "status": "PASS"
+  },
+  {
+    "name": "food costs once, consumed after walking",
+    "status": "PASS"
+  },
+  {
+    "name": "rest recovers then stops at max HP",
+    "status": "PASS"
+  },
+  {
+    "name": "auto rest below 20%, then resume training",
+    "status": "PASS"
+  },
+  {
+    "name": "day earns food & rope only on crossing boundary",
+    "status": "PASS"
+  },
+  {
+    "name": "instance id preserved through save roundtrip",
+    "status": "PASS"
+  },
+  {
+    "name": "in storage cannot start command",
+    "status": "PASS"
+  },
+  {
+    "name": "trained stats preserve minimum one and HP costs only on completion",
+    "status": "PASS"
+  },
+  {
+    "name": "expanded gym shortens training cycles (temporary extension)",
+    "status": "PASS"
+  },
+  {
+    "name": "expanded rest area improves healing without extra resource use",
+    "status": "PASS"
+  },
+  {
+    "name": "expanded track increases speed gain after a completed cycle",
+    "status": "PASS"
+  },
+  {
+    "name": "disable auto-rest stops low-HP training",
+    "status": "PASS"
+  },
+  {
+    "name": "storage mon remains frozen as active farm advances",
+    "status": "PASS"
+  },
+  {
+    "name": "peripheral command targets are conditional on purchased plots",
+    "status": "PASS"
+  },
+  {
+    "name": "target-stat automation stops at requested attack value",
+    "status": "PASS"
+  },
+  {
+    "name": "target-stat automation survives automatic rest and resume",
+    "status": "PASS"
+  },
+  {
+    "name": "already satisfied target does not consume resources",
+    "status": "PASS"
+  },
+  {
+    "name": "invalid target does not cancel valid ongoing training",
+    "status": "PASS"
+  },
+  {
+    "name": "target persists through a JSON state copy and continues",
+    "status": "PASS"
+  },
+  {
+    "name": "hungriness wins food contest regardless of team roster order",
+    "status": "PASS"
+  },
+  {
+    "name": "two foods go to two different Digimon",
+    "status": "PASS"
+  },
+  {
+    "name": "wandering hungry Digimon is interrupted for food",
+    "status": "PASS"
+  },
+  {
+    "name": "feeding does not cancel requested training",
+    "status": "PASS"
+  },
+  {
+    "name": "idle tired Digimon automatically walks to rest, no training reward",
+    "status": "PASS"
+  },
+  {
+    "name": "feeding creates emote and save keeps the food reservation",
+    "status": "PASS"
+  },
+  {
+    "name": "stale food reservation from missing Digimon is released",
+    "status": "PASS"
+  },
+  {
+    "name": "invalid coordinates do not spend food",
+    "status": "PASS"
+  }
+]

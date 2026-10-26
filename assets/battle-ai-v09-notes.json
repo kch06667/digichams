@@ -1,0 +1,21 @@
+{
+  "version": "0.9",
+  "inspired_by": "user supplied original battle clip",
+  "implemented_behaviors": [
+    "approach",
+    "flank",
+    "disengage",
+    "reaction dodge",
+    "short melee combos",
+    "melee and ranged specials"
+  ],
+  "verified_rom_data": [
+    "overlay19 pointers to effect strings",
+    "original ROM field maps"
+  ],
+  "not_verified": [
+    "original AI formula",
+    "original move IDs",
+    "specific Digimon skill-effect associations"
+  ]
+}

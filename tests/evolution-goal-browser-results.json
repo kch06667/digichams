@@ -1,0 +1,18 @@
+[
+  {
+    "file": "index.html",
+    "status": "PASS",
+    "goal_lock": "PASS",
+    "target_evolution": "PASS",
+    "tree": "PASS",
+    "pageerrors": []
+  },
+  {
+    "file": "standalone.html",
+    "status": "PASS",
+    "goal_lock": "PASS",
+    "target_evolution": "PASS",
+    "tree": "PASS",
+    "pageerrors": []
+  }
+]

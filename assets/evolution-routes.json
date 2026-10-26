@@ -1,0 +1,3342 @@
+{
+  "version": "0.18.0",
+  "source": "GameFAQs Digivolution Guide hemlock86 2008-10-04 (community guide, unverified against ROM)",
+  "sourceUrl": "https://gamefaqs.gamespot.com/ds/943756-digimon-world-championship/faqs/54306",
+  "data": {
+    "즈루몬": [
+      {
+        "to": "카프리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "파구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "모치몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "쵸로몬": [
+      {
+        "to": "파구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "모치몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "카프리몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "뇨키몬": [
+      {
+        "to": "피요몬(유년기)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "코로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "시드몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "버블몬": [
+      {
+        "to": "모치몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "피요몬(유년기)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 20
+        }
+      },
+      {
+        "to": "시드몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "피치몬": [
+      {
+        "to": "푸카몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "토코몬",
+        "source": "hemlock86-2008",
+        "time": true
+      },
+      {
+        "to": "뿔몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      }
+    ],
+    "푸니몬": [
+      {
+        "to": "푸카몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "야옹몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "꼬마메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "깜몬": [
+      {
+        "to": "토코몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "파구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "코로몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "뽀요몬": [
+      {
+        "to": "토코몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "모치몬",
+        "source": "hemlock86-2008",
+        "time": true
+      },
+      {
+        "to": "푸카몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "야옹몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      }
+    ],
+    "모쿠몬": [
+      {
+        "to": "카프리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "꼬마메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      },
+      {
+        "to": "코로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "썬몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      }
+    ],
+    "유키미보타몬": [
+      {
+        "to": "뿔몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "문몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "야옹몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "유라몬": [
+      {
+        "to": "꼬마메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "코로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "시드몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "페티몬": [
+      {
+        "to": "베비드몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "카프리몬": [
+      {
+        "to": "아르마몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "울퉁몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "토이아구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "톱니몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "코로몬": [
+      {
+        "to": "브이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        },
+        "battles": 3
+      },
+      {
+        "to": "유키아구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "블랙아구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "아구몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "토이아구몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "시드몬": [
+      {
+        "to": "플로라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "머쉬몬",
+        "source": "hemlock86-2008",
+        "penalties": 3
+      },
+      {
+        "to": "알라우몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "파르몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "뿔몬": [
+      {
+        "to": "가오몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "가부몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "사이케몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "data": 20
+        }
+      },
+      {
+        "to": "에렉몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "토코몬": [
+      {
+        "to": "브이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        },
+        "battles": 3
+      },
+      {
+        "to": "바쿠몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "테리어몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "파타몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "야옹몬": [
+      {
+        "to": "테리어몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "플롯트몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "기자몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "레나몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "파구몬": [
+      {
+        "to": "가지몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "고부리몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "피코데블몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 30
+        }
+      },
+      {
+        "to": "츠카이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "피요몬(유년기)": [
+      {
+        "to": "팔코몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "플로라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "피코데블몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "피요몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "푸카몬": [
+      {
+        "to": "쉬라몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "카메몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "유키아구몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "기자몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "꼬마메라몬": [
+      {
+        "to": "길몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "코로나몬",
+        "source": "hemlock86-2008",
+        "battles": 4
+      },
+      {
+        "to": "피코데블몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "캔들몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "모치몬": [
+      {
+        "to": "카메몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "텐타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "쿠네몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "베비드몬": [
+      {
+        "to": "올챙몬",
+        "source": "hemlock86-2008",
+        "penalties": 3
+      },
+      {
+        "to": "드라코몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "썬몬": [
+      {
+        "to": "길몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "플롯트몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "코로나몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "문몬": [
+      {
+        "to": "가지몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "블랙아구몬",
+        "source": "hemlock86-2008",
+        "battles": 3
+      },
+      {
+        "to": "루나몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "아구몬": [
+      {
+        "to": "지오그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        },
+        "battles": 6
+      },
+      {
+        "to": "그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "스카몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "티라노몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "아르마몬": [
+      {
+        "to": "쉘몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "안킬로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "모노크로몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "토타몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "에렉몬": [
+      {
+        "to": "구미호몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "썬더볼몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "켄타루몬",
+        "source": "hemlock86-2008",
+        "battles": 4
+      },
+      {
+        "to": "레드베지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "올챙몬": [
+      {
+        "to": "개굴몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "게소몬",
+        "source": "hemlock86-2008",
+        "battles": 4
+      },
+      {
+        "to": "레어몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가오몬": [
+      {
+        "to": "켄타루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "가오가몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "가르고몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가지몬": [
+      {
+        "to": "데비드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        },
+        "battles": 6
+      },
+      {
+        "to": "블랙가루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "워매몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "링크스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가부몬": [
+      {
+        "to": "원뿔몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "블랙가루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 20
+        }
+      },
+      {
+        "to": "그루루몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "가루몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "카메몬": [
+      {
+        "to": "토타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "아이스몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "원뿔몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "쉘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "기자몬": [
+      {
+        "to": "시드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "쉘몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "데비드라몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "게소몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "캔들몬": [
+      {
+        "to": "메라몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "클락몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        },
+        "eggReverts": 1
+      },
+      {
+        "to": "레드베지몬",
+        "source": "hemlock86-2008",
+        "penalties": 4,
+        "time": true
+      },
+      {
+        "to": "링크스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "쿠네몬": [
+      {
+        "to": "캅테리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "썬더볼몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "레드베지몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 10
+        }
+      },
+      {
+        "to": "베지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "울퉁몬": [
+      {
+        "to": "가드로몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "스타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "아이스몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "게레몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "고부리몬": [
+      {
+        "to": "켄타루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "위자몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "data": 10
+        }
+      },
+      {
+        "to": "데블몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "우가몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "쉬라몬": [
+      {
+        "to": "원뿔몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "그루루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "프리지몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "모쟈몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "테리어몬": [
+      {
+        "to": "다르크몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "유니몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "가르고몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "가트몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "텐타몬": [
+      {
+        "to": "캅테리몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "쿠와가몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "우드몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "니드몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "토이아구몬": [
+      {
+        "to": "메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "클락몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "스타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "스카몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "드라코몬": [
+      {
+        "to": "코어드라몬(청)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "vaccine": 30
+        },
+        "battles": 5
+      },
+      {
+        "to": "코어드라몬(녹)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 30
+        },
+        "battles": 5
+      },
+      {
+        "to": "다크티라노몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "바쿠몬": [
+      {
+        "to": "소서리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "유니몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "다르크몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "고스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "톱니몬": [
+      {
+        "to": "가드로몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "클락몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "고스몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "스타몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "파타몬": [
+      {
+        "to": "엔젤몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "위자몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "data": 10
+        }
+      },
+      {
+        "to": "켄타루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "구미호몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "파르몬": [
+      {
+        "to": "키위몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 20
+        }
+      },
+      {
+        "to": "니드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "스카몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "베지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "피코데블몬": [
+      {
+        "to": "데블몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "세이버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "고스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "피요몬": [
+      {
+        "to": "에어드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        },
+        "battles": 6
+      },
+      {
+        "to": "버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 20
+        }
+      },
+      {
+        "to": "세이버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "아카토리몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "팔코몬": [
+      {
+        "to": "페크몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "에어드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "고스몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "세이버드라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "플롯트몬": [
+      {
+        "to": "다르크몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "엔젤몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "유니몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "가트몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "플로라몬": [
+      {
+        "to": "요우코몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "니드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "엔젤몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 20
+        }
+      },
+      {
+        "to": "베지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "머쉬몬": [
+      {
+        "to": "쿠와가몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "우드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "레드베지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "유키아구몬": [
+      {
+        "to": "아이스데블몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "시드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "고스몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "프리지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "레나몬": [
+      {
+        "to": "레오몬",
+        "source": "hemlock86-2008",
+        "battles": 6,
+        "eggReverts": 1
+      },
+      {
+        "to": "요우코몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "구미호몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "스카몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "코로나몬": [
+      {
+        "to": "파이라몬",
+        "source": "hemlock86-2008",
+        "battles": 5
+      },
+      {
+        "to": "메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "링크스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "루나몬": [
+      {
+        "to": "레키스몬",
+        "source": "hemlock86-2008",
+        "battles": 5
+      },
+      {
+        "to": "프리지몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "가트몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "블랙아구몬": [
+      {
+        "to": "그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "데비드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "다크티라노몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 20
+        }
+      },
+      {
+        "to": "모노크로몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "사이케몬": [
+      {
+        "to": "그루루몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "요우코몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 20
+        }
+      },
+      {
+        "to": "스타몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "알라우몬": [
+      {
+        "to": "레드베지몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 20
+        }
+      },
+      {
+        "to": "키위몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 20
+        }
+      },
+      {
+        "to": "요우코몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "위자몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "츠카이몬": [
+      {
+        "to": "세이버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 20
+        }
+      },
+      {
+        "to": "위자몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "데블몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "고스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "브이몬": [
+      {
+        "to": "브이드라몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "시드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 20
+        }
+      },
+      {
+        "to": "레어몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "에어드라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "길몬": [
+      {
+        "to": "그라우몬",
+        "source": "hemlock86-2008",
+        "battles": 6
+      },
+      {
+        "to": "메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 20
+        }
+      },
+      {
+        "to": "게레몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "다크티라노몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "안킬로몬": [
+      {
+        "to": "트리케라몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "아노말로카리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 30
+        }
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "원뿔몬": [
+      {
+        "to": "쥬드몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "고래몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "행요몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "위자몬": [
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 30
+        }
+      },
+      {
+        "to": "레이디데블몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "우드몬": [
+      {
+        "to": "쥬레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 40
+        }
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "에어드라몬": [
+      {
+        "to": "세이버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "패롯몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        }
+      },
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "엔젤몬": [
+      {
+        "to": "홀리엔젤몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "엔젤우몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        }
+      },
+      {
+        "to": "피콜몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "우가몬": [
+      {
+        "to": "와루몬자에몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "에테몬",
+        "source": "hemlock86-2008",
+        "penalties": 4
+      },
+      {
+        "to": "판다몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가오가몬": [
+      {
+        "to": "마하가오가몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "워가루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "판다몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "캅테리몬": [
+      {
+        "to": "아트라캅테리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "아노말로카리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 30
+        }
+      },
+      {
+        "to": "쥬레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가르고몬": [
+      {
+        "to": "래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "블랙래피드몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "판다몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가루몬": [
+      {
+        "to": "워가루몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "몬자에몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "블랙가루몬": [
+      {
+        "to": "워가루몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "블랙래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "와루몬자에몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가드로몬": [
+      {
+        "to": "세이버드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "안드로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "빅콩알몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "키위몬": [
+      {
+        "to": "패롯몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        }
+      },
+      {
+        "to": "가루다몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "구미호몬": [
+      {
+        "to": "가루다몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "몬자에몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "쥬레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "그레이몬": [
+      {
+        "to": "메탈그레이몬(바이러스)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "vaccine": 30
+        },
+        "battles": 8
+      },
+      {
+        "to": "메탈그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "클락몬": [
+      {
+        "to": "메탈티라노몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "빅콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 40
+        }
+      },
+      {
+        "to": "콩알몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "쿠와가몬": [
+      {
+        "to": "오쿠와몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "쥬레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "개굴몬": [
+      {
+        "to": "왕개굴몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "고래몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "행요몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "게소몬": [
+      {
+        "to": "다고몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "메가시드라몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "켄타루몬": [
+      {
+        "to": "마하가오가몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "안드로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "꼬끼몬": [
+      {
+        "to": "피콜몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        }
+      },
+      {
+        "to": "패롯몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        }
+      },
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "썬더볼몬": [
+      {
+        "to": "빅콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "나이트몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "콩알몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "쉘몬": [
+      {
+        "to": "아노말로카리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "트리케라몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "왕개굴몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "지오그레이몬": [
+      {
+        "to": "라이즈그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "메탈그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 40
+        }
+      },
+      {
+        "to": "맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "시드라몬": [
+      {
+        "to": "메가시드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "메가드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "다고몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "스카몬": [
+      {
+        "to": "에테몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "슈퍼스타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "가비지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "스타몬": [
+      {
+        "to": "슈퍼스타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "다르크몬": [
+      {
+        "to": "사이버드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "야타가라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        }
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "다크티라노몬": [
+      {
+        "to": "메탈그레이몬(바이러스)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "메가드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        },
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "메탈티라노몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "티라노몬": [
+      {
+        "to": "메탈그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "메탈티라노몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가트몬": [
+      {
+        "to": "홀리엔젤몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        }
+      },
+      {
+        "to": "워가루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "판다몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "데비드라몬": [
+      {
+        "to": "메가드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "사이버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "데블몬": [
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "레이디데블몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 40
+        }
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "니드몬": [
+      {
+        "to": "릴리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "피콜몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        }
+      },
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "토타몬": [
+      {
+        "to": "쥬드몬",
+        "source": "hemlock86-2008",
+        "battles": 8,
+        "wins": 0.5
+      },
+      {
+        "to": "아노말로카리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "워매몬": [
+      {
+        "to": "고래몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "가비지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "고스몬": [
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "버드라몬": [
+      {
+        "to": "야타가라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        }
+      },
+      {
+        "to": "가루다몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "패롯몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "베지몬": [
+      {
+        "to": "아트라캅테리몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "쥬레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 40
+        }
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "페크몬": [
+      {
+        "to": "사이버드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "메라몬": [
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "블루메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "에테몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "모쟈몬": [
+      {
+        "to": "맘몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "블루메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "판다몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "모노크로몬": [
+      {
+        "to": "메탈티라노몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 40
+        }
+      },
+      {
+        "to": "트리케라몬",
+        "source": "hemlock86-2008",
+        "battles": 8
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "프리지몬": [
+      {
+        "to": "블루메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "몬자에몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "판다몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "유니몬": [
+      {
+        "to": "마하가오가몬",
+        "source": "hemlock86-2008",
+        "battles": 8,
+        "wins": 0.5
+      },
+      {
+        "to": "래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "요우코몬": [
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "레이디데블몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "링크스몬": [
+      {
+        "to": "플레어몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "블랙래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "몬자에몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "레어몬": [
+      {
+        "to": "다고몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "가비지몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "레오몬": [
+      {
+        "to": "몬자에몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "와루몬자에몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "레드베지몬": [
+      {
+        "to": "쥬레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 40
+        }
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "코어드라몬(청)": [
+      {
+        "to": "윙드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "사이버드라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "코어드라몬(녹)": [
+      {
+        "to": "그라운드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "트리케라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "파이라몬": [
+      {
+        "to": "플레어몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "몬자에몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "레키스몬": [
+      {
+        "to": "크레세몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "와루몬자에몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "아이스데블몬": [
+      {
+        "to": "블루메라몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "크레세몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 40
+        }
+      },
+      {
+        "to": "레이디데블몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "그루루몬": [
+      {
+        "to": "래피드몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        }
+      },
+      {
+        "to": "홀리엔젤몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "게레몬": [
+      {
+        "to": "슈퍼스타몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 20
+        }
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "베이더몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "블루메라몬": [
+      {
+        "to": "파라오몬",
+        "source": "hemlock86-2008",
+        "battles": 16
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "소서리몬": [
+      {
+        "to": "엔젤우몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        }
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 40
+        }
+      },
+      {
+        "to": "피콜몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "아카토리몬": [
+      {
+        "to": "가루다몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        },
+        "battles": 8
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 40
+        }
+      },
+      {
+        "to": "데스메라몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "세이버드라몬": [
+      {
+        "to": "사이버드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10
+      },
+      {
+        "to": "야타가라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        }
+      },
+      {
+        "to": "팬텀몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "아이스몬": [
+      {
+        "to": "블루메라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        }
+      },
+      {
+        "to": "행요몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40
+        }
+      },
+      {
+        "to": "빅콩알몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "브이드라몬": [
+      {
+        "to": "사이버드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "메탈그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 40
+        }
+      },
+      {
+        "to": "맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "그라우몬": [
+      {
+        "to": "메탈그레이몬(바이러스)",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 40
+        }
+      },
+      {
+        "to": "메가드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "wins": 0.5
+      },
+      {
+        "to": "스컬그레이몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "아트라캅테리몬": [
+      {
+        "to": "헤라클레스캅테리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 60
+        },
+        "battles": 18,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "아노말로카리몬": [
+      {
+        "to": "푸쿠몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "안드로몬": [
+      {
+        "to": "하이안드로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 60
+        },
+        "battles": 14,
+        "wins": 0.5
+      }
+    ],
+    "에테몬": [
+      {
+        "to": "메탈에테몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 50
+        },
+        "battles": 14,
+        "wins": 0.5
+      }
+    ],
+    "엔젤우몬": [
+      {
+        "to": "호우오우몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 40
+        },
+        "eggReverts": 1
+      },
+      {
+        "to": "발키리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 50
+        },
+        "battles": 12
+      }
+    ],
+    "오쿠와몬": [
+      {
+        "to": "그랑쿠가몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 50
+        },
+        "battles": 16,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "가루다몬": [
+      {
+        "to": "호우오우몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 50
+        },
+        "battles": 16,
+        "eggReverts": 1
+      },
+      {
+        "to": "발키리몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "가비지몬": [
+      {
+        "to": "메탈에테몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 60,
+          "machine": 60
+        }
+      }
+    ],
+    "사이버드라몬": [
+      {
+        "to": "블랙워그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 50,
+          "dragon": 50
+        },
+        "battles": 18
+      },
+      {
+        "to": "황제드라몬 파이터 모드",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 50
+        },
+        "battles": 16,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "쥬레이몬": [
+      {
+        "to": "피노키몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 60,
+          "machine": 60
+        }
+      }
+    ],
+    "스컬그레이몬": [
+      {
+        "to": "스컬맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "쥬드몬": [
+      {
+        "to": "바이킹몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 60
+        },
+        "battles": 18,
+        "wins": 0.5
+      }
+    ],
+    "다고몬": [
+      {
+        "to": "기가시드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 40,
+          "machine": 40
+        },
+        "battles": 12
+      },
+      {
+        "to": "푸쿠몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "데스메라몬": [
+      {
+        "to": "피에몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 30
+        },
+        "battles": 18,
+        "wins": 0.5
+      }
+    ],
+    "델루몬": [
+      {
+        "to": "프린스콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "data": 60
+        },
+        "battles": 12
+      }
+    ],
+    "왕개굴몬": [
+      {
+        "to": "기가시드라몬",
+        "source": "hemlock86-2008",
+        "eggReverts": 3
+      }
+    ],
+    "트리케라몬": [
+      {
+        "to": "세인트가르고몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 60
+        },
+        "battles": 18,
+        "wins": 0.5
+      }
+    ],
+    "나이트몬": [
+      {
+        "to": "발키리몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 60
+        },
+        "battles": 14
+      }
+    ],
+    "패롯몬": [
+      {
+        "to": "크로스몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "행요몬": [
+      {
+        "to": "푸쿠몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "판다몬": [
+      {
+        "to": "미라쥬가오가몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 40
+        },
+        "battles": 22,
+        "wins": 0.5,
+        "eggReverts": 1
+      },
+      {
+        "to": "스컬맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "빅콩알몬": [
+      {
+        "to": "프린스콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 80
+        }
+      }
+    ],
+    "피콜몬": [
+      {
+        "to": "로제몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "data": 40,
+          "insect": 60
+        },
+        "eggReverts": 1
+      }
+    ],
+    "팬텀몬": [
+      {
+        "to": "파라오몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "베이더몬": [
+      {
+        "to": "프린스콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 80
+        }
+      }
+    ],
+    "고래몬": [
+      {
+        "to": "플레시오몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 60
+        },
+        "battles": 14
+      },
+      {
+        "to": "메탈시드라몬",
+        "source": "hemlock86-2008",
+        "battles": 10,
+        "eggReverts": 3
+      }
+    ],
+    "홀리엔젤몬": [
+      {
+        "to": "호우오우몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 60
+        },
+        "battles": 16,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "마하가오가몬": [
+      {
+        "to": "미라쥬가오가몬",
+        "source": "hemlock86-2008",
+        "battles": 22,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "콩알몬": [
+      {
+        "to": "무겐드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 40
+        },
+        "eggReverts": 5
+      },
+      {
+        "to": "프린스콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 80
+        }
+      }
+    ],
+    "맘몬": [
+      {
+        "to": "스컬맘몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "메가시드라몬": [
+      {
+        "to": "메탈시드라몬",
+        "source": "hemlock86-2008",
+        "battles": 14,
+        "wins": 0.5,
+        "eggReverts": 1
+      },
+      {
+        "to": "기가시드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "water": 50
+        },
+        "battles": 16
+      }
+    ],
+    "메가드라몬": [
+      {
+        "to": "듀크몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 60
+        },
+        "battles": 22,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "메탈그레이몬(바이러스)": [
+      {
+        "to": "블랙워그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 60
+        },
+        "battles": 14,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "메탈그레이몬": [
+      {
+        "to": "워그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "dragon": 60
+        },
+        "battles": 14,
+        "wins": 0.5,
+        "eggReverts": 1
+      },
+      {
+        "to": "빅토리그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 30,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "메탈티라노몬": [
+      {
+        "to": "무겐드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 60
+        },
+        "battles": 20,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "몬자에몬": [
+      {
+        "to": "반쵸레오몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "beast": 60
+        },
+        "battles": 20,
+        "wins": 0.7,
+        "eggReverts": 1
+      },
+      {
+        "to": "샤벨레오몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "야타가라몬": [
+      {
+        "to": "호우오우몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "bird": 60
+        },
+        "battles": 12,
+        "eggReverts": 1
+      },
+      {
+        "to": "그리포몬",
+        "source": "hemlock86-2008",
+        "time": true
+      }
+    ],
+    "라이즈그레이몬": [
+      {
+        "to": "샤인그레이몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "vaccine": 40,
+          "dragon": 40
+        },
+        "battles": 18,
+        "wins": 0.5,
+        "eggReverts": 1
+      },
+      {
+        "to": "빅토리그레이몬",
+        "source": "hemlock86-2008",
+        "battles": 30,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "래피드몬": [
+      {
+        "to": "세인트가르고몬",
+        "source": "hemlock86-2008",
+        "battles": 18,
+        "wins": 0.7
+      }
+    ],
+    "릴리몬": [
+      {
+        "to": "로제몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "insect": 70
+        },
+        "battles": 14,
+        "wins": 0.5
+      }
+    ],
+    "레이디데블몬": [
+      {
+        "to": "피에몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 60,
+          "darkness": 60
+        }
+      }
+    ],
+    "와루몬자에몬": [
+      {
+        "to": "피노키몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 60,
+          "machine": 60
+        }
+      }
+    ],
+    "워가루몬": [
+      {
+        "to": "메탈가루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "data": 40
+        },
+        "battles": 20
+      },
+      {
+        "to": "지드가루몬",
+        "source": "hemlock86-2008",
+        "battles": 16,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "블랙워가루몬": [
+      {
+        "to": "메탈가루몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 40
+        },
+        "battles": 20
+      },
+      {
+        "to": "지드가루몬",
+        "source": "hemlock86-2008",
+        "battles": 16,
+        "wins": 0.5,
+        "eggReverts": 2
+      }
+    ],
+    "윙드라몬": [
+      {
+        "to": "슬레이어드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "vaccine": 60
+        },
+        "battles": 18,
+        "eggReverts": 1
+      }
+    ],
+    "그라운드라몬": [
+      {
+        "to": "브레이크드라몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "virus": 60
+        },
+        "battles": 18,
+        "eggReverts": 1
+      }
+    ],
+    "플레어몬": [
+      {
+        "to": "아폴로몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "holy": 40
+        },
+        "battles": 20,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "크레세몬": [
+      {
+        "to": "디아나몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "darkness": 40
+        },
+        "battles": 20,
+        "wins": 0.5,
+        "eggReverts": 1
+      }
+    ],
+    "슈퍼스타몬": [
+      {
+        "to": "프린스콩알몬",
+        "source": "hemlock86-2008",
+        "ap": {
+          "machine": 80
+        }
+      }
+    ],
+    "블랙래피드몬": [
+      {
+        "to": "세인트가르고몬",
+        "source": "hemlock86-2008",
+        "battles": 20,
+        "wins": 0.5
+      }
+    ]
+  }
+}

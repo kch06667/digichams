@@ -1,0 +1,29 @@
+{
+  "results": [
+    {
+      "name": "old train and feed buttons route into timed hex simulation",
+      "status": "PASS"
+    },
+    {
+      "name": "auto-rest preference is editable from farm UI",
+      "status": "PASS"
+    },
+    {
+      "name": "mock Storage persists team and training after reload",
+      "status": "PASS"
+    },
+    {
+      "name": "JSON export/import restores state and rejects broken archive",
+      "status": "PASS"
+    },
+    {
+      "name": "downloaded JSON save archive is valid",
+      "status": "PASS"
+    },
+    {
+      "name": "updated controls do not introduce mobile page overflow",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

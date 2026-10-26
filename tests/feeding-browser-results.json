@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "name": "desktop: button then tile click places and consumes one food",
+      "status": "PASS"
+    },
+    {
+      "name": "cancelling placement does not consume food",
+      "status": "PASS"
+    },
+    {
+      "name": "JSON export/import preserves meal on the ground",
+      "status": "PASS"
+    },
+    {
+      "name": "two Digimon compete: only hungriest eats",
+      "status": "PASS"
+    },
+    {
+      "name": "mobile real touch: button -> tapped plot -> food appears",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

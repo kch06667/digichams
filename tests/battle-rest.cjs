@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict');
+const farm=require('../src/farm-core.js');
+const m=(id,storage=false)=>({instanceId:id,name:'아구몬',hp:20,maxHp:100,maxTp:70,tp:12,atk:20,def:15,spd:20,hunger:20,fatigue:60,training:0,exp:0,friendship:20,level:1,...(storage?{location:'storage'}:{})});
+const s={day:1,food:5,ropes:4,points:0,logs:[],team:[m('a'),m('b',true)]};
+const archived=JSON.stringify(s.team[1]);
+assert.ok(farm.command(s,'a','rest'));
+farm.advance(s,20);
+assert.ok(s.team[0].hp>20,'farm rest restores HP');
+assert.ok(s.team[0].tp>12 && s.team[0].tp<=70,'farm rest restores finite TP');
+assert.equal(JSON.stringify(s.team[1]),archived,'stored monster is entirely frozen');
+console.log('PASS: farm rest recharges HP and TP, archive state frozen');

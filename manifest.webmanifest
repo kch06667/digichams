@@ -1,0 +1,9 @@
+{
+  "name": "디지몬 챔피언십: 디지털 사육장 v0.6",
+  "short_name": "디지몬 사육장",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#101a2c",
+  "description": "제공된 디지몬 GIF 스프라이트를 적용한 독립 육성·포획·자동전투 프로토타입"
+}

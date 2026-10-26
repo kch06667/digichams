@@ -1,0 +1,37 @@
+{
+  "results": [
+    {
+      "name": "trained owned stats and identity enter battle",
+      "status": "PASS"
+    },
+    {
+      "name": "victory affects participants, exactly once",
+      "status": "PASS"
+    },
+    {
+      "name": "insufficient owned 3v3 rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "close persists damage and one defeat",
+      "status": "PASS"
+    },
+    {
+      "name": "sandbox does not alter save",
+      "status": "PASS"
+    },
+    {
+      "name": "interrupted battle recovery once",
+      "status": "PASS"
+    },
+    {
+      "name": "evolution preserves instance id",
+      "status": "PASS"
+    },
+    {
+      "name": "KO cannot enter battle",
+      "status": "PASS"
+    }
+  ],
+  "errors": []
+}

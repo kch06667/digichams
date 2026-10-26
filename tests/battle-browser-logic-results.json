@@ -1,0 +1,48 @@
+[
+  {
+    "html": "index.html",
+    "status": "PASS",
+    "result": {
+      "initial": {
+        "tp": 57,
+        "maxTp": 77,
+        "pending": true,
+        "selection": "focus"
+      },
+      "spent": {
+        "tp": 33,
+        "special": true
+      },
+      "end": {
+        "tp": 33,
+        "wins": 1,
+        "pending": false,
+        "tactic": "focus"
+      },
+      "choices": 5
+    }
+  },
+  {
+    "html": "standalone.html",
+    "status": "PASS",
+    "result": {
+      "initial": {
+        "tp": 57,
+        "maxTp": 77,
+        "pending": true,
+        "selection": "focus"
+      },
+      "spent": {
+        "tp": 33,
+        "special": true
+      },
+      "end": {
+        "tp": 33,
+        "wins": 1,
+        "pending": false,
+        "tactic": "focus"
+      },
+      "choices": 5
+    }
+  }
+]

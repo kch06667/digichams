@@ -1,0 +1,17 @@
+const assert=require('node:assert/strict');
+const C=require('../src/championship-core');
+const mon=(n='아구몬',hp=40)=>({name:n,hp,maxHp:50,location:'farm',stage:'성장기'});
+function fresh(day=1,team=[mon()]){return {day,team,wins:0,points:0,facilityCredits:0}}
+let passed=0;function test(name,run){run();passed++;console.log('PASS',name)}
+test('cup schedule starts on exact day, repeats weekly',()=>{assert.equal(C.nextDay(C.get('novice'),1),1);assert.equal(C.nextDay(C.get('novice'),2),8);assert.equal(C.nextDay(C.get('novice'),8),8)});
+test('rookie cup can enter at day 1 with one live digimon',()=>{const s=fresh();assert.deepEqual(C.requirements(s,'novice'),[]);assert.equal(C.enter(s,'novice').ok,true);assert.equal(C.nextMatch(s).opponent,'고부리몬')});
+test('cannot enter regional before novice win and required roster',()=>{const s=fresh(5);s.wins=4;assert(C.requirements(s,'regional').some(x=>x.includes('우승')));assert(C.requirements(s,'regional').some(x=>x.includes('2마리')))});
+test('storage and fainted characters cannot enter a 2v2',()=>{const s=fresh(5,[mon(),{...mon('가부몬'),location:'storage'}]);s.championship={crowns:{novice:1}};s.wins=5;assert(C.requirements(s,'regional').some(x=>x.includes('2마리')))});
+test('two tournament wins award crown and prize exactly once',()=>{const s=fresh();assert(C.enter(s,'novice').ok);const m1=C.nextMatch(s);assert(C.beginMatch(s,m1.matchId).ok);assert.equal(C.finishMatch(s,m1.matchId,true).complete,false);const m2=C.nextMatch(s);assert.equal(m2.round,1);assert(C.beginMatch(s,m2.matchId).ok);const result=C.finishMatch(s,m2.matchId,true);assert(result.complete&&result.won);assert.equal(s.facilityCredits,260);assert.equal(s.points,4);assert.equal(s.championship.rank,1);assert.equal(s.championship.crowns.novice,1);assert.equal(s.championship.active,null);assert.equal(C.finishMatch(s,m2.matchId,true).ok,false);assert.equal(s.facilityCredits,260)});
+test('loss or forfeit ends tournament with no champion prize',()=>{const s=fresh();C.enter(s,'novice');const m=C.nextMatch(s);C.beginMatch(s,m.matchId);const r=C.finishMatch(s,m.matchId,false);assert.equal(r.complete,true);assert.equal(r.won,false);assert.equal(s.facilityCredits,0);assert.equal(s.championship.active,null)});
+test('battle crash is forfeit only when a matching pendingBattle exists',()=>{const s=fresh();C.enter(s,'novice');let m=C.nextMatch(s);C.beginMatch(s,m.matchId);assert.equal(C.interrupted(s,null),false);assert(C.nextMatch(s));C.beginMatch(s,m.matchId);assert.equal(C.interrupted(s,{tournamentMatchId:m.matchId}),true);assert.equal(s.championship.active,null);assert.equal(C.interrupted(s,{tournamentMatchId:m.matchId}),false)});
+test('changing day does not invalidate active bracket',()=>{const s=fresh();C.enter(s,'novice');s.day=30;assert(C.nextMatch(s));});
+test('tournament state survives JSON restore and result is settled once',()=>{const s=fresh();C.enter(s,'novice');let m=C.nextMatch(s);C.beginMatch(s,m.matchId);let restored=JSON.parse(JSON.stringify(s));assert(C.finishMatch(restored,m.matchId,true).ok);assert.equal(C.nextMatch(restored).round,1)});
+test('cannot double-begin a pending round',()=>{const s=fresh();C.enter(s,'novice');const m=C.nextMatch(s);assert(C.beginMatch(s,m.matchId).ok);assert(!C.beginMatch(s,m.matchId).ok)});
+test('re-entry is blocked while a bracket is active',()=>{const s=fresh();C.enter(s,'novice');assert(!C.enter(s,'novice').ok)});
+console.log('Championship core: '+passed+' passing');

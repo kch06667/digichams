@@ -1,0 +1,96 @@
+[
+  {
+    "html": "index.html",
+    "status": "PASS",
+    "result": {
+      "before": {
+        "cups": 3,
+        "locked": 2
+      },
+      "bracket": {
+        "active": "novice",
+        "round": 0,
+        "button": true
+      },
+      "first": {
+        "pending": "cup-1-round-0",
+        "opponent": "고부리몬",
+        "mode": "owned",
+        "scale": "1"
+      },
+      "semifinal": {
+        "active": "novice",
+        "round": 1,
+        "crowns": 0,
+        "credits": 0
+      },
+      "final": {
+        "opponent": "아구몬",
+        "pending": true
+      },
+      "end": {
+        "active": null,
+        "crowns": 1,
+        "rank": 1,
+        "credits": 260,
+        "points": 8,
+        "history": 1,
+        "wins": 2,
+        "pending": false,
+        "rankUI": "신인 챔피언",
+        "localStored": 1
+      },
+      "duplicate": {
+        "credits": 260,
+        "history": 1
+      }
+    }
+  },
+  {
+    "html": "standalone.html",
+    "status": "PASS",
+    "result": {
+      "before": {
+        "cups": 3,
+        "locked": 2
+      },
+      "bracket": {
+        "active": "novice",
+        "round": 0,
+        "button": true
+      },
+      "first": {
+        "pending": "cup-1-round-0",
+        "opponent": "고부리몬",
+        "mode": "owned",
+        "scale": "1"
+      },
+      "semifinal": {
+        "active": "novice",
+        "round": 1,
+        "crowns": 0,
+        "credits": 0
+      },
+      "final": {
+        "opponent": "아구몬",
+        "pending": true
+      },
+      "end": {
+        "active": null,
+        "crowns": 1,
+        "rank": 1,
+        "credits": 260,
+        "points": 8,
+        "history": 1,
+        "wins": 2,
+        "pending": false,
+        "rankUI": "신인 챔피언",
+        "localStored": 1
+      },
+      "duplicate": {
+        "credits": 260,
+        "history": 1
+      }
+    }
+  }
+]

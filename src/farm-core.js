@@ -1,0 +1,194 @@
+/* user_design topology/time; numeric balance provisional, not ROM-verified. */
+(function(root){
+'use strict';
+const SLOTS={attack:{x:25,y:35},defense:{x:50,y:22},speed:{x:75,y:35},rest:{x:73,y:68},cage:{x:50,y:35}};
+// Peripheral hex coordinates use the existing actor coordinate frame, mapped to world pixels by hex-farm-ui.js.
+// These are expansion UX positions, NOT coordinates extracted from the NDS ROM.
+const PLOTS={training:{x:50,y:-76,zone:'training'},track:{x:154,y:-18,zone:'track'},rest:{x:-54,y:118,zone:'rest'},forest:{x:50,y:198,zone:'forest'}};
+const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
+const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
+function ensure(s){
+ s.world||={seconds:0,speed:1,paused:false,seed:12345,accumulator:0};
+ s.farm||={actors:{},foods:[],nextFood:1,completed:0};
+ s.world.accumulator??=0;s.farm.actors||={};s.farm.foods||=[];
+ // Guard against malformed/older saves before the simulation begins.
+ if(!Number.isFinite(s.world.seed))s.world.seed=12345;
+ if(!Number.isFinite(s.world.accumulator)||s.world.accumulator<0)s.world.accumulator=0;
+ if(!Number.isFinite(s.farm.completed)||s.farm.completed<0)s.farm.completed=0;
+ if(!Number.isFinite(s.farm.nextFood)||s.farm.nextFood<1)s.farm.nextFood=1;
+ s.farm.nextFood??=1;s.farm.completed??=0;
+ // Saved meals may contain stale claims after older saves or roster changes.
+ const activeIds=new Set(s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>m.instanceId));
+ for(const f of s.farm.foods)if(f.claim&&(!activeIds.has(f.claim)||s.farm.actors[f.claim]?.foodId!==f.id||s.farm.actors[f.claim]?.goal?.kind!=='eat'))delete f.claim;
+ s.world.seconds=Math.max(0,Number(s.world.seconds)||0);
+ if(![1,2,4].includes(s.world.speed))s.world.speed=1;
+ for(const m of s.team){if(!m.instanceId)throw Error('Missing instanceId');s.farm.actors[m.instanceId]||={x:50,y:62,mode:'idle',pose:0,remaining:0,idleTime:0,autoRest:true};}
+ for(const id of Object.keys(s.farm.actors))if(!s.team.some(m=>m.instanceId===id))delete s.farm.actors[id];
+ s.saveVersion=Math.max(3,s.saveVersion||0);return s;
+}
+function rnd(s){s.world.seed=(Math.imul(s.world.seed,1664525)+1013904223)>>>0;return s.world.seed/4294967296;}
+function log(s,text){s.logs.unshift('[사육장] '+text);s.logs=s.logs.slice(0,60);}
+function actor(s,id){return s.farm.actors[id];}
+function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.idleTime=0;}
+function destination(s,kind,options={}){
+ if(kind==='cage'){
+  const cage=options.cage;
+  const forest=cage==='forest'&&s.facilities?.forest;
+  return {...(forest?PLOTS.forest:PLOTS.training),kind:'cage',cage};
+ }
+ if(kind==='rest'&&s.facilities?.rest)return {...PLOTS.rest,kind};
+ if(kind==='speed'&&s.facilities?.track)return {...PLOTS.track,kind};
+ if((kind==='attack'||kind==='defense'||kind==='speed')&&s.facilities?.training)return {...PLOTS.training,kind};
+ return {...SLOTS[kind],zone:'core',kind};
+}
+function command(s,id,kind,options={}){ensure(s);const m=s.team.find(m=>m.instanceId===id);if(!m||m.egg||m.location==='storage'||s.pendingBattle)return false;if(kind!=='stop'&&!SLOTS[kind])return false;const stat={attack:'atk',defense:'def',speed:'spd'}[kind];
+ const cages=root.DCCages||(typeof require==='function'?require('./cage-training-core.js'):null);
+ if(kind==='cage'&&!cages?.owned(s,options.cage))return false;
+ const proposed=stat&&options?.target!==undefined?Number(options.target):null;
+ const proposedAp=kind==='cage'&&options?.apTarget!==undefined?Number(options.apTarget):null;
+ if(proposedAp!==null&&(!Number.isInteger(proposedAp)||proposedAp<1||proposedAp>999))return false;
+ if(proposed!==null&&(!Number.isInteger(proposed)||proposed<1||proposed>999))return false;
+ const a=actor(s,id);a.id=id;clear(s,a);if(kind==='stop')return true;
+ if(proposed!==null){const value=proposed;
+  if(m[stat]>=value){log(s,m.name+'의 '+stat+' 목표 '+value+' 이미 달성.');return true;}
+  a.target={stat,value};
+ }
+ if(proposedAp!==null){
+   const family=Object.keys(cages.MAP[options.cage].ap)[0],value=proposedAp;
+   const current=Number(m.evo?.ap?.[family])||0;
+   if(current>=value){log(s,m.name+'의 '+family+' AP '+value+' 이미 달성.');return true;}
+   a.target={ap:family,value};
+ }
+ a.goal=destination(s,kind,options);a.mode='moving';a.pose=2;return true;}
+function placeFood(s,x=50,y=65){
+ ensure(s);
+ if(s.food<=0||s.pendingBattle||s.farm.foods.length>=12||!Number.isFinite(x)||!Number.isFinite(y))return false;
+ s.food--;
+ s.farm.foods.push({id:s.farm.nextFood++,x:Math.max(-369/1.82,Math.min((920-369)/1.82,x)),y:Math.max(-262/1.56,Math.min((690-262)/1.56,y)),age:0});
+ return true;
+}
+// Each food item can be reserved by only one hungry active Digimon.
+// Prioritize the hungriest first, then choose their closest free food item.
+// Explicit training/rest orders are not interrupted by automatic foraging.
+function assignFood(s){
+ const candidates=s.team.filter(m=>!m.egg&&m.location!=='storage'&&m.hunger>=CFG.hungerSeek&&
+  ((actor(s,m.instanceId)?.mode==='idle')||(actor(s,m.instanceId)?.goal?.kind==='wander')));
+ candidates.sort((a,b)=>b.hunger-a.hunger||a.instanceId.localeCompare(b.instanceId));
+ for(const m of candidates){
+  const a=actor(s,m.instanceId);
+  const free=s.farm.foods.filter(f=>!f.claim).sort((f,g)=>
+   Math.hypot(f.x-a.x,f.y-a.y)-Math.hypot(g.x-a.x,g.y-a.y)||f.id-g.id);
+  const food=free[0];if(!food)continue;
+  food.claim=m.instanceId;a.id=m.instanceId;a.foodId=food.id;
+  a.goal={x:food.x,y:food.y,kind:'eat'};a.mode='moving';a.pose=2;a.idleTime=0;
+ }
+}
+function trainDuration(m,periods,facilities){const base=Math.max(.1,periods?.[m.name]||2);return base*(facilities?.training ? .85 : 1)*(m.care?.sick?1.5:m.care?.injured?1.25:1);}
+function step(s,dt,hooks={}){
+ ensure(s);if(s.world.paused||s.pendingBattle)return;
+ const previousDay=Math.floor(s.world.seconds/CFG.daySeconds);s.world.seconds+=dt;const nextDay=Math.floor(s.world.seconds/CFG.daySeconds);
+ if(nextDay>previousDay){const n=nextDay-previousDay;s.day+=n;s.food+=2*n;s.ropes=Math.min(9,s.ropes+n);if(hooks.evolution?.advanceDays)hooks.evolution.advanceDays(s,n,hooks.lookup);CARE?.advanceDays(s,n);log(s,'하루가 지나 먹이와 로프가 보충됐어.');}
+ for(const f of s.farm.foods)f.age+=dt;
+ // Spoiled food is removed rather than eaten in this first slice; disease rules pending.
+ s.farm.foods=s.farm.foods.filter(f=>f.age<CFG.foodRot);
+ // Reserve food once per step across the whole roster, independent of roster order.
+ // Do this after hunger advancement so every eligible Digimon can compete fairly.
+ for(const m of s.team)if(m.location!=='storage'&&!m.egg)
+  m.hunger=Math.min(100,(Number(m.hunger)||0)+dt*CFG.hungerRate);
+ assignFood(s);
+ for(const m of s.team){
+  const id=m.instanceId,a=actor(s,id);a.id=id;if(m.location==='storage')continue;
+  if(m.egg){m.hatchRemaining=(m.hatchRemaining??CFG.hatchSeconds)-dt;a.pose=0;if(m.hatchRemaining<=0){if(hooks.evolution?.hatch)hooks.evolution.hatch(s,m,hooks.lookup);else {delete m.egg;delete m.hatchRemaining;}log(s,'디지타마 부화 완료.');}continue;}
+  // Hunger rises even while training, but stored Digimon remain frozen.
+  if(a.mode==='idle'){
+   a.idleTime+=dt;
+   // When no specific order is active, fatigued or injured Digimon rest by themselves.
+   if(m.fatigue>=65||m.hp<m.maxHp*.4){a.goal=destination(s,'rest');a.mode='moving';a.pose=2;}
+   else if(a.idleTime>3){a.idleTime=0;a.goal={x:23+rnd(s)*54,y:27+rnd(s)*49,kind:'wander'};a.mode='moving';a.pose=2;}
+  }
+  if(a.mode==='moving'||a.mode==='waiting'){
+   if(!a.goal){clear(s,a);continue;}
+   if(a.goal.kind==='eat'&&!s.farm.foods.some(f=>f.id===a.foodId)){clear(s,a);continue;}
+   const waiting=a.mode==='waiting';
+   const waitTarget=waiting&&a.waitPosition?a.waitPosition:null;
+   const dx=(waitTarget||a.goal).x-a.x,dy=(waitTarget||a.goal).y-a.y,d=Math.hypot(dx,dy),travel=CFG.moveSpeed*dt;
+   if(waiting){
+    const zone=a.goal.zone||'core',kind=a.goal.kind;
+    const occupying=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===kind)).length;
+    if(occupying>=2){
+     if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.pose=2;}
+     else {a.x=(waitTarget||a.goal).x;a.y=(waitTarget||a.goal).y;a.pose=0;}
+     continue;
+    }
+    a.waitPosition=null;
+   }
+   if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.mode='moving';a.pose=2;continue;}
+   a.x=a.goal.x;a.y=a.goal.y;const kind=a.goal.kind;
+   if(kind==='wander'){a.goal=null;a.mode='idle';a.pose=0;continue;}
+   if(kind!=='eat'){
+    const zone=a.goal.zone||'core';
+    const capacity=zone==='training'||zone==='track'||zone==='rest'?2:2;
+    const occupying=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===kind)).length;
+    if(occupying>=capacity){
+     // Queue outside the facility instead of stacking on the occupied action point.
+     if(!a.waitPosition){
+      const peers=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='waiting'&&b.goal&&(b.goal.zone||'core')===zone&&b.goal.kind===kind).length;
+      const lane=peers%4,ring=Math.floor(peers/4);
+      a.waitPosition={x:a.goal.x+[-12,12,-12,12][lane]*(1+ring*.5),y:a.goal.y+[-10,-10,10,10][lane]*(1+ring*.5)};
+     }
+     a.mode='waiting';a.pose=0;continue;
+    }
+    a.waitPosition=null;
+   }
+   a.mode='acting';a.remaining=kind==='rest'?CFG.restCycle:kind==='eat'?CFG.foodSeconds:trainDuration(m,hooks.periods,s.facilities);a.pose=kind==='rest'?13:kind==='eat'?14:32;continue;
+  }
+  if(a.mode!=='acting')continue;
+  a.remaining-=dt;if(a.remaining>1e-8)continue;const kind=a.goal?.kind;
+  if(kind==='eat'){
+   const i=s.farm.foods.findIndex(f=>f.id===a.foodId&&f.claim===id);
+   if(i>=0){s.farm.foods.splice(i,1);m.hunger=Math.max(0,m.hunger-30);m.hp=Math.min(m.maxHp,m.hp+5);m.friendship=Math.min(100,m.friendship+3);log(s,m.name+'이 바닥의 먹이를 먹었어.');}
+   clear(s,a);
+   if(i>=0){a.emote='💚';a.emoteUntil=s.world.seconds+1.8;}
+  }else if(kind==='rest'){
+   // Expanded rest/flower plots make rest more effective; temporary expansion balance.
+   const heal=CFG.restHeal+(s.facilities?.rest?3:0)+(s.facilities?.garden?2:0);
+   m.hp=Math.min(m.maxHp,m.hp+heal);
+   // TP is a battle resource and recharges during farm rest (v0.22 extension balance).
+   if(Number.isFinite(m.maxTp)&&m.maxTp>0)m.tp=Math.min(m.maxTp,Math.max(0,Number.isFinite(m.tp)?m.tp:m.maxTp)+Math.max(3,Math.ceil(m.maxTp*.12)));
+   m.fatigue=Math.max(0,m.fatigue-12-(s.facilities?.rest?4:0));
+   if(a.resume&&m.hp>=m.maxHp*.8&&m.fatigue<=30){const k=a.resume,opts=a.resumeOptions||(Number.isFinite(a.resumeTarget)?{target:a.resumeTarget}:{});command(s,id,k,opts);}
+   else if(m.hp>=m.maxHp&&m.fatigue===0)clear(s,a);else a.remaining=CFG.restCycle;
+  }else if(SLOTS[kind]){
+   const healthCost=CFG.trainHP+(m.care?.injured?1:0)+(m.care?.sick?2:0);
+   if(m.hp-healthCost<Math.max(1,m.maxHp*.2)||m.fatigue>=80){
+    const resume=kind,oldGoal={...a.goal},oldTarget=a.target?{...a.target}:null;
+    if(a.autoRest){command(s,id,'rest');a.resume=resume;a.resumeTarget=oldTarget?.value??null;a.resumeOptions=resume==='cage'?{cage:oldGoal.cage,...(oldTarget?.ap?{apTarget:oldTarget.value}:{})}:oldTarget?.stat?{target:oldTarget.value}:{};}else{clear(s,a);log(s,m.name+'의 훈련을 체력/피로 때문에 중단했어.');}continue;
+   }
+   const isCage=kind==='cage',cages=root.DCCages||(typeof require==='function'?require('./cage-training-core.js'):null);
+   const effect=isCage?cages?.effect(s,kind,a.goal?.zone,a.goal?.cage):null;
+   if(isCage&&!effect){clear(s,a);continue;}
+   const gain=isCage?({atk:'atk',def:'def',spd:'spd',wis:'atk'}[effect.stat]||'atk'):{attack:'atk',defense:'def',speed:'spd'}[kind];
+   const loss={atk:'def',def:'spd',spd:'atk'}[gain]||'def';
+   m.hp-=healthCost;
+   // Secondary numeric effects are provisional. Facility affinities come from NDS guides.
+   if(isCage){if(effect.stat==='wis')m.wis=Math.max(1,Number(m.wis)||1)+(CARE?.statGain(s.day,1)||1);else if(effect.stat)m[gain]+=(CARE?.statGain(s.day,1)||1);}
+   else{const baseGain=1+(kind==='speed'&&s.facilities?.track?1:0);
+    m[gain]+=(CARE?.statGain(s.day,baseGain)||baseGain);
+    m[loss]=Math.max(1,m[loss]-(CARE?.statLoss(s.day,1)??1));}
+   m.training++;m.fatigue=Math.min(100,m.fatigue+8);s.points++;s.farm.completed++;
+   CARE?.afterTraining(s,m);
+   if(hooks.evolution?.train)hooks.evolution.train(s,m,kind,a.goal?.zone,hooks.lookup,{cageId:a.goal?.cage});
+   // Evolution can cancel the actor's goal; don't restart training after transforming.
+   if(a.mode!=='acting'||!a.goal)continue;
+   if(hooks.xp)hooks.xp(m,5);else m.exp+=5;
+   if(a.target){const value=a.target.ap?m.evo?.ap?.[a.target.ap]:m[a.target.stat];
+    if(value>=a.target.value){const goal=a.target.value,targetLabel=a.target.ap||gain;clear(s,a);log(s,m.name+' 목표 '+targetLabel+' '+goal+' 달성! 자동 훈련 종료.');continue;}}
+   a.remaining=trainDuration(m,hooks.periods,s.facilities);
+   if(isCage)log(s,m.name+' '+effect.label+' 훈련 완료: 종족 AP 축적 / HP -4 (증가량 임시)');
+   else log(s,m.name+' 훈련 완료: '+gain+' +'+(kind==='speed'&&s.facilities?.track?2:1)+' / '+loss+' -1 / HP -4 (임시)');
+  }
+ }
+}
+function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingBattle)return;s.world.accumulator+=Math.max(0,realSeconds)*s.world.speed;while(s.world.accumulator>=.05-1e-9){s.world.accumulator-=.05;if(s.world.accumulator<0)s.world.accumulator=0;step(s,.05,hooks);}}
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+})(typeof globalThis!=='undefined'?globalThis:this);

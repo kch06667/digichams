@@ -1,0 +1,20 @@
+/* Hunting field v0.21, mobile-first and independent from hex farm. */
+#huntStage{width:100%;aspect-ratio: 600 / 335;max-height:390px;min-height:195px;position:relative;overflow:hidden;border-radius:14px;border:2px solid #6f9c7c;background:radial-gradient(circle at 76% 30%,#8cba67 0 7%,transparent 8%),linear-gradient(135deg,#3a7555 0%,#4b865b 52%,#2e6850 100%);touch-action:none;user-select:none;cursor:crosshair;margin:11px 0;isolation:isolate}
+#huntStage::before{content:'🌲　　　　 🌳　　　　　🌿　　　🌲';position:absolute;top:5%;left:2%;width:96%;font-size:clamp(15px,4vw,27px);opacity:.68;pointer-events:none}
+#huntStage::after{content:'🌾　🌿　　　　　🌼　🌾　　　　　🌿';position:absolute;bottom:3%;left:4%;width:90%;font-size:clamp(14px,3vw,22px);opacity:.6;pointer-events:none}
+#wildArt{position:absolute;width:clamp(60px,13vw,100px);height:clamp(60px,13vw,100px);object-fit:contain;image-rendering:pixelated;transform:translate(-50%,-55%);pointer-events:none;filter:drop-shadow(0 6px 2px #17271d80);z-index:2}
+#wildArt.tied{filter:drop-shadow(0 0 8px #fbd076)}
+#huntStageCanvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;touch-action:none}
+#huntEmote{position:absolute;z-index:4;transform:translate(-50%,-160%);font-size:clamp(13px,2vw,19px);font-weight:800;color:#ffe4a6;text-shadow:1px 2px 2px #132f29;pointer-events:none}
+#huntStage.disabled{opacity:.68;cursor:default}
+#huntActionBar{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;margin:12px 0}
+#huntActionBar button{flex:1 1 110px;min-height:43px}
+#huntHud{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:10px 0}
+#huntHud>div{border:1px solid #416453;background:#102f2e70;padding:7px 4px;border-radius:9px;font-size:12px}
+#huntHud b{display:block;color:#fff0ae;font-size:14px}
+#huntZone{width:100%;max-width:280px;background:#213f48;border:1px solid #6b9377;padding:9px;margin:7px 0}
+#huntInstructions{font-size:13px;color:#d9e6d3;min-height:35px;margin:8px 0;line-height:1.5}
+#hunt .huntfield{padding:11px}
+#hunt .huntfield h3{margin:5px}
+#hunt .huntRopeActive{box-shadow:0 0 0 2px #ffdc7b inset;background:#84602f}
+@media(max-width:520px){#huntStage{min-height:210px}#wildArt{width:70px;height:70px}#huntHud b{font-size:12px}}

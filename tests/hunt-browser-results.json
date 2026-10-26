@@ -1,0 +1,18 @@
+[
+  {
+    "html": "index.html",
+    "input": "mouse",
+    "status": "PASS",
+    "capture": "아구몬",
+    "ropeSpent": 1,
+    "teamCount": 2
+  },
+  {
+    "html": "standalone.html",
+    "input": "touch",
+    "status": "PASS",
+    "capture": "코로몬",
+    "ropeSpent": 1,
+    "teamCount": 2
+  }
+]

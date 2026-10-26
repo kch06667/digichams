@@ -1,0 +1,13 @@
+{
+  "version": "0.10",
+  "slower_melee_cooldown_seconds": [
+    1.55,
+    2.35
+  ],
+  "normal_attack_windup_seconds": 0.36,
+  "special_duration_seconds": 2.05,
+  "source": "user-provided original battle video, previous ROM field asset extraction, user-provided GIF pack",
+  "verified": "sprite GIF natural direction left, ROM arena assets",
+  "original_AI_reversed": false,
+  "original_special_effects_recovered": false
+}

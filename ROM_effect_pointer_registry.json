@@ -1,0 +1,924 @@
+{
+  "rom_sha256": "2092998ee80d6646c7115ef8f008f955e72e1860c718dc8d7cbc3b8cea9f2234",
+  "overlay": 19,
+  "rom_offset": "0x1ef600",
+  "load_ram": "0x0210e8a0",
+  "table_overlay_offset": "0x26234",
+  "table_ram_address": "0x2134ad4",
+  "named_effect_entries": 151,
+  "loop_bound": 152,
+  "observations": [
+    "ldr r6 [pc,#0x25c] at overlay+0xf0c8 reads table pointer literal at overlay+0xf32c",
+    "ldr r1 [r0,#-4] at overlay+0xf0f8 loads effect pointer",
+    "cmp r9,#152 at overlay+0xf13c loops while r9<152 (slot zero skipped)",
+    "Functions called by surrounding instructions have not been identified"
+  ],
+  "entries": [
+    {
+      "effect_index": 1,
+      "table_offset": "0x26234",
+      "name_pointer": "0x02134168",
+      "name": "e003_battle"
+    },
+    {
+      "effect_index": 2,
+      "table_offset": "0x26238",
+      "name_pointer": "0x02134800",
+      "name": "e003_battle_popup"
+    },
+    {
+      "effect_index": 3,
+      "table_offset": "0x2623c",
+      "name_pointer": "0x02134230",
+      "name": "e003_mind_eff"
+    },
+    {
+      "effect_index": 4,
+      "table_offset": "0x26240",
+      "name_pointer": "0x02134520",
+      "name": "e003_suport_eff"
+    },
+    {
+      "effect_index": 5,
+      "table_offset": "0x26244",
+      "name_pointer": "0x021346ac",
+      "name": "e003_specialtime"
+    },
+    {
+      "effect_index": 6,
+      "table_offset": "0x26248",
+      "name_pointer": "0x021342a0",
+      "name": "e003_bubble00"
+    },
+    {
+      "effect_index": 7,
+      "table_offset": "0x2624c",
+      "name_pointer": "0x02134490",
+      "name": "e003_fireball00"
+    },
+    {
+      "effect_index": 8,
+      "table_offset": "0x26250",
+      "name_pointer": "0x02134220",
+      "name": "e003_unchi00"
+    },
+    {
+      "effect_index": 9,
+      "table_offset": "0x26254",
+      "name_pointer": "0x021346c0",
+      "name": "e003_lightball00"
+    },
+    {
+      "effect_index": 10,
+      "table_offset": "0x26258",
+      "name_pointer": "0x02134180",
+      "name": "e003_onpu00"
+    },
+    {
+      "effect_index": 11,
+      "table_offset": "0x2625c",
+      "name_pointer": "0x021342b0",
+      "name": "e003_banana00"
+    },
+    {
+      "effect_index": 12,
+      "table_offset": "0x26260",
+      "name_pointer": "0x021340f0",
+      "name": "e003_beam00"
+    },
+    {
+      "effect_index": 13,
+      "table_offset": "0x26264",
+      "name_pointer": "0x0213418c",
+      "name": "e003_beam01"
+    },
+    {
+      "effect_index": 14,
+      "table_offset": "0x26268",
+      "name_pointer": "0x021340c0",
+      "name": "e003_fish00"
+    },
+    {
+      "effect_index": 15,
+      "table_offset": "0x2626c",
+      "name_pointer": "0x021344e0",
+      "name": "e003_cogwheel00"
+    },
+    {
+      "effect_index": 16,
+      "table_offset": "0x26270",
+      "name_pointer": "0x02134814",
+      "name": "e003_blacksmoke00"
+    },
+    {
+      "effect_index": 17,
+      "table_offset": "0x26274",
+      "name_pointer": "0x021346d4",
+      "name": "e003_airneedle00"
+    },
+    {
+      "effect_index": 18,
+      "table_offset": "0x26278",
+      "name_pointer": "0x02134828",
+      "name": "e003_hasyuriken00"
+    },
+    {
+      "effect_index": 19,
+      "table_offset": "0x2627c",
+      "name_pointer": "0x02134510",
+      "name": "e003_kikanzyu00"
+    },
+    {
+      "effect_index": 20,
+      "table_offset": "0x26280",
+      "name_pointer": "0x02134260",
+      "name": "e003_kinoko00"
+    },
+    {
+      "effect_index": 21,
+      "table_offset": "0x26284",
+      "name_pointer": "0x021343e0",
+      "name": "e003_missile00"
+    },
+    {
+      "effect_index": 22,
+      "table_offset": "0x26288",
+      "name_pointer": "0x02134360",
+      "name": "e003_pointer00"
+    },
+    {
+      "effect_index": 23,
+      "table_offset": "0x2628c",
+      "name_pointer": "0x021341f0",
+      "name": "e003_raiun00"
+    },
+    {
+      "effect_index": 24,
+      "table_offset": "0x26290",
+      "name_pointer": "0x021340b4",
+      "name": "e003_rock00"
+    },
+    {
+      "effect_index": 25,
+      "table_offset": "0x26294",
+      "name_pointer": "0x021341b0",
+      "name": "e003_seed00"
+    },
+    {
+      "effect_index": 26,
+      "table_offset": "0x26298",
+      "name_pointer": "0x02134864",
+      "name": "e003_snowcrystal00"
+    },
+    {
+      "effect_index": 27,
+      "table_offset": "0x2629c",
+      "name_pointer": "0x02134410",
+      "name": "e003_syuriken00"
+    },
+    {
+      "effect_index": 28,
+      "table_offset": "0x262a0",
+      "name_pointer": "0x02134878",
+      "name": "e003_thunderball00"
+    },
+    {
+      "effect_index": 29,
+      "table_offset": "0x262a4",
+      "name_pointer": "0x021341d4",
+      "name": "e003_tuno00"
+    },
+    {
+      "effect_index": 30,
+      "table_offset": "0x262a8",
+      "name_pointer": "0x02134500",
+      "name": "e003_tyusyaki00"
+    },
+    {
+      "effect_index": 31,
+      "table_offset": "0x262ac",
+      "name_pointer": "0x02134530",
+      "name": "e003_waterball00"
+    },
+    {
+      "effect_index": 32,
+      "table_offset": "0x262b0",
+      "name_pointer": "0x021343b0",
+      "name": "e003_walaser00"
+    },
+    {
+      "effect_index": 33,
+      "table_offset": "0x262b4",
+      "name_pointer": "0x02134420",
+      "name": "e003_tatumaki00"
+    },
+    {
+      "effect_index": 34,
+      "table_offset": "0x262b8",
+      "name_pointer": "0x02134370",
+      "name": "e003_toyfire00"
+    },
+    {
+      "effect_index": 35,
+      "table_offset": "0x262bc",
+      "name_pointer": "0x02134270",
+      "name": "e003_bubble01"
+    },
+    {
+      "effect_index": 36,
+      "table_offset": "0x262c0",
+      "name_pointer": "0x021346fc",
+      "name": "e003_fireball_w00"
+    },
+    {
+      "effect_index": 37,
+      "table_offset": "0x262c4",
+      "name_pointer": "0x02134108",
+      "name": "e003_hart00"
+    },
+    {
+      "effect_index": 38,
+      "table_offset": "0x262c8",
+      "name_pointer": "0x0213488c",
+      "name": "e003_rocketpunch00"
+    },
+    {
+      "effect_index": 39,
+      "table_offset": "0x262cc",
+      "name_pointer": "0x021343c0",
+      "name": "e003_missile01"
+    },
+    {
+      "effect_index": 40,
+      "table_offset": "0x262d0",
+      "name_pointer": "0x021342e0",
+      "name": "e003_catseye00"
+    },
+    {
+      "effect_index": 41,
+      "table_offset": "0x262d4",
+      "name_pointer": "0x021342d0",
+      "name": "e003_koenryu00"
+    },
+    {
+      "effect_index": 42,
+      "table_offset": "0x262d8",
+      "name_pointer": "0x02134710",
+      "name": "e003_sumiburesu00"
+    },
+    {
+      "effect_index": 43,
+      "table_offset": "0x262dc",
+      "name_pointer": "0x021341a4",
+      "name": "e003_bone00"
+    },
+    {
+      "effect_index": 44,
+      "table_offset": "0x262e0",
+      "name_pointer": "0x021348f0",
+      "name": "e003_crescentmoon00"
+    },
+    {
+      "effect_index": 45,
+      "table_offset": "0x262e4",
+      "name_pointer": "0x02134738",
+      "name": "e003_deathcharm00"
+    },
+    {
+      "effect_index": 46,
+      "table_offset": "0x262e8",
+      "name_pointer": "0x02134440",
+      "name": "e003_firewing00"
+    },
+    {
+      "effect_index": 47,
+      "table_offset": "0x262ec",
+      "name_pointer": "0x02134300",
+      "name": "e003_holyarrow"
+    },
+    {
+      "effect_index": 48,
+      "table_offset": "0x262f0",
+      "name_pointer": "0x02134450",
+      "name": "e003_icearrow00"
+    },
+    {
+      "effect_index": 49,
+      "table_offset": "0x262f4",
+      "name_pointer": "0x02134594",
+      "name": "e003_koorituno00"
+    },
+    {
+      "effect_index": 50,
+      "table_offset": "0x262f8",
+      "name_pointer": "0x021345bc",
+      "name": "e003_magmaball00"
+    },
+    {
+      "effect_index": 51,
+      "table_offset": "0x262fc",
+      "name_pointer": "0x021345d0",
+      "name": "e003_magmaball01"
+    },
+    {
+      "effect_index": 52,
+      "table_offset": "0x26300",
+      "name_pointer": "0x02134150",
+      "name": "e003_star00"
+    },
+    {
+      "effect_index": 53,
+      "table_offset": "0x26304",
+      "name_pointer": "0x021340a8",
+      "name": "e003_toge00"
+    },
+    {
+      "effect_index": 54,
+      "table_offset": "0x26308",
+      "name_pointer": "0x0213496c",
+      "name": "e003_firehurricane00"
+    },
+    {
+      "effect_index": 55,
+      "table_offset": "0x2630c",
+      "name_pointer": "0x021348a0",
+      "name": "e003_dirtysaucer00"
+    },
+    {
+      "effect_index": 56,
+      "table_offset": "0x26310",
+      "name_pointer": "0x02134460",
+      "name": "e003_crescent00"
+    },
+    {
+      "effect_index": 57,
+      "table_offset": "0x26314",
+      "name_pointer": "0x02134774",
+      "name": "e003_cherrybomb00"
+    },
+    {
+      "effect_index": 58,
+      "table_offset": "0x26318",
+      "name_pointer": "0x02134788",
+      "name": "e003_groundzero00"
+    },
+    {
+      "effect_index": 59,
+      "table_offset": "0x2631c",
+      "name_pointer": "0x02134330",
+      "name": "e003_trident00"
+    },
+    {
+      "effect_index": 60,
+      "table_offset": "0x26320",
+      "name_pointer": "0x02134210",
+      "name": "e003_spear00"
+    },
+    {
+      "effect_index": 61,
+      "table_offset": "0x26324",
+      "name_pointer": "0x02134abc",
+      "name": "e003_bigsmileybomber00"
+    },
+    {
+      "effect_index": 62,
+      "table_offset": "0x26328",
+      "name_pointer": "0x02134340",
+      "name": "e003_bitbomb00"
+    },
+    {
+      "effect_index": 63,
+      "table_offset": "0x2632c",
+      "name_pointer": "0x02134480",
+      "name": "e003_jetarrow00"
+    },
+    {
+      "effect_index": 64,
+      "table_offset": "0x26330",
+      "name_pointer": "0x021348b4",
+      "name": "e003_etc_hiteffect"
+    },
+    {
+      "effect_index": 65,
+      "table_offset": "0x26334",
+      "name_pointer": "0x0213479c",
+      "name": "e003_blacksmoke01"
+    },
+    {
+      "effect_index": 66,
+      "table_offset": "0x26338",
+      "name_pointer": "0x021347b0",
+      "name": "e003_blacksmoke02"
+    },
+    {
+      "effect_index": 67,
+      "table_offset": "0x2633c",
+      "name_pointer": "0x02134904",
+      "name": "e003_darknesswave00"
+    },
+    {
+      "effect_index": 68,
+      "table_offset": "0x26340",
+      "name_pointer": "0x02134984",
+      "name": "e003_colorfulspark00"
+    },
+    {
+      "effect_index": 69,
+      "table_offset": "0x26344",
+      "name_pointer": "0x0213465c",
+      "name": "e003_fraucanon00"
+    },
+    {
+      "effect_index": 70,
+      "table_offset": "0x26348",
+      "name_pointer": "0x021348c8",
+      "name": "e003_heavensgate00"
+    },
+    {
+      "effect_index": 71,
+      "table_offset": "0x2634c",
+      "name_pointer": "0x02134a14",
+      "name": "e003_genocideattack00"
+    },
+    {
+      "effect_index": 72,
+      "table_offset": "0x26350",
+      "name_pointer": "0x021347d8",
+      "name": "e003_smileybomb00"
+    },
+    {
+      "effect_index": 73,
+      "table_offset": "0x26354",
+      "name_pointer": "0x02134a2c",
+      "name": "e003_thunderjavelin00"
+    },
+    {
+      "effect_index": 74,
+      "table_offset": "0x26358",
+      "name_pointer": "0x02134684",
+      "name": "e003_lightball01"
+    },
+    {
+      "effect_index": 75,
+      "table_offset": "0x2635c",
+      "name_pointer": "0x0213499c",
+      "name": "e003_gigadestroyer00"
+    },
+    {
+      "effect_index": 76,
+      "table_offset": "0x26360",
+      "name_pointer": "0x02134290",
+      "name": "e003_haguro00"
+    },
+    {
+      "effect_index": 77,
+      "table_offset": "0x26364",
+      "name_pointer": "0x021349b4",
+      "name": "e003_infinitiarrow00"
+    },
+    {
+      "effect_index": 78,
+      "table_offset": "0x26368",
+      "name_pointer": "0x0213456c",
+      "name": "e003_lightball02"
+    },
+    {
+      "effect_index": 79,
+      "table_offset": "0x2636c",
+      "name_pointer": "0x02134114",
+      "name": "e003_H_claw"
+    },
+    {
+      "effect_index": 80,
+      "table_offset": "0x26370",
+      "name_pointer": "0x021344c0",
+      "name": "e003_H_Slashtop"
+    },
+    {
+      "effect_index": 81,
+      "table_offset": "0x26374",
+      "name_pointer": "0x021343d0",
+      "name": "e003_H_Knuckle"
+    },
+    {
+      "effect_index": 82,
+      "table_offset": "0x26378",
+      "name_pointer": "0x021344d0",
+      "name": "e003_H_piercing"
+    },
+    {
+      "effect_index": 83,
+      "table_offset": "0x2637c",
+      "name_pointer": "0x021340cc",
+      "name": "e003_rose00"
+    },
+    {
+      "effect_index": 84,
+      "table_offset": "0x26380",
+      "name_pointer": "0x02134a44",
+      "name": "e003_apollomonarrow00"
+    },
+    {
+      "effect_index": 85,
+      "table_offset": "0x26384",
+      "name_pointer": "0x02134a5c",
+      "name": "e003_crescemonarrow00"
+    },
+    {
+      "effect_index": 86,
+      "table_offset": "0x26388",
+      "name_pointer": "0x0213483c",
+      "name": "e003_delumonegg00"
+    },
+    {
+      "effect_index": 87,
+      "table_offset": "0x2638c",
+      "name_pointer": "0x021349cc",
+      "name": "e003_dianamonarrow00"
+    },
+    {
+      "effect_index": 88,
+      "table_offset": "0x26390",
+      "name_pointer": "0x021343f0",
+      "name": "e003_icerock00"
+    },
+    {
+      "effect_index": 89,
+      "table_offset": "0x26394",
+      "name_pointer": "0x021349e4",
+      "name": "e003_lekismonarrow00"
+    },
+    {
+      "effect_index": 90,
+      "table_offset": "0x26398",
+      "name_pointer": "0x02134a8c",
+      "name": "e003_pinochimonarrow00"
+    },
+    {
+      "effect_index": 91,
+      "table_offset": "0x2639c",
+      "name_pointer": "0x021341e0",
+      "name": "e003_tsunami"
+    },
+    {
+      "effect_index": 92,
+      "table_offset": "0x263a0",
+      "name_pointer": "0x02134390",
+      "name": "e003_oukuwamon"
+    },
+    {
+      "effect_index": 93,
+      "table_offset": "0x263a4",
+      "name_pointer": "0x02134544",
+      "name": "e003_flamefist00"
+    },
+    {
+      "effect_index": 94,
+      "table_offset": "0x263a8",
+      "name_pointer": "0x02134558",
+      "name": "e003_magmaball02"
+    },
+    {
+      "effect_index": 95,
+      "table_offset": "0x263ac",
+      "name_pointer": "0x02134280",
+      "name": "e003_purple00"
+    },
+    {
+      "effect_index": 96,
+      "table_offset": "0x263b0",
+      "name_pointer": "0x02134200",
+      "name": "e003_sword00"
+    },
+    {
+      "effect_index": 97,
+      "table_offset": "0x263b4",
+      "name_pointer": "0x02134430",
+      "name": "e003_tatumaki01"
+    },
+    {
+      "effect_index": 98,
+      "table_offset": "0x263b8",
+      "name_pointer": "0x02134724",
+      "name": "e003_casuburesu00"
+    },
+    {
+      "effect_index": 99,
+      "table_offset": "0x263bc",
+      "name_pointer": "0x02134954",
+      "name": "e003_crashsymphony00"
+    },
+    {
+      "effect_index": 100,
+      "table_offset": "0x263c0",
+      "name_pointer": "0x0213412c",
+      "name": "e003_dark01"
+    },
+    {
+      "effect_index": 101,
+      "table_offset": "0x263c4",
+      "name_pointer": "0x021345a8",
+      "name": "e003_hartbreak00"
+    },
+    {
+      "effect_index": 102,
+      "table_offset": "0x263c8",
+      "name_pointer": "0x02134240",
+      "name": "e003_heaven00"
+    },
+    {
+      "effect_index": 103,
+      "table_offset": "0x263cc",
+      "name_pointer": "0x021349fc",
+      "name": "e003_myorunirusanda00"
+    },
+    {
+      "effect_index": 104,
+      "table_offset": "0x263d0",
+      "name_pointer": "0x02134aa4",
+      "name": "e003_risingdestroyer00"
+    },
+    {
+      "effect_index": 105,
+      "table_offset": "0x263d4",
+      "name_pointer": "0x02134470",
+      "name": "e003_soloblue00"
+    },
+    {
+      "effect_index": 106,
+      "table_offset": "0x263d8",
+      "name_pointer": "0x02134320",
+      "name": "e003_walaser01"
+    },
+    {
+      "effect_index": 107,
+      "table_offset": "0x263dc",
+      "name_pointer": "0x0213460c",
+      "name": "e003_magmaball03"
+    },
+    {
+      "effect_index": 108,
+      "table_offset": "0x263e0",
+      "name_pointer": "0x02134620",
+      "name": "e003_magmaball04"
+    },
+    {
+      "effect_index": 109,
+      "table_offset": "0x263e4",
+      "name_pointer": "0x02134350",
+      "name": "e003_foxfire00"
+    },
+    {
+      "effect_index": 110,
+      "table_offset": "0x263e8",
+      "name_pointer": "0x02134918",
+      "name": "e003_kiwimonsmall00"
+    },
+    {
+      "effect_index": 111,
+      "table_offset": "0x263ec",
+      "name_pointer": "0x021347c4",
+      "name": "e003_blacksmoke03"
+    },
+    {
+      "effect_index": 112,
+      "table_offset": "0x263f0",
+      "name_pointer": "0x02134670",
+      "name": "e003_waterball01"
+    },
+    {
+      "effect_index": 113,
+      "table_offset": "0x263f4",
+      "name_pointer": "0x021344a0",
+      "name": "e003_firewing01"
+    },
+    {
+      "effect_index": 114,
+      "table_offset": "0x263f8",
+      "name_pointer": "0x021344b0",
+      "name": "e003_firewing02"
+    },
+    {
+      "effect_index": 115,
+      "table_offset": "0x263fc",
+      "name_pointer": "0x021347ec",
+      "name": "e003_gigaburasuta"
+    },
+    {
+      "effect_index": 116,
+      "table_offset": "0x26400",
+      "name_pointer": "0x02134698",
+      "name": "e003_magmaball06"
+    },
+    {
+      "effect_index": 117,
+      "table_offset": "0x26404",
+      "name_pointer": "0x02134250",
+      "name": "e003_ropear01"
+    },
+    {
+      "effect_index": 118,
+      "table_offset": "0x26408",
+      "name_pointer": "0x021348dc",
+      "name": "e003_clockmonclock"
+    },
+    {
+      "effect_index": 119,
+      "table_offset": "0x2640c",
+      "name_pointer": "0x02134a74",
+      "name": "e003_crescemonarrow01"
+    },
+    {
+      "effect_index": 120,
+      "table_offset": "0x26410",
+      "name_pointer": "0x02134940",
+      "name": "e003_bakemoncurse00"
+    },
+    {
+      "effect_index": 121,
+      "table_offset": "0x26414",
+      "name_pointer": "0x02134850",
+      "name": "e003_blacksmoke04"
+    },
+    {
+      "effect_index": 122,
+      "table_offset": "0x26418",
+      "name_pointer": "0x021346e8",
+      "name": "e003_kyubimonfire"
+    },
+    {
+      "effect_index": 123,
+      "table_offset": "0x2641c",
+      "name_pointer": "0x02134084",
+      "name": "e003_sun00"
+    },
+    {
+      "effect_index": 124,
+      "table_offset": "0x26420",
+      "name_pointer": "0x021340fc",
+      "name": "e003_moon00"
+    },
+    {
+      "effect_index": 125,
+      "table_offset": "0x26424",
+      "name_pointer": "0x02134580",
+      "name": "e003_abduction00"
+    },
+    {
+      "effect_index": 126,
+      "table_offset": "0x26428",
+      "name_pointer": "0x021340d8",
+      "name": "e003_beam02"
+    },
+    {
+      "effect_index": 127,
+      "table_offset": "0x2642c",
+      "name_pointer": "0x02134138",
+      "name": "e003_beam03"
+    },
+    {
+      "effect_index": 128,
+      "table_offset": "0x26430",
+      "name_pointer": "0x021345e4",
+      "name": "e003_hammerspark"
+    },
+    {
+      "effect_index": 129,
+      "table_offset": "0x26434",
+      "name_pointer": "0x02134760",
+      "name": "e003_blacksmoke05"
+    },
+    {
+      "effect_index": 130,
+      "table_offset": "0x26438",
+      "name_pointer": "0x0213415c",
+      "name": "e003_kumo00"
+    },
+    {
+      "effect_index": 131,
+      "table_offset": "0x2643c",
+      "name_pointer": "0x02134174",
+      "name": "e003_kumo01"
+    },
+    {
+      "effect_index": 132,
+      "table_offset": "0x26440",
+      "name_pointer": "0x02134648",
+      "name": "e003_leomonhed00"
+    },
+    {
+      "effect_index": 133,
+      "table_offset": "0x26444",
+      "name_pointer": "0x02134380",
+      "name": "e003_missile02"
+    },
+    {
+      "effect_index": 134,
+      "table_offset": "0x26448",
+      "name_pointer": "0x021343a0",
+      "name": "e003_missile03"
+    },
+    {
+      "effect_index": 135,
+      "table_offset": "0x2644c",
+      "name_pointer": "0x0213492c",
+      "name": "e003_giantmissile00"
+    },
+    {
+      "effect_index": 136,
+      "table_offset": "0x26450",
+      "name_pointer": "0x021344f0",
+      "name": "e003_yukigumo00"
+    },
+    {
+      "effect_index": 137,
+      "table_offset": "0x26454",
+      "name_pointer": "0x02134400",
+      "name": "e003_snowstorm"
+    },
+    {
+      "effect_index": 138,
+      "table_offset": "0x26458",
+      "name_pointer": "0x0213409c",
+      "name": "e003_beam04"
+    },
+    {
+      "effect_index": 139,
+      "table_offset": "0x2645c",
+      "name_pointer": "0x021342c0",
+      "name": "e003_crescemon"
+    },
+    {
+      "effect_index": 140,
+      "table_offset": "0x26460",
+      "name_pointer": "0x0213474c",
+      "name": "e003_spiralbone00"
+    },
+    {
+      "effect_index": 141,
+      "table_offset": "0x26464",
+      "name_pointer": "0x02134310",
+      "name": "e003_missile04"
+    },
+    {
+      "effect_index": 142,
+      "table_offset": "0x26468",
+      "name_pointer": "0x021345f8",
+      "name": "e003_starlight00"
+    },
+    {
+      "effect_index": 143,
+      "table_offset": "0x2646c",
+      "name_pointer": "0x021341c8",
+      "name": "e003_jiware"
+    },
+    {
+      "effect_index": 144,
+      "table_offset": "0x26470",
+      "name_pointer": "0x02134120",
+      "name": "e003_star01"
+    },
+    {
+      "effect_index": 145,
+      "table_offset": "0x26474",
+      "name_pointer": "0x021342f0",
+      "name": "e003_koenryu01"
+    },
+    {
+      "effect_index": 146,
+      "table_offset": "0x26478",
+      "name_pointer": "0x02134144",
+      "name": "e003_beam05"
+    },
+    {
+      "effect_index": 147,
+      "table_offset": "0x2647c",
+      "name_pointer": "0x02134198",
+      "name": "e003_beam06"
+    },
+    {
+      "effect_index": 148,
+      "table_offset": "0x26480",
+      "name_pointer": "0x02134634",
+      "name": "e003_brakedramon"
+    },
+    {
+      "effect_index": 149,
+      "table_offset": "0x26484",
+      "name_pointer": "0x02134090",
+      "name": "e003_explo"
+    },
+    {
+      "effect_index": 150,
+      "table_offset": "0x26488",
+      "name_pointer": "0x021341bc",
+      "name": "e003_beam07"
+    },
+    {
+      "effect_index": 151,
+      "table_offset": "0x2648c",
+      "name_pointer": "0x021340e4",
+      "name": "e003_beam08"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+/* Progressive v0.14.3 override of legacy horizontal corridor, preserving the rest of the UI. */
+#farmPanel .farmViewport{height:min(520px,65vh);min-height:340px;overflow:auto;scroll-behavior:smooth;touch-action:pan-x pan-y;overscroll-behavior:contain;}
+#farmPanel .farmWorld{position:relative;display:block;box-sizing:border-box;width:920px;min-width:920px;height:690px;padding:0;background:radial-gradient(ellipse at 50% 50%,#315f55 0%,#152d34 42%,#0c192c 90%);}
+#farmPanel .farmWorld:after{display:none}
+#farmPanel .hexTile{position:absolute;z-index:1;width:220px;height:226px;padding:0;transform:translate(-50%,-50%);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);border:0;border-radius:0;background:linear-gradient(150deg,#3b826b,#174437 73%,#13302d);color:#e8ffea;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 4px 2px #000);}
+#farmPanel .hexTile.locked{background:linear-gradient(145deg,#3b4858,#1c2e3e);color:#c5d2de;opacity:.84;}
+#farmPanel .hexTile.core{background:linear-gradient(155deg,#67b67d 0%,#26664f 55%,#143d35 95%);}
+#farmPanel .hexTile.selected{outline:none;filter:brightness(1.18) drop-shadow(0 0 12px #dcbf65);}
+#farmPanel .hexTile.selected .hexInner{border:2px solid #e7d18a;}
+#farmPanel .hexInner{width:95%;height:95%;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center;clip-path:inherit;border:2px solid #86b795;outline-offset:-4px;background:radial-gradient(ellipse,#ffffff12,transparent 77%);}
+#farmPanel .hexInner b{font-size:27px;}#farmPanel .hexInner strong{font-size:15px;line-height:1.2;}#farmPanel .hexInner small{font-size:11px;}
+#farmPanel .hexActor{position:absolute;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:end;transform:translate(-50%,-85%);border:0;padding:0;background:none;pointer-events:auto;cursor:pointer;min-width:45px;max-width:80px;box-shadow:none;}
+#farmPanel .hexActor img{image-rendering:pixelated;max-width:60px;max-height:57px;filter:drop-shadow(0 3px 3px #111b1c);}#farmPanel .hexActor span{background:#081c2ac7;border-radius:5px;font-size:11px;padding:1px 4px;white-space:nowrap;}
+#farmPanel .hexActor.active span{background:#655319;color:#fff4bc;}
+#farmPanel .hexFood{position:absolute;z-index:5;transform:translate(-50%,-50%);font-size:21px;pointer-events:none;}
+#farmPanel .hexControls{display:flex;flex-direction:column;gap:9px;padding:13px 10px 8px;background:linear-gradient(180deg,#122b37,#132034);border:1px solid #406778;border-radius:10px;margin:10px 0 5px;}
+#farmPanel .hexClock,#farmPanel .hexOrders{display:flex;gap:7px;align-items:center;flex-wrap:wrap;}
+#farmPanel .hexClock{border-bottom:1px solid #345064;padding-bottom:9px;}
+#farmPanel .hexClock strong{margin-right:auto;color:#ffdc95;font-variant-numeric:tabular-nums;}
+#farmPanel .hexClock label,#farmPanel .hexOrders label{font-size:12px;color:#b1d1db;}
+#farmPanel .hexOrders select{min-width:140px;max-width:240px;}
+#farmPanel .hexControls button,#farmPanel .hexControls select{padding:9px 11px;font-size:12px;min-height:41px;}
+#farmPanel .hexNote{font-size:12px;color:#c0dfdc;margin:0;}
+#farmPanel .farmNav{margin-top:9px;}
+#farmPanel .farmHint{font-size:11px;}
+body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
+@media(max-width:500px){#farmPanel .hexOrders button{flex:1 1 125px;}#farmPanel .hexOrders select{flex:1 1 120px;}#farmPanel .farmNav button{flex:1 1 90px;}#farmPanel .farmHint{width:100%;}}
+
+#farmPanel .hexArchive{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid #345064;padding-top:10px;}
+#farmPanel .hexArchive button{min-height:42px;}
+#farmPanel .hexArchiveNote{font-size:11px;color:#a7cbd3;flex:1 1 175px;}
+@media(max-width:500px){#farmPanel .hexArchive button{flex:1 1 140px;}}
+
+#farmPanel .hexAutoToggle{display:flex;align-items:center;gap:7px;max-width:100%;font-size:12px;cursor:pointer;color:#d1eee2;}
+#farmPanel .hexAutoToggle input{width:18px;height:18px;accent-color:#8bd7af;flex:none;}
+
+#farmPanel #hexFollow{background:#255668;color:#edfaff;border-color:#6bb9c7;}
+
+#farmPanel .hexTargetControls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;border-top:1px dashed #47707a;padding-top:8px;font-size:12px;color:#d6eaf3;}
+#farmPanel .hexTargetControls label{display:flex;align-items:center;gap:6px;max-width:100%;}
+#farmPanel #hexGoalValue{width:78px;min-height:34px;padding:4px 7px;background:#152d3c;border:1px solid #5a7e89;border-radius:7px;color:#fff;}
+#farmPanel .hexTargetControls span{color:#a8cdd6;font-size:11px;}
+
+/* v0.15.1: food drops and eating reactions. Reduced-motion friendly. */
+#farmPanel .hexFood.falling{animation:foodDrop .65s cubic-bezier(.2,.8,.28,1) both;}
+@keyframes foodDrop{0%{opacity:0;transform:translate(-50%,-180%) scale(.65)}70%{opacity:1;transform:translate(-50%,-25%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1)}}
+#farmPanel .hexEmote{position:absolute;top:-20px;right:0;font-style:normal;font-size:16px;opacity:0;transform:translateY(6px);pointer-events:none;}
+#farmPanel .hexEmote.visible{opacity:1;transform:translateY(-3px);transition:transform .18s,opacity .18s;}
+@media(prefers-reduced-motion:reduce){#farmPanel .hexFood.falling{animation:none}#farmPanel .hexEmote.visible{transition:none}}
+
+/* v0.19.0: original training cages as unlockable rooms inside special training hex. */
+#farmPanel .hexCageBox{display:flex;flex-wrap:wrap;align-items:center;gap:9px;border-top:1px dashed #47707a;padding:10px 1px 4px;color:#daede2;font-size:12px;}
+#farmPanel .hexCageBox>strong{flex:0 0 100%;color:#ffe3a8;font-size:13px;}
+#farmPanel .hexCageActions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;width:100%;}
+#farmPanel #hexCageSelect{flex:1 1 170px;max-width:100%;background:#123343;color:#f1ffec;border:1px solid #648b93;border-radius:6px;}
+#farmPanel #hexCageGoalValue{width:75px;min-height:33px;background:#152d3c;border:1px solid #5a7e89;border-radius:7px;color:#fff;padding:4px;}
+#farmPanel .hexCageInfo{flex:0 0 100%;font-size:12px;margin:0;color:#c9e5df;}
+#farmPanel .hexCageNote{font-size:11px;color:#abc8c9;}
+#farmPanel .hexCageBox button:disabled{opacity:.52;cursor:not-allowed;}
+@media(max-width:500px){#farmPanel .hexCageActions button{flex:1 1 130px;}}
+
+/* v0.20 care controls */
+#farmPanel .hexCareControls{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 0;border-top:1px dashed #47707a;color:#e4f1ea;font-size:12px;}
+#farmPanel .hexCareControls>strong{color:#ffe3a8;}
+#farmPanel .hexCareControls button:disabled{opacity:.47;cursor:not-allowed;}
+#farmPanel #hexCareInfo{flex:1 1 150px;}
+#farmPanel #hexSeason{display:inline-flex;padding:3px 6px;border-radius:6px;background:#203c4b;color:#fff0c2;font-weight:700;}
+@media(max-width:500px){#farmPanel .hexCareControls button{flex:1 1 115px;}}

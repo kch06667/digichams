@@ -1,0 +1,154 @@
+{
+  "results": [
+    {
+      "name": "normal UI training to first evolution",
+      "status": "PASS",
+      "details": {
+        "name": "코로몬",
+        "stage": "유년기 II",
+        "emoji": "🟠",
+        "hp": 66,
+        "maxHp": 66,
+        "atk": 26,
+        "def": 7,
+        "spd": 7,
+        "hunger": 100,
+        "fatigue": 0,
+        "training": 15,
+        "exp": 0,
+        "level": 3,
+        "friendship": 32
+      }
+    },
+    {
+      "name": "reload preserves evolved state",
+      "status": "PASS",
+      "details": "exact state equality"
+    },
+    {
+      "name": "old accumulated XP migration is idempotent",
+      "status": "PASS",
+      "details": {
+        "name": "코로몬",
+        "stage": "유년기 II",
+        "emoji": "🟠",
+        "hp": 66,
+        "maxHp": 66,
+        "atk": 11,
+        "def": 7,
+        "spd": 7,
+        "hunger": 20,
+        "fatigue": 10,
+        "training": 3,
+        "exp": 25,
+        "level": 3,
+        "friendship": 30
+      }
+    },
+    {
+      "name": "missing target safely blocked",
+      "status": "PASS"
+    },
+    {
+      "name": "layout 360x800 dsMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 360,
+        "scroll": 360
+      }
+    },
+    {
+      "name": "layout 360x800 wideMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 360,
+        "scroll": 360
+      }
+    },
+    {
+      "name": "layout 412x915 dsMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 412,
+        "scroll": 412
+      }
+    },
+    {
+      "name": "layout 412x915 wideMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 412,
+        "scroll": 412
+      }
+    },
+    {
+      "name": "layout 915x412 dsMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 915,
+        "scroll": 915
+      }
+    },
+    {
+      "name": "layout 915x412 wideMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 915,
+        "scroll": 915
+      }
+    },
+    {
+      "name": "layout 1365x900 dsMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 1365,
+        "scroll": 1365
+      }
+    },
+    {
+      "name": "layout 1365x900 wideMode",
+      "status": "PASS",
+      "details": {
+        "viewport": 1365,
+        "scroll": 1365
+      }
+    },
+    {
+      "name": "battle resize keeps state",
+      "status": "PASS"
+    },
+    {
+      "name": "live battle animation runs without errors",
+      "status": "PASS",
+      "details": "일시정지"
+    },
+    {
+      "name": "Canvas walk GIF uses distinct timed frames",
+      "status": "PASS",
+      "details": {
+        "frames": 2,
+        "different": true
+      }
+    },
+    {
+      "name": "production battle loop reaches terminal result",
+      "status": "PASS",
+      "details": {
+        "finished": true,
+        "steps": 5111,
+        "wins": 1,
+        "losses": 0
+      }
+    },
+    {
+      "name": "mobile DS quick buttons respond to taps",
+      "status": "PASS",
+      "details": {
+        "food": 4,
+        "training": 1,
+        "fatigue": 0
+      }
+    }
+  ],
+  "errors": []
+}

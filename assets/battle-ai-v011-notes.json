@@ -1,0 +1,25 @@
+{
+  "version": "0.11",
+  "world": [
+    600,
+    405
+  ],
+  "viewport": [
+    480,
+    320
+  ],
+  "area_multiplier": 2.197,
+  "knockback": {
+    "melee_speed": [
+      145,
+      195
+    ],
+    "special_speed": [
+      260,
+      325
+    ],
+    "friction_per_second": 9.0,
+    "two_dimensional": true
+  },
+  "note": "Nine-slice ROM field expansion; camera tracking; independent prototype combat AI (not ROM-reversed)."
+}
