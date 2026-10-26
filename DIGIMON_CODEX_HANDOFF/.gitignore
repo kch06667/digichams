@@ -1,0 +1,10 @@
+*.nds
+*.NDS
+*.mp4
+*.sav
+*.dsv
+node_modules/
+dist/
+.cache/
+local_assets/
+existing_prototype/

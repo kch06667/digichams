@@ -1,0 +1,10 @@
+*.nds
+*.NDS
+*.sav
+*.srm
+*.zip
+*.7z
+*.rar
+node_modules/
+.env
+.env.*
