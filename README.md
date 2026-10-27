@@ -1,3 +1,5 @@
+> 개발 작업 안내 (2026-10-28): 최신 GitHub `main`을 기준으로 진행하고 매 수정마다 ZIP을 만들지 않습니다. `node tools/build-dev-page.cjs`로 가벼운 `index.dev.html`을 생성하여 개발·테스트하고, 기존 배포용 HTML은 그대로 유지합니다. `docs/DEVELOPMENT_WORKFLOW.md` 참고. 아래 v0.23.0 설명은 과거 기능 기록입니다.
+
 # Digimon World Championship · Browser Expansion Prototype v0.23.0
 
 Extract the full ZIP, then open `index.html` or `standalone.html`. Retains the earlier v0.14.2 game's battle, hunting, evolution, ROM art and sprite code; progressively integrates the user-approved hex farm.
