@@ -143,6 +143,17 @@ function ensure(s){
  s.world.seconds=Math.max(0,Number(s.world.seconds)||0);
  if(![1,2,4].includes(s.world.speed))s.world.speed=1;
  for(const m of s.team){if(!m.instanceId)throw Error('Missing instanceId');s.farm.actors[m.instanceId]||={x:50,y:62,mode:'idle',pose:0,remaining:0,idleTime:0,autoRest:true};}
+ // Repair legacy off-map positions before pathfinding. Preserve valid orders,
+ // but never grant an unfinished training action's reward during relocation.
+ for(const m of s.team){
+  if(m.egg||m.location==='storage')continue;
+  const a=s.farm.actors[m.instanceId];
+  if(walkable(s,a.x,a.y))continue;
+  const origin=center('core');a.x=origin.x;a.y=origin.y;
+  a.route=null;a.routeKey=null;a.waitPosition=null;a.trafficWait=0;
+  if(a.goal){a.mode='moving';a.repositioning=!!a.remaining&&a.goal.kind!=='wander'&&a.goal.kind!=='eat';}
+  else{a.mode='idle';a.pose=0;}
+ }
  for(const id of Object.keys(s.farm.actors))if(!s.team.some(m=>m.instanceId===id))delete s.farm.actors[id];
  s.saveVersion=Math.max(3,s.saveVersion||0);return s;
 }

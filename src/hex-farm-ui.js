@@ -14,7 +14,7 @@ const CFG=[
 for(const f of CFG)[f.x,f.y]=core.HEX_CENTERS[f.id];
 const byId=Object.fromEntries(CFG.map(x=>[x.id,x]));const ranks=['신입','브론즈','실버','골드'];
 let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
-function rank(){const w=state.wins||0,d=state.day||1;if(w>=9&&d>=10&&state.team.length>=3)return 3;if(w>=5&&d>=5&&state.team.length>=2)return 2;if(w>=2&&d>=3)return 1;return 0;}
+function rank(){const w=state.wins||0,d=state.day||1;const legacy=w>=9&&d>=10&&state.team.length>=3?3:w>=5&&d>=5&&state.team.length>=2?2:w>=2&&d>=3?1:0;return Math.max(legacy,DCChampionship.ensure(state).rank);}
 function prepare(){cages.ensure(state);if(!state.facilities||typeof state.facilities!=='object')state.facilities={};state.facilities.core=true;if(!Number.isFinite(state.facilityCredits))state.facilityCredits=0;if(!Number.isFinite(state.facilityPaidWins))state.facilityPaidWins=state.wins||0;if(!Number.isFinite(state.facilityPaidDays))state.facilityPaidDays=state.day||1;core.ensure(state);
  if(knownState!==state){knownState=state;knownDay=state.day;knownWins=state.wins||0;knownCompleted=state.farm.completed;lastTeam='';actors.clear();foodNodes.clear();document.querySelectorAll('.hexActor,.hexFood').forEach(n=>n.remove());}}
 function missing(f){const out=[];if(f.needs&&!state.facilities[f.needs])out.push('선행 구역 필요');if(state.day<f.day)out.push('DAY '+f.day);if((state.wins||0)<f.wins)out.push('대회 '+f.wins+'승');if(rank()<f.rank)out.push(ranks[f.rank]+' 등급');return out;}
@@ -64,8 +64,7 @@ function refreshCageFacilities(){
  if(cages.MAP[last])list.value=last;
  updateCageInfo();
 }
-function updateCageInfo(){
- const c=cages.info(state,$('hexCageSelect').value);if(!c)return;
+function updateCageInfo(){ const c=cages.info(state,$('hexCageSelect').value);if(!c)return;
  const apKey=Object.keys(c.ap)[0],m=state.team.find(x=>x.instanceId===$('hexMon').value);
  const owned=cages.owned(state,c.id);
  $('hexCageBuy').disabled=owned||c.needs.length>0||!c.affordable;
@@ -88,11 +87,11 @@ $('hexCageTrain').onclick=()=>{const c=$('hexCageSelect').value,m=$('hexMon').va
 const archive=document.createElement('div');archive.className='hexArchive';
 archive.innerHTML='<button type="button" id="hexExportSave">💾 세이브 파일 내보내기</button><button type="button" id="hexImportSave">📂 세이브 파일 불러오기</button><input id="hexArchiveFile" type="file" accept=".json,application/json" hidden><span class="hexArchiveNote">브라우저나 기기를 옮길 때 사용 · JSON 파일에는 ROM/이미지 없음</span>';
 controls.appendChild(archive);
-function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.0',state:JSON.parse(JSON.stringify(state))};}
+function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.3',state:JSON.parse(JSON.stringify(state))};}
 function validateSaveStructures(next){
  const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
  const fail=()=>{throw Error('세이브의 내부 기록이 손상되어 있어. 현재 게임은 유지돼.');};
- const object=(v)=>{if(v!=null&&!record(v))fail();};
+ const object=v=>{if(v!=null&&!record(v))fail();};
  const numbers=(v,keys)=>{if(v)for(const k of keys)if(v[k]!=null&&!Number.isFinite(v[k]))fail();};
  const point=v=>{if(!record(v)||!Number.isFinite(v.x)||!Number.isFinite(v.y))fail();};
  for(const key of ['world','farm','facilities','cageFacilities','championship'])object(next[key]);
