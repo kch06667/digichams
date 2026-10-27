@@ -14,3 +14,5 @@ node_modules/
 /rom-output/
 /test-output/
 __pycache__/
+/index.dev.html
+/.dev-generated/
