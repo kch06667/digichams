@@ -50,3 +50,9 @@
 - 임시 `/tmp/check-feed-escape.py`, 실제 HTTP Chromium에서 index/standalone × hexDrop/feed 총 4조합 통과.
 - Esc 취소 후 선택 모드 해제, 두 버튼 원래 문구 복귀, 반복 Esc에서 먹이 수와 바닥 먹이 배열 동일, pageerror 없음.
 - 입력/UI 변경만 있어 전체 게임 회귀는 반복하지 않음.
+
+## 세이브 불러오기 보호
+- 수정 전 손상 중첩 데이터 9종 × 두 HTML 검사에서 현재 상태 변경 또는 손상 입력 수락 재현.
+- `python3 tests/save-import-browser.py`: 두 HTML 각각 손상 입력 9건 거부 및 live state/localStorage/기존 백업 불변 확인. 별도로 구세이브 수락, 입력 객체 불변, 강제 render 실패 시 이전 상태/저장/백업 복구 통과.
+- 기존 farm-placement-browser.py 및 farm-routing-browser.py 총 8조합 통과. 다른 게임 엔진은 변경하지 않음.
+- 브라우저 저장 용량 초과/권한 차단 시 기존 save 함수의 best-effort 동작은 유지; 저장장치 오류의 원자적 복구까지 보장한 것은 아님.

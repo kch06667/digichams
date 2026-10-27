@@ -1882,19 +1882,64 @@ $('hexCageTrain').onclick=()=>{const c=$('hexCageSelect').value,m=$('hexMon').va
 const archive=document.createElement('div');archive.className='hexArchive';
 archive.innerHTML='<button type="button" id="hexExportSave">💾 세이브 파일 내보내기</button><button type="button" id="hexImportSave">📂 세이브 파일 불러오기</button><input id="hexArchiveFile" type="file" accept=".json,application/json" hidden><span class="hexArchiveNote">브라우저나 기기를 옮길 때 사용 · JSON 파일에는 ROM/이미지 없음</span>';
 controls.appendChild(archive);
-function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.19.0',state:JSON.parse(JSON.stringify(state))};}
+function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.0',state:JSON.parse(JSON.stringify(state))};}
+function validateSaveStructures(next){
+ const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ const fail=()=>{throw Error('세이브의 내부 기록이 손상되어 있어. 현재 게임은 유지돼.');};
+ const object=(v)=>{if(v!=null&&!record(v))fail();};
+ const numbers=(v,keys)=>{if(v)for(const k of keys)if(v[k]!=null&&!Number.isFinite(v[k]))fail();};
+ const point=v=>{if(!record(v)||!Number.isFinite(v.x)||!Number.isFinite(v.y))fail();};
+ for(const key of ['world','farm','facilities','cageFacilities','championship'])object(next[key]);
+ numbers(next.world,['seconds','seed','careSeed','accumulator','speed']);
+ if(next.world?.accumulator>1||next.world?.accumulator<0)fail();
+ for(const m of next.team){
+  if(!record(m))fail();
+  if(m.instanceId!=null&&(typeof m.instanceId!=='string'||Object.prototype.hasOwnProperty.call(Object.prototype,m.instanceId)))fail();
+  object(m.evo);object(m.care);object(m.evo?.ap);object(m.evo?.resist);
+ }
+ if(next.farm){
+  object(next.farm.actors);
+  if(next.farm.foods!=null){
+   if(!Array.isArray(next.farm.foods)||next.farm.foods.length>12)fail();
+   const foodIds=new Set();
+   for(const f of next.farm.foods){point(f);numbers(f,['id','age']);if(!Number.isSafeInteger(f.id)||f.id<1||foodIds.has(f.id))fail();foodIds.add(f.id);}
+  }
+  for(const [id,a] of Object.entries(next.farm.actors||{})){
+   if(Object.prototype.hasOwnProperty.call(Object.prototype,id))fail();
+   point(a);numbers(a,['remaining','idleTime','station','trafficWait']);
+   if(!['idle','moving','waiting','acting'].includes(a.mode))fail();
+   for(const key of ['goal','waitPosition'])if(a[key]!=null)point(a[key]);
+   if(a.goal&&(!['attack','defense','speed','rest','cage','eat','wander'].includes(a.goal.kind)||a.goal.zone!=null&&!Object.hasOwn(core.HEX_CENTERS,a.goal.zone)))fail();
+   if(a.route!=null){if(!Array.isArray(a.route)||a.route.length>16)fail();a.route.forEach(point);}
+   object(a.target);object(a.resumeOptions);
+  }
+ }
+ if(next.championship){object(next.championship.crowns);object(next.championship.active);}
+}
 function importSaveData(json){
- const next=json&&json.format==='digicham-save'?json.state:json;
+ if(json?.format!=null&&(json.format!=='digicham-save'||json.exportVersion!==1))throw Error('지원하지 않는 세이브 형식이야.');
+ const next=JSON.parse(JSON.stringify(json&&json.format==='digicham-save'?json.state:json));
  if(!next||typeof next!=='object'||!Array.isArray(next.team)||next.team.length<1||next.team.length>50||!Number.isInteger(next.day)||next.day<1||next.day>100000||next.pendingBattle){throw Error('지원되지 않는 세이브 파일이거나 중단된 전투가 포함되어 있어.');}
+ validateSaveStructures(next);
  if(next.team.some(m=>!m||typeof m.name!=='string'||!m.name||!Number.isFinite(m.maxHp)||m.maxHp<=0||!Number.isFinite(m.hp)))throw Error('디지몬 개체 기록이 올바르지 않아.');
  if(!Array.isArray(next.logs))next.logs=[];
  if(next.logs.length>250)next.logs=next.logs.slice(0,250);
  if(next.team.some(m=>!Number.isFinite(m.atk)||!Number.isFinite(m.def)||!Number.isFinite(m.spd)||!Number.isFinite(m.hunger)||!Number.isFinite(m.fatigue)))throw Error('디지몬 능력치 기록이 올바르지 않아.');
  if(!Number.isInteger(next.selected)||next.selected<0||next.selected>=next.team.length)next.selected=0;
  for(const key of ['food','ropes','points','wins','losses'])if(!Number.isFinite(next[key]))next[key]=0;
- // Only after validating, preserve the current state and replace it.
- try{if(!localStorage.getItem('dc_save_backup_before_import_v0144'))localStorage.setItem('dc_save_backup_before_import_v0144',JSON.stringify(state));}catch{}
- state=next;ensureInstances();DCEvolution.ensure(state);prepare();core.ensure(state);selected='core';drawTiles();renderRoster();drawClock();drawStatus();render();save(false);centerOn('core');return true;
+ // Initialize an isolated candidate; a rejected import never touches the live save.
+ const ids=new Set();for(const m of next.team){if(!m.instanceId||ids.has(m.instanceId))m.instanceId=dcNewInstanceId();ids.add(m.instanceId);}
+ DCEvolution.ensure(next);care.ensure(next);cages.ensure(next);core.ensure(next);
+ const previous=state,previousTile=selected;
+ try{
+  state=next;prepare();selected='core';drawTiles();renderRoster();drawClock();drawStatus();render();centerOn('core');
+ }catch(error){
+  state=previous;knownState=null;selected=previousTile;prepare();drawTiles();renderRoster();drawClock();drawStatus();render();
+  throw error;
+ }
+ // Commit persistent data only after the candidate also rendered successfully.
+ try{if(!localStorage.getItem('dc_save_backup_before_import_v0144'))localStorage.setItem('dc_save_backup_before_import_v0144',JSON.stringify(previous));}catch{}
+ disarmFoodPlacement();save(false);return true;
 }
 $('hexExportSave').onclick=()=>{
  try{const data=JSON.stringify(getSaveData(),null,2);const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='digicham-save-day'+state.day+'.json';a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('세이브 JSON 파일을 내려받았어.');}
