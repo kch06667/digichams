@@ -199,9 +199,7 @@ body.mode-nds .farmDoor{bottom:21px;height:12px}
  body.mode-nds .dsTouchScroller .farmPanel{padding:6px;}
  body.mode-nds .dsTouchScroller .farmScene{inset:23px 3px 40px;}
 }
-</style><style id="hex-farm-style-v0143">
-
-/* Progressive v0.14.3 override of legacy horizontal corridor, preserving the rest of the UI. */
+</style><style id="hex-farm-style-v0143">/* Progressive v0.14.3 override of legacy horizontal corridor, preserving the rest of the UI. */
 #farmPanel .farmViewport{height:min(520px,65vh);min-height:340px;overflow:auto;scroll-behavior:smooth;touch-action:pan-x pan-y;overscroll-behavior:contain;}
 #farmPanel .farmWorld{position:relative;display:block;box-sizing:border-box;width:920px;min-width:920px;height:690px;padding:0;background:radial-gradient(ellipse at 50% 50%,#315f55 0%,#152d34 42%,#0c192c 90%);}
 #farmPanel .farmWorld:after{display:none}
@@ -270,9 +268,12 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 #farmPanel #hexSeason{display:inline-flex;padding:3px 6px;border-radius:6px;background:#203c4b;color:#fff0c2;font-weight:700;}
 @media(max-width:500px){#farmPanel .hexCareControls button{flex:1 1 115px;}}
 
+/* Placement targets the ground; actors must not steal selection clicks/taps. */
+#farmPanel .farmWorld.foodPlacement{cursor:crosshair;}
+#farmPanel .farmWorld.foodPlacement .hexActor{pointer-events:none;}
 
-
-
+/* Walkable connectors use the same core-to-plot graph as the simulation. */
+#farmPanel .hexPath{position:absolute;z-index:0;height:28px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
 </style><style id="championshipStyle">
 #championshipPanel{margin-top:16px}.championshipCalendar{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:12px 0}.championshipCup{background:rgba(30,61,75,.65);border:1px solid #537487;border-radius:10px;padding:12px}.championshipCup h3{font-size:16px;margin:0 0 8px}.championshipCup p{margin:5px 0;font-size:12px}.championshipCup button{margin-top:9px;width:100%}.championshipCup .champ-lock{color:#f5c48a}.championshipCup .champ-win{color:#82eac6}#championshipBracket{padding:9px;border:1px dashed #608297;border-radius:8px;margin:10px 0}#championshipHistory{opacity:.85}#championshipHistory p{margin:4px 0}
 </style></head><body><div class="wrap"><header class="top"><div class="brand"><div class="logo">🥚</div><div><h1>디지몬 챔피언십 · 웹 이식</h1><p>육성 · 로프 포획 · 자동 전투</p></div></div><div class="pill" id="dayPill">DAY 1 · 신입 사육사</div></header>
@@ -1501,6 +1502,126 @@ const SLOTS={attack:{x:25,y:35},defense:{x:50,y:22},speed:{x:75,y:35},rest:{x:73
 // Peripheral hex coordinates use the existing actor coordinate frame, mapped to world pixels by hex-farm-ui.js.
 // These are expansion UX positions, NOT coordinates extracted from the NDS ROM.
 const PLOTS={training:{x:50,y:-76,zone:'training'},track:{x:154,y:-18,zone:'track'},rest:{x:-54,y:118,zone:'rest'},forest:{x:50,y:198,zone:'forest'}};
+// Same pixel-space hex geometry as the UI; placement must stay on open ground.
+const HEX_CENTERS={core:[460,340],training:[460,128],garden:[270,234],track:[650,234],rest:[270,446],clinic:[650,446],forest:[460,552]};
+function foodGround(s,x,y){
+ if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+ const px=369+x*1.82,py=262+y*1.56;
+ return Object.entries(HEX_CENTERS).some(([id,[cx,cy]])=>{
+  if(id!=='core'&&!s.facilities?.[id])return false;
+  const dx=Math.abs(px-cx),dy=Math.abs(py-cy);
+  // A small inset keeps the meal inside the clipped hex border.
+  return dx<=102&&dy<=105-dx*113/220;
+ });
+}
+function center(id){const [x,y]=HEX_CENTERS[id];return {x:(x-369)/1.82,y:(y-262)/1.56};}
+function openZones(s){return Object.keys(HEX_CENTERS).filter(id=>id==='core'||s.facilities?.[id]);}
+function zoneAt(s,p){return openZones(s).sort((a,b)=>Math.hypot(p.x-center(a).x,p.y-center(a).y)-Math.hypot(p.x-center(b).x,p.y-center(b).y))[0];}
+function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
+function walkable(s,x,y){
+ if(foodGround(s,x,y))return true;
+ if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+ return openZones(s).some(id=>id!=='core'&&segmentDistance({x,y},center('core'),center(id))<=9);
+}
+// Expansion topology, not recovered NDS movement: outer plots connect through core.
+function routeTo(s,a,target){
+ const from=zoneAt(s,a),to=zoneAt(s,target),points=[];
+ if(from!==to){if(from!=='core')points.push(center(from));points.push(center('core'));if(to!=='core')points.push(center(to));}
+ points.push({x:target.x,y:target.y});return points;
+}
+// Small ground footprints, not sprite bounding boxes. Numbers are expansion UX.
+const PERSONAL_SPACE=10;
+function safeStride(s,a,p,peers){
+ if(!walkable(s,p.x,p.y))return false;
+ return peers.every(b=>{
+  const before=Math.hypot(a.x-b.x,a.y-b.y),after=Math.hypot(p.x-b.x,p.y-b.y);
+  // Old saves/spawn positions may overlap. Permit only movement that separates them.
+  if(before<PERSONAL_SPACE-1e-6)return after>before+1e-6;
+  return segmentDistance(b,a,p)>=PERSONAL_SPACE-1e-6;
+ });
+}
+function yieldIdle(s,a,target){
+ const actors=activeActors(s);
+ for(const b of actors){
+  if(b===a||b.mode!=='idle'||b.goal||Math.hypot(a.x-b.x,a.y-b.y)>PERSONAL_SPACE*2||Math.hypot(target.x-b.x,target.y-b.y)>PERSONAL_SPACE)continue;
+  const angle=Math.atan2(b.y-a.y,b.x-a.x);
+  for(const turn of [Math.PI/2,-Math.PI/2,Math.PI,0]){
+   const p={x:b.x+Math.cos(angle+turn)*18,y:b.y+Math.sin(angle+turn)*18};
+   if(!foodGround(s,p.x,p.y)||actors.some(c=>c!==b&&Math.hypot(c.x-p.x,c.y-p.y)<PERSONAL_SPACE))continue;
+   // Only idle actors yield: explicit training, rest and reserved meals are untouched.
+   b.goal={...p,kind:'wander',yielding:true};b.mode='moving';b.route=null;b.routeKey=null;b.pose=2;break;
+  }
+ }
+}
+function stride(s,a,p,amount){
+ const dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy),length=Math.min(d,amount);
+ if(d<1e-9)return true;
+ if(a.route.length===1)yieldIdle(s,a,p);
+ const peers=activeActors(s).filter(b=>b!==a&&Math.hypot(a.x-b.x,a.y-b.y)<PERSONAL_SPACE+amount+1);
+ // Consistent right-hand preference avoids symmetric head-on stand-offs.
+ const angles=[0,Math.PI/6,Math.PI/3,Math.PI/2,2*Math.PI/3,5*Math.PI/6,Math.PI,-Math.PI/6,-Math.PI/3,-Math.PI/2,-2*Math.PI/3];
+ for(const angle of angles){
+  const ux=dx/d*Math.cos(angle)-dy/d*Math.sin(angle),uy=dx/d*Math.sin(angle)+dy/d*Math.cos(angle);
+  const next={x:a.x+ux*length,y:a.y+uy*length};
+  if(!safeStride(s,a,next,peers))continue;
+  a.x=next.x;a.y=next.y;if(Math.abs(ux)>1e-9)a.face=ux<0?1:-1;a.pose=2;
+  a.trafficWait=0;return angle===0&&length>=d-1e-9;
+ }
+ a.pose=0;a.trafficWait=(a.trafficWait||0)+amount/CFG.moveSpeed;
+ return false;
+}
+function walk(s,a,target,dt){
+ const key=target.x+','+target.y;
+ if(a.routeKey!==key||!Array.isArray(a.route)||!a.route.length){a.routeKey=key;a.route=routeTo(s,a,target);}
+ let travel=CFG.moveSpeed*dt;
+ while(a.route.length){
+  const p=a.route[0],d=Math.hypot(p.x-a.x,p.y-a.y);
+  if(d<1e-9){a.route.shift();continue;}
+  // A transit marker is not an action destination: walk around an occupied marker.
+  if(a.route.length>1&&d<PERSONAL_SPACE*2&&activeActors(s).some(b=>b!==a&&Math.hypot(p.x-b.x,p.y-b.y)<PERSONAL_SPACE)){
+   const next=a.route[1];
+   if([.25,.5,.75].every(t=>walkable(s,a.x+(next.x-a.x)*t,a.y+(next.y-a.y)*t))){a.route.shift();continue;}
+  }
+  if(!stride(s,a,p,travel))return false;
+  travel-=d;a.route.shift();
+  if(travel<1e-9&&a.route.length)return false;
+ }
+ a.routeKey=null;return true;
+}
+function facilityKey(a){return a.goal&&SLOTS[a.goal.kind]?(a.goal.zone||'core')+':'+((a.goal.zone||'core')==='core'?a.goal.kind:'shared'):null;}
+function activeActors(s){return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>actor(s,m.instanceId));}
+function stationPoint(a){const g=a.goal;return {x:g.x+(a.station===1?(g.zone==='core'&&g.x>50?-32:32):0),y:g.y};}
+function reserveStation(s,a){
+ const key=facilityKey(a);if(!key)return true;
+ const peers=activeActors(s).filter(b=>b!==a&&facilityKey(b)===key);
+ // Existing acting users get first claim when migrating saves without reservations.
+ const reserved=new Set(peers.filter(b=>Number.isInteger(b.station)).map(b=>b.station));
+ if(!Number.isInteger(a.station)||a.station<0||a.station>1||peers.some(b=>b.station===a.station&&b.mode==='acting')){
+  a.station=[0,1].find(n=>!reserved.has(n));
+ }
+ if(a.station!==undefined){a.waitPosition=null;return true;}
+ if(!a.waitPosition){
+  const c=center(a.goal.zone||'core');
+  // Bounded waiting positions; never grow queue rings outside the purchased hex.
+  const occupied=activeActors(s).filter(b=>b!==a).map(b=>b.waitPosition||((Number.isInteger(b.station)&&b.goal)?stationPoint(b):b));
+  outer:for(const dy of [30,12,-12,-30])for(const dx of [-32,0,32]){
+   const p={x:c.x+dx,y:c.y+dy};
+   if(foodGround(s,p.x,p.y)&&occupied.every(b=>Math.hypot(p.x-b.x,p.y-b.y)>=18)){a.waitPosition=p;break outer;}
+  }
+ }
+ return false;
+}
+function migrateStations(s){
+ const used=new Map();
+ for(const a of activeActors(s).filter(a=>a.mode==='acting'&&facilityKey(a))){
+  const key=facilityKey(a),taken=used.get(key)||new Set();used.set(key,taken);
+  if(!Number.isInteger(a.station)||a.station<0||a.station>1||taken.has(a.station))a.station=[0,1].find(n=>!taken.has(n));
+  if(a.station===undefined){a.mode='waiting';a.repositioning=true;continue;}
+  taken.add(a.station);
+  const p=stationPoint(a);
+  if(Math.hypot(a.x-p.x,a.y-p.y)>1e-6){a.mode='moving';a.repositioning=true;a.route=null;}
+ }
+}
 const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
 const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
 function ensure(s){
@@ -1525,7 +1646,7 @@ function ensure(s){
 function rnd(s){s.world.seed=(Math.imul(s.world.seed,1664525)+1013904223)>>>0;return s.world.seed/4294967296;}
 function log(s,text){s.logs.unshift('[사육장] '+text);s.logs=s.logs.slice(0,60);}
 function actor(s,id){return s.farm.actors[id];}
-function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.idleTime=0;}
+function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.station=undefined;a.route=null;a.routeKey=null;a.repositioning=false;a.trafficWait=0;a.idleTime=0;}
 function destination(s,kind,options={}){
  if(kind==='cage'){
   const cage=options.cage;
@@ -1558,9 +1679,9 @@ function command(s,id,kind,options={}){ensure(s);const m=s.team.find(m=>m.instan
  a.goal=destination(s,kind,options);a.mode='moving';a.pose=2;return true;}
 function placeFood(s,x=50,y=65){
  ensure(s);
- if(s.food<=0||s.pendingBattle||s.farm.foods.length>=12||!Number.isFinite(x)||!Number.isFinite(y))return false;
+ if(s.food<=0||s.pendingBattle||s.farm.foods.length>=12||!foodGround(s,x,y))return false;
  s.food--;
- s.farm.foods.push({id:s.farm.nextFood++,x:Math.max(-369/1.82,Math.min((920-369)/1.82,x)),y:Math.max(-262/1.56,Math.min((690-262)/1.56,y)),age:0});
+ s.farm.foods.push({id:s.farm.nextFood++,x,y,age:0});
  return true;
 }
 // Each food item can be reserved by only one hungry active Digimon.
@@ -1592,6 +1713,7 @@ function step(s,dt,hooks={}){
  for(const m of s.team)if(m.location!=='storage'&&!m.egg)
   m.hunger=Math.min(100,(Number(m.hunger)||0)+dt*CFG.hungerRate);
  assignFood(s);
+ migrateStations(s);
  for(const m of s.team){
   const id=m.instanceId,a=actor(s,id);a.id=id;if(m.location==='storage')continue;
   if(m.egg){m.hatchRemaining=(m.hatchRemaining??CFG.hatchSeconds)-dt;a.pose=0;if(m.hatchRemaining<=0){if(hooks.evolution?.hatch)hooks.evolution.hatch(s,m,hooks.lookup);else {delete m.egg;delete m.hatchRemaining;}log(s,'디지타마 부화 완료.');}continue;}
@@ -1605,37 +1727,18 @@ function step(s,dt,hooks={}){
   if(a.mode==='moving'||a.mode==='waiting'){
    if(!a.goal){clear(s,a);continue;}
    if(a.goal.kind==='eat'&&!s.farm.foods.some(f=>f.id===a.foodId)){clear(s,a);continue;}
-   const waiting=a.mode==='waiting';
-   const waitTarget=waiting&&a.waitPosition?a.waitPosition:null;
-   const dx=(waitTarget||a.goal).x-a.x,dy=(waitTarget||a.goal).y-a.y,d=Math.hypot(dx,dy),travel=CFG.moveSpeed*dt;
-   if(waiting){
-    const zone=a.goal.zone||'core',kind=a.goal.kind;
-    const occupying=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===kind)).length;
-    if(occupying>=2){
-     if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.pose=2;}
-     else {a.x=(waitTarget||a.goal).x;a.y=(waitTarget||a.goal).y;a.pose=0;}
-     continue;
-    }
-    a.waitPosition=null;
+   const kind=a.goal.kind;
+   const available=reserveStation(s,a);
+   if(!available){
+    a.mode='waiting';
+    if(a.waitPosition){if(walk(s,a,a.waitPosition,dt))a.pose=0;}else a.pose=0;
+    continue;
    }
-   if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.mode='moving';a.pose=2;continue;}
-   a.x=a.goal.x;a.y=a.goal.y;const kind=a.goal.kind;
+   const target=facilityKey(a)?stationPoint(a):a.goal;
+   a.mode='moving';
+   if(!walk(s,a,target,dt))continue;
    if(kind==='wander'){a.goal=null;a.mode='idle';a.pose=0;continue;}
-   if(kind!=='eat'){
-    const zone=a.goal.zone||'core';
-    const capacity=zone==='training'||zone==='track'||zone==='rest'?2:2;
-    const occupying=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===kind)).length;
-    if(occupying>=capacity){
-     // Queue outside the facility instead of stacking on the occupied action point.
-     if(!a.waitPosition){
-      const peers=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='waiting'&&b.goal&&(b.goal.zone||'core')===zone&&b.goal.kind===kind).length;
-      const lane=peers%4,ring=Math.floor(peers/4);
-      a.waitPosition={x:a.goal.x+[-12,12,-12,12][lane]*(1+ring*.5),y:a.goal.y+[-10,-10,10,10][lane]*(1+ring*.5)};
-     }
-     a.mode='waiting';a.pose=0;continue;
-    }
-    a.waitPosition=null;
-   }
+   if(a.repositioning){a.repositioning=false;a.mode='acting';a.pose=kind==='rest'?13:32;continue;}
    a.mode='acting';a.remaining=kind==='rest'?CFG.restCycle:kind==='eat'?CFG.foodSeconds:trainDuration(m,hooks.periods,s.facilities);a.pose=kind==='rest'?13:kind==='eat'?14:32;continue;
   }
   if(a.mode!=='acting')continue;
@@ -1686,11 +1789,10 @@ function step(s,dt,hooks={}){
  }
 }
 function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingBattle)return;s.world.accumulator+=Math.max(0,realSeconds)*s.world.speed;while(s.world.accumulator>=.05-1e-9){s.world.accumulator-=.05;if(s.world.accumulator<0)s.world.accumulator=0;step(s,.05,hooks);}}
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script>
-<script id="hex-farm-v0143">
-/* v0.15.1 hex farm UI. New visual layout, reuses v0.14.2 game state and battle. */
+<script id="hex-farm-v0143">/* v0.15.1 hex farm UI. New visual layout, reuses v0.14.2 game state and battle. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id), core=window.DCFarm, cages=window.DCCages, care=window.DCCare;
 if(!core||!cages||!care){console.error('Missing DCFarm or DCCages');return;}
@@ -1703,16 +1805,17 @@ const CFG=[
  {id:'clinic',label:'치료 에리어',x:650,y:446,cost:570,day:3,wins:2,rank:1,needs:'rest',desc:'HP·부상·질병을 한 번에 치료하는 시설.'},
  {id:'forest',label:'숲 사육장',x:460,y:552,cost:900,day:5,wins:5,rank:2,needs:'clinic',desc:'미래 자연형 시설 후보. 현재 건설/표시만 가능하며 특수 행동은 아직 없음.'}
 ];
+for(const f of CFG)[f.x,f.y]=core.HEX_CENTERS[f.id];
 const byId=Object.fromEntries(CFG.map(x=>[x.id,x]));const ranks=['신입','브론즈','실버','골드'];
 let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
-function rank(){const w=state.wins||0,d=state.day||1;const legacy=w>=9&&d>=10&&state.team.length>=3?3:w>=5&&d>=5&&state.team.length>=2?2:w>=2&&d>=3?1:0;return Math.max(legacy,DCChampionship.ensure(state).rank);}
+function rank(){const w=state.wins||0,d=state.day||1;if(w>=9&&d>=10&&state.team.length>=3)return 3;if(w>=5&&d>=5&&state.team.length>=2)return 2;if(w>=2&&d>=3)return 1;return 0;}
 function prepare(){cages.ensure(state);if(!state.facilities||typeof state.facilities!=='object')state.facilities={};state.facilities.core=true;if(!Number.isFinite(state.facilityCredits))state.facilityCredits=0;if(!Number.isFinite(state.facilityPaidWins))state.facilityPaidWins=state.wins||0;if(!Number.isFinite(state.facilityPaidDays))state.facilityPaidDays=state.day||1;core.ensure(state);
  if(knownState!==state){knownState=state;knownDay=state.day;knownWins=state.wins||0;knownCompleted=state.farm.completed;lastTeam='';actors.clear();foodNodes.clear();document.querySelectorAll('.hexActor,.hexFood').forEach(n=>n.remove());}}
 function missing(f){const out=[];if(f.needs&&!state.facilities[f.needs])out.push('선행 구역 필요');if(state.day<f.day)out.push('DAY '+f.day);if((state.wins||0)<f.wins)out.push('대회 '+f.wins+'승');if(rank()<f.rank)out.push(ranks[f.rank]+' 등급');return out;}
 function canBuy(f){return f&&!state.facilities[f.id]&&!missing(f).length&&state.facilityCredits>=f.cost;}
 function format(n){return Math.floor(n).toLocaleString('ko-KR');}
 function tileHTML(f){const unlocked=!!state.facilities[f.id],isCore=f.id==='core';return `<button type="button" class="hexTile ${unlocked?'unlocked':'locked'} ${isCore?'core':''} ${selected===f.id?'selected':''}" data-hex="${f.id}" aria-label="${f.label}, ${unlocked?'개방':'잠김'}" style="left:${f.x}px;top:${f.y}px"><span class="hexInner"><b>${isCore?'🏡':unlocked?'🌿':'🔒'}</b><strong>${f.label}</strong><small>${unlocked?'개방 중':format(f.cost)+' Bit'}</small></span></button>`;}
-function drawTiles(){const layer=$('farmWorld');const nodes=Array.from(layer.querySelectorAll('.hexActor,.hexFood'));layer.innerHTML=CFG.map(tileHTML).join('');for(const node of nodes)layer.appendChild(node);drawDetails();drawNumbers();}
+function drawTiles(){const layer=$('farmWorld');const nodes=Array.from(layer.querySelectorAll('.hexActor,.hexFood'));layer.innerHTML=CFG.filter(f=>f.id!=='core'&&state.facilities[f.id]).map(f=>`<span class="hexPath" aria-hidden="true" style="left:460px;top:340px;width:${Math.hypot(f.x-460,f.y-340)}px;transform:translateY(-50%) rotate(${Math.atan2(f.y-340,f.x-460)}rad)"></span>`).join('')+CFG.map(tileHTML).join('');for(const node of nodes)layer.appendChild(node);drawDetails();drawNumbers();}
 function drawNumbers(){$('farmCredits').textContent=format(state.facilityCredits);$('farmRank').textContent=ranks[rank()];$('farmRoomCount').textContent=CFG.filter(f=>state.facilities[f.id]).length;$('farmWinCount').textContent=state.wins||0;}
 function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilities[f.id],needs=missing(f);
  const el=$('farmDetails');
@@ -1721,14 +1824,16 @@ function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilitie
 function centerOn(id='core',smooth=false){const f=byId[id]||byId.core,v=$('farmViewport');v.scrollTo({left:Math.max(0,f.x-v.clientWidth/2),top:Math.max(0,f.y-v.clientHeight/2),behavior:smooth?'smooth':'instant'});}
 function choose(id){if(!byId[id])return;selected=id;document.querySelectorAll('.hexTile').forEach(t=>t.classList.toggle('selected',t.dataset.hex===id));drawDetails();centerOn(id,true);}
 let foodPlacement=false;
-function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('사육장 지도에서 먹이를 놓을 위치를 눌러 줘.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
+function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('지도에서 먹이 위치를 선택해 줘. 버튼을 다시 누르거나 Esc로 취소할 수 있어.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
 function disarmFoodPlacement(){foodPlacement=false;$('hexDrop').textContent='🍖 바닥에 먹이 놓기';$('feed').textContent='🍖 먹이 주기';$('farmWorld').classList.remove('foodPlacement');}
 function toggleFoodPlacement(){if(foodPlacement)disarmFoodPlacement();else armFoodPlacement();}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&foodPlacement){disarmFoodPlacement();toast('먹이 놓기를 취소했어.');}});
 $('farmWorld').addEventListener('click',e=>{
  if(foodPlacement){
   const rect=$('farmWorld').getBoundingClientRect();
   const x=(e.clientX-rect.left-369)/1.82,y=(e.clientY-rect.top-262)/1.56;
-  if(!core.placeFood(state,x,y))return toast('먹이가 부족하거나 바닥이 가득 찼어.');
+  if(!core.foodGround(state,x,y))return toast('개방된 사육장 바닥 안쪽에 먹이를 놓아 줘.');
+  if(!core.placeFood(state,x,y))return toast('먹이가 부족하거나 지금은 놓을 수 없어.');
   disarmFoodPlacement();render();save(false);updateActors();drawStatus();toast('선택한 위치에 먹이를 놓았어.');return;
  }
  const tile=e.target.closest('[data-hex]');if(tile)choose(tile.dataset.hex);
@@ -1777,19 +1882,64 @@ $('hexCageTrain').onclick=()=>{const c=$('hexCageSelect').value,m=$('hexMon').va
 const archive=document.createElement('div');archive.className='hexArchive';
 archive.innerHTML='<button type="button" id="hexExportSave">💾 세이브 파일 내보내기</button><button type="button" id="hexImportSave">📂 세이브 파일 불러오기</button><input id="hexArchiveFile" type="file" accept=".json,application/json" hidden><span class="hexArchiveNote">브라우저나 기기를 옮길 때 사용 · JSON 파일에는 ROM/이미지 없음</span>';
 controls.appendChild(archive);
-function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.19.0',state:JSON.parse(JSON.stringify(state))};}
+function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.0',state:JSON.parse(JSON.stringify(state))};}
+function validateSaveStructures(next){
+ const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ const fail=()=>{throw Error('세이브의 내부 기록이 손상되어 있어. 현재 게임은 유지돼.');};
+ const object=(v)=>{if(v!=null&&!record(v))fail();};
+ const numbers=(v,keys)=>{if(v)for(const k of keys)if(v[k]!=null&&!Number.isFinite(v[k]))fail();};
+ const point=v=>{if(!record(v)||!Number.isFinite(v.x)||!Number.isFinite(v.y))fail();};
+ for(const key of ['world','farm','facilities','cageFacilities','championship'])object(next[key]);
+ numbers(next.world,['seconds','seed','careSeed','accumulator','speed']);
+ if(next.world?.accumulator>1||next.world?.accumulator<0)fail();
+ for(const m of next.team){
+  if(!record(m))fail();
+  if(m.instanceId!=null&&(typeof m.instanceId!=='string'||Object.prototype.hasOwnProperty.call(Object.prototype,m.instanceId)))fail();
+  object(m.evo);object(m.care);object(m.evo?.ap);object(m.evo?.resist);
+ }
+ if(next.farm){
+  object(next.farm.actors);
+  if(next.farm.foods!=null){
+   if(!Array.isArray(next.farm.foods)||next.farm.foods.length>12)fail();
+   const foodIds=new Set();
+   for(const f of next.farm.foods){point(f);numbers(f,['id','age']);if(!Number.isSafeInteger(f.id)||f.id<1||foodIds.has(f.id))fail();foodIds.add(f.id);}
+  }
+  for(const [id,a] of Object.entries(next.farm.actors||{})){
+   if(Object.prototype.hasOwnProperty.call(Object.prototype,id))fail();
+   point(a);numbers(a,['remaining','idleTime','station','trafficWait']);
+   if(!['idle','moving','waiting','acting'].includes(a.mode))fail();
+   for(const key of ['goal','waitPosition'])if(a[key]!=null)point(a[key]);
+   if(a.goal&&(!['attack','defense','speed','rest','cage','eat','wander'].includes(a.goal.kind)||a.goal.zone!=null&&!Object.hasOwn(core.HEX_CENTERS,a.goal.zone)))fail();
+   if(a.route!=null){if(!Array.isArray(a.route)||a.route.length>16)fail();a.route.forEach(point);}
+   object(a.target);object(a.resumeOptions);
+  }
+ }
+ if(next.championship){object(next.championship.crowns);object(next.championship.active);}
+}
 function importSaveData(json){
- const next=json&&json.format==='digicham-save'?json.state:json;
+ if(json?.format!=null&&(json.format!=='digicham-save'||json.exportVersion!==1))throw Error('지원하지 않는 세이브 형식이야.');
+ const next=JSON.parse(JSON.stringify(json&&json.format==='digicham-save'?json.state:json));
  if(!next||typeof next!=='object'||!Array.isArray(next.team)||next.team.length<1||next.team.length>50||!Number.isInteger(next.day)||next.day<1||next.day>100000||next.pendingBattle){throw Error('지원되지 않는 세이브 파일이거나 중단된 전투가 포함되어 있어.');}
+ validateSaveStructures(next);
  if(next.team.some(m=>!m||typeof m.name!=='string'||!m.name||!Number.isFinite(m.maxHp)||m.maxHp<=0||!Number.isFinite(m.hp)))throw Error('디지몬 개체 기록이 올바르지 않아.');
  if(!Array.isArray(next.logs))next.logs=[];
  if(next.logs.length>250)next.logs=next.logs.slice(0,250);
  if(next.team.some(m=>!Number.isFinite(m.atk)||!Number.isFinite(m.def)||!Number.isFinite(m.spd)||!Number.isFinite(m.hunger)||!Number.isFinite(m.fatigue)))throw Error('디지몬 능력치 기록이 올바르지 않아.');
  if(!Number.isInteger(next.selected)||next.selected<0||next.selected>=next.team.length)next.selected=0;
  for(const key of ['food','ropes','points','wins','losses'])if(!Number.isFinite(next[key]))next[key]=0;
- // Only after validating, preserve the current state and replace it.
- try{if(!localStorage.getItem('dc_save_backup_before_import_v0144'))localStorage.setItem('dc_save_backup_before_import_v0144',JSON.stringify(state));}catch{}
- state=next;ensureInstances();DCEvolution.ensure(state);prepare();core.ensure(state);selected='core';drawTiles();renderRoster();drawClock();drawStatus();render();save(false);centerOn('core');return true;
+ // Initialize an isolated candidate; a rejected import never touches the live save.
+ const ids=new Set();for(const m of next.team){if(!m.instanceId||ids.has(m.instanceId))m.instanceId=dcNewInstanceId();ids.add(m.instanceId);}
+ DCEvolution.ensure(next);care.ensure(next);cages.ensure(next);core.ensure(next);
+ const previous=state,previousTile=selected;
+ try{
+  state=next;prepare();selected='core';drawTiles();renderRoster();drawClock();drawStatus();render();centerOn('core');
+ }catch(error){
+  state=previous;knownState=null;selected=previousTile;prepare();drawTiles();renderRoster();drawClock();drawStatus();render();
+  throw error;
+ }
+ // Commit persistent data only after the candidate also rendered successfully.
+ try{if(!localStorage.getItem('dc_save_backup_before_import_v0144'))localStorage.setItem('dc_save_backup_before_import_v0144',JSON.stringify(previous));}catch{}
+ disarmFoodPlacement();save(false);return true;
 }
 $('hexExportSave').onclick=()=>{
  try{const data=JSON.stringify(getSaveData(),null,2);const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='digicham-save-day'+state.day+'.json';a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('세이브 JSON 파일을 내려받았어.');}
@@ -1817,9 +1967,10 @@ function treatSelected(kind){const m=state.team.find(x=>x.instanceId===$('hexMon
 $('hexFollow').onclick=()=>{const a=state.farm.actors[$('hexMon').value];if(!a)return;const v=$('farmViewport');v.scrollTo({left:Math.max(0,369+a.x*1.82-v.clientWidth/2),top:Math.max(0,262+a.y*1.56-v.clientHeight/2),behavior:'smooth'});};
 $('hexPause').onclick=()=>{state.world.paused=!state.world.paused;drawClock();save(false);};$('hexSpeed').onchange=()=>{state.world.speed=Number($('hexSpeed').value);save(false);drawClock();};
 function drawClock(){const w=state.world;const elapsed=w.seconds%core.CFG.daySeconds;const minutes=Math.floor(elapsed/core.CFG.daySeconds*24*60);$('hexSeason').textContent=({봄:'🌱',여름:'☀️',가을:'🍂',겨울:'❄️'}[care.season(state.day)]||'🌱')+' '+care.season(state.day);$('hexTime').textContent='DAY '+state.day+' · '+String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');$('hexPause').textContent=w.paused?'▶ 계속':'⏸ 일시정지';$('hexSpeed').value=String(w.speed);}
-function drawStatus(){const mon=state.team.find(m=>m.instanceId===$('hexMon').value);if(!mon)return;const a=state.farm.actors[mon.instanceId];const labels={idle:'대기',moving:'이동 중',waiting:'시설 대기',acting:'행동 중'};const kind={attack:'공격 훈련',defense:'방어 훈련',speed:'속도 훈련',cage:'종족 AP 훈련',rest:'휴식',eat:'먹기',wander:'산책'};
+function drawStatus(){const mon=state.team.find(m=>m.instanceId===$('hexMon').value);if(!mon)return;const a=state.farm.actors[mon.instanceId];const labels={idle:'대기',moving:'이동 중',waiting:'시설 대기',acting:'행동 중'};const kind={attack:'공격 훈련',defense:'방어 훈련',speed:'속도 훈련',cage:'종족 AP 훈련',rest:'휴식',eat:'먹기',wander:a?.goal?.yielding?'자리 양보':'산책'};
+ const activity=(a?.mode==='moving'||a?.mode==='waiting')&&a.trafficWait>=.2?'통로 대기':labels[a?.mode]||'대기';
  const ar=state.farm.actors[mon.instanceId];$('hexAutoRest').checked=ar?.autoRest!==false;
- $('hexStatus').textContent=`${mon.name}: ${labels[a?.mode]||'대기'}${a?.goal?' · '+(a.goal.kind==='cage'?(cages.MAP[a.goal.cage]?.label||'종족 훈련'):(kind[a.goal.kind]||''))+' · '+({core:'중앙',training:'특별훈련장',track:'주행장',forest:'숲',rest:'휴식 구역'}[a.goal.zone]||'중앙') : ''}${a?.target?' · 목표 '+(a.target.stat||a.target.ap)+' '+a.target.value:''} | HP ${Math.ceil(mon.hp)}/${mon.maxHp} · 배고픔 ${Math.floor(mon.hunger)}/100 · 피로 ${Math.floor(mon.fatigue)} · 훈련 ${mon.training}`;
+ $('hexStatus').textContent=`${mon.name}: ${activity}${a?.goal?' · '+(a.goal.kind==='cage'?(cages.MAP[a.goal.cage]?.label||'종족 훈련'):(kind[a.goal.kind]||''))+' · '+({core:'중앙',training:'특별훈련장',track:'주행장',forest:'숲',rest:'휴식 구역'}[a.goal.zone]||'중앙') : ''}${a?.target?' · 목표 '+(a.target.stat||a.target.ap)+' '+a.target.value:''} | HP ${Math.ceil(mon.hp)}/${mon.maxHp} · 배고픔 ${Math.floor(mon.hunger)}/100 · 피로 ${Math.floor(mon.fatigue)} · 훈련 ${mon.training}`;
  care.ensureMon(mon);$('hexCareInfo').textContent=(mon.care.injured?'🩹 부상 ':'')+(mon.care.sick?'🤒 질병 ':'')+(!mon.care.injured&&!mon.care.sick?'건강':'')+' · 육성 패널티 '+(mon.evo?.penalties||0);
  $('hexBandage').disabled=!mon.care.injured;$('hexMedicine').disabled=!mon.care.sick;
  updateCageInfo();}

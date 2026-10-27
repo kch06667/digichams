@@ -8,3 +8,9 @@
 node_modules/
 .env
 .env.*
+*.srl
+*.SRL
+/rom-private/
+/rom-output/
+/test-output/
+__pycache__/

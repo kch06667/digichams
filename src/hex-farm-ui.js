@@ -11,6 +11,7 @@ const CFG=[
  {id:'clinic',label:'치료 에리어',x:650,y:446,cost:570,day:3,wins:2,rank:1,needs:'rest',desc:'HP·부상·질병을 한 번에 치료하는 시설.'},
  {id:'forest',label:'숲 사육장',x:460,y:552,cost:900,day:5,wins:5,rank:2,needs:'clinic',desc:'미래 자연형 시설 후보. 현재 건설/표시만 가능하며 특수 행동은 아직 없음.'}
 ];
+for(const f of CFG)[f.x,f.y]=core.HEX_CENTERS[f.id];
 const byId=Object.fromEntries(CFG.map(x=>[x.id,x]));const ranks=['신입','브론즈','실버','골드'];
 let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
 function rank(){const w=state.wins||0,d=state.day||1;if(w>=9&&d>=10&&state.team.length>=3)return 3;if(w>=5&&d>=5&&state.team.length>=2)return 2;if(w>=2&&d>=3)return 1;return 0;}
@@ -20,7 +21,7 @@ function missing(f){const out=[];if(f.needs&&!state.facilities[f.needs])out.push
 function canBuy(f){return f&&!state.facilities[f.id]&&!missing(f).length&&state.facilityCredits>=f.cost;}
 function format(n){return Math.floor(n).toLocaleString('ko-KR');}
 function tileHTML(f){const unlocked=!!state.facilities[f.id],isCore=f.id==='core';return `<button type="button" class="hexTile ${unlocked?'unlocked':'locked'} ${isCore?'core':''} ${selected===f.id?'selected':''}" data-hex="${f.id}" aria-label="${f.label}, ${unlocked?'개방':'잠김'}" style="left:${f.x}px;top:${f.y}px"><span class="hexInner"><b>${isCore?'🏡':unlocked?'🌿':'🔒'}</b><strong>${f.label}</strong><small>${unlocked?'개방 중':format(f.cost)+' Bit'}</small></span></button>`;}
-function drawTiles(){const layer=$('farmWorld');const nodes=Array.from(layer.querySelectorAll('.hexActor,.hexFood'));layer.innerHTML=CFG.map(tileHTML).join('');for(const node of nodes)layer.appendChild(node);drawDetails();drawNumbers();}
+function drawTiles(){const layer=$('farmWorld');const nodes=Array.from(layer.querySelectorAll('.hexActor,.hexFood'));layer.innerHTML=CFG.filter(f=>f.id!=='core'&&state.facilities[f.id]).map(f=>`<span class="hexPath" aria-hidden="true" style="left:460px;top:340px;width:${Math.hypot(f.x-460,f.y-340)}px;transform:translateY(-50%) rotate(${Math.atan2(f.y-340,f.x-460)}rad)"></span>`).join('')+CFG.map(tileHTML).join('');for(const node of nodes)layer.appendChild(node);drawDetails();drawNumbers();}
 function drawNumbers(){$('farmCredits').textContent=format(state.facilityCredits);$('farmRank').textContent=ranks[rank()];$('farmRoomCount').textContent=CFG.filter(f=>state.facilities[f.id]).length;$('farmWinCount').textContent=state.wins||0;}
 function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilities[f.id],needs=missing(f);
  const el=$('farmDetails');
@@ -29,14 +30,16 @@ function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilitie
 function centerOn(id='core',smooth=false){const f=byId[id]||byId.core,v=$('farmViewport');v.scrollTo({left:Math.max(0,f.x-v.clientWidth/2),top:Math.max(0,f.y-v.clientHeight/2),behavior:smooth?'smooth':'instant'});}
 function choose(id){if(!byId[id])return;selected=id;document.querySelectorAll('.hexTile').forEach(t=>t.classList.toggle('selected',t.dataset.hex===id));drawDetails();centerOn(id,true);}
 let foodPlacement=false;
-function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('사육장 지도에서 먹이를 놓을 위치를 눌러 줘.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
+function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('지도에서 먹이 위치를 선택해 줘. 버튼을 다시 누르거나 Esc로 취소할 수 있어.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
 function disarmFoodPlacement(){foodPlacement=false;$('hexDrop').textContent='🍖 바닥에 먹이 놓기';$('feed').textContent='🍖 먹이 주기';$('farmWorld').classList.remove('foodPlacement');}
 function toggleFoodPlacement(){if(foodPlacement)disarmFoodPlacement();else armFoodPlacement();}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&foodPlacement){disarmFoodPlacement();toast('먹이 놓기를 취소했어.');}});
 $('farmWorld').addEventListener('click',e=>{
  if(foodPlacement){
   const rect=$('farmWorld').getBoundingClientRect();
   const x=(e.clientX-rect.left-369)/1.82,y=(e.clientY-rect.top-262)/1.56;
-  if(!core.placeFood(state,x,y))return toast('먹이가 부족하거나 바닥이 가득 찼어.');
+  if(!core.foodGround(state,x,y))return toast('개방된 사육장 바닥 안쪽에 먹이를 놓아 줘.');
+  if(!core.placeFood(state,x,y))return toast('먹이가 부족하거나 지금은 놓을 수 없어.');
   disarmFoodPlacement();render();save(false);updateActors();drawStatus();toast('선택한 위치에 먹이를 놓았어.');return;
  }
  const tile=e.target.closest('[data-hex]');if(tile)choose(tile.dataset.hex);
@@ -85,19 +88,64 @@ $('hexCageTrain').onclick=()=>{const c=$('hexCageSelect').value,m=$('hexMon').va
 const archive=document.createElement('div');archive.className='hexArchive';
 archive.innerHTML='<button type="button" id="hexExportSave">💾 세이브 파일 내보내기</button><button type="button" id="hexImportSave">📂 세이브 파일 불러오기</button><input id="hexArchiveFile" type="file" accept=".json,application/json" hidden><span class="hexArchiveNote">브라우저나 기기를 옮길 때 사용 · JSON 파일에는 ROM/이미지 없음</span>';
 controls.appendChild(archive);
-function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.19.0',state:JSON.parse(JSON.stringify(state))};}
+function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.0',state:JSON.parse(JSON.stringify(state))};}
+function validateSaveStructures(next){
+ const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ const fail=()=>{throw Error('세이브의 내부 기록이 손상되어 있어. 현재 게임은 유지돼.');};
+ const object=(v)=>{if(v!=null&&!record(v))fail();};
+ const numbers=(v,keys)=>{if(v)for(const k of keys)if(v[k]!=null&&!Number.isFinite(v[k]))fail();};
+ const point=v=>{if(!record(v)||!Number.isFinite(v.x)||!Number.isFinite(v.y))fail();};
+ for(const key of ['world','farm','facilities','cageFacilities','championship'])object(next[key]);
+ numbers(next.world,['seconds','seed','careSeed','accumulator','speed']);
+ if(next.world?.accumulator>1||next.world?.accumulator<0)fail();
+ for(const m of next.team){
+  if(!record(m))fail();
+  if(m.instanceId!=null&&(typeof m.instanceId!=='string'||Object.prototype.hasOwnProperty.call(Object.prototype,m.instanceId)))fail();
+  object(m.evo);object(m.care);object(m.evo?.ap);object(m.evo?.resist);
+ }
+ if(next.farm){
+  object(next.farm.actors);
+  if(next.farm.foods!=null){
+   if(!Array.isArray(next.farm.foods)||next.farm.foods.length>12)fail();
+   const foodIds=new Set();
+   for(const f of next.farm.foods){point(f);numbers(f,['id','age']);if(!Number.isSafeInteger(f.id)||f.id<1||foodIds.has(f.id))fail();foodIds.add(f.id);}
+  }
+  for(const [id,a] of Object.entries(next.farm.actors||{})){
+   if(Object.prototype.hasOwnProperty.call(Object.prototype,id))fail();
+   point(a);numbers(a,['remaining','idleTime','station','trafficWait']);
+   if(!['idle','moving','waiting','acting'].includes(a.mode))fail();
+   for(const key of ['goal','waitPosition'])if(a[key]!=null)point(a[key]);
+   if(a.goal&&(!['attack','defense','speed','rest','cage','eat','wander'].includes(a.goal.kind)||a.goal.zone!=null&&!Object.hasOwn(core.HEX_CENTERS,a.goal.zone)))fail();
+   if(a.route!=null){if(!Array.isArray(a.route)||a.route.length>16)fail();a.route.forEach(point);}
+   object(a.target);object(a.resumeOptions);
+  }
+ }
+ if(next.championship){object(next.championship.crowns);object(next.championship.active);}
+}
 function importSaveData(json){
- const next=json&&json.format==='digicham-save'?json.state:json;
+ if(json?.format!=null&&(json.format!=='digicham-save'||json.exportVersion!==1))throw Error('지원하지 않는 세이브 형식이야.');
+ const next=JSON.parse(JSON.stringify(json&&json.format==='digicham-save'?json.state:json));
  if(!next||typeof next!=='object'||!Array.isArray(next.team)||next.team.length<1||next.team.length>50||!Number.isInteger(next.day)||next.day<1||next.day>100000||next.pendingBattle){throw Error('지원되지 않는 세이브 파일이거나 중단된 전투가 포함되어 있어.');}
+ validateSaveStructures(next);
  if(next.team.some(m=>!m||typeof m.name!=='string'||!m.name||!Number.isFinite(m.maxHp)||m.maxHp<=0||!Number.isFinite(m.hp)))throw Error('디지몬 개체 기록이 올바르지 않아.');
  if(!Array.isArray(next.logs))next.logs=[];
  if(next.logs.length>250)next.logs=next.logs.slice(0,250);
  if(next.team.some(m=>!Number.isFinite(m.atk)||!Number.isFinite(m.def)||!Number.isFinite(m.spd)||!Number.isFinite(m.hunger)||!Number.isFinite(m.fatigue)))throw Error('디지몬 능력치 기록이 올바르지 않아.');
  if(!Number.isInteger(next.selected)||next.selected<0||next.selected>=next.team.length)next.selected=0;
  for(const key of ['food','ropes','points','wins','losses'])if(!Number.isFinite(next[key]))next[key]=0;
- // Only after validating, preserve the current state and replace it.
- try{if(!localStorage.getItem('dc_save_backup_before_import_v0144'))localStorage.setItem('dc_save_backup_before_import_v0144',JSON.stringify(state));}catch{}
- state=next;ensureInstances();DCEvolution.ensure(state);prepare();core.ensure(state);selected='core';drawTiles();renderRoster();drawClock();drawStatus();render();save(false);centerOn('core');return true;
+ // Initialize an isolated candidate; a rejected import never touches the live save.
+ const ids=new Set();for(const m of next.team){if(!m.instanceId||ids.has(m.instanceId))m.instanceId=dcNewInstanceId();ids.add(m.instanceId);}
+ DCEvolution.ensure(next);care.ensure(next);cages.ensure(next);core.ensure(next);
+ const previous=state,previousTile=selected;
+ try{
+  state=next;prepare();selected='core';drawTiles();renderRoster();drawClock();drawStatus();render();centerOn('core');
+ }catch(error){
+  state=previous;knownState=null;selected=previousTile;prepare();drawTiles();renderRoster();drawClock();drawStatus();render();
+  throw error;
+ }
+ // Commit persistent data only after the candidate also rendered successfully.
+ try{if(!localStorage.getItem('dc_save_backup_before_import_v0144'))localStorage.setItem('dc_save_backup_before_import_v0144',JSON.stringify(previous));}catch{}
+ disarmFoodPlacement();save(false);return true;
 }
 $('hexExportSave').onclick=()=>{
  try{const data=JSON.stringify(getSaveData(),null,2);const blob=new Blob([data],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='digicham-save-day'+state.day+'.json';a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('세이브 JSON 파일을 내려받았어.');}
@@ -125,9 +173,10 @@ function treatSelected(kind){const m=state.team.find(x=>x.instanceId===$('hexMon
 $('hexFollow').onclick=()=>{const a=state.farm.actors[$('hexMon').value];if(!a)return;const v=$('farmViewport');v.scrollTo({left:Math.max(0,369+a.x*1.82-v.clientWidth/2),top:Math.max(0,262+a.y*1.56-v.clientHeight/2),behavior:'smooth'});};
 $('hexPause').onclick=()=>{state.world.paused=!state.world.paused;drawClock();save(false);};$('hexSpeed').onchange=()=>{state.world.speed=Number($('hexSpeed').value);save(false);drawClock();};
 function drawClock(){const w=state.world;const elapsed=w.seconds%core.CFG.daySeconds;const minutes=Math.floor(elapsed/core.CFG.daySeconds*24*60);$('hexSeason').textContent=({봄:'🌱',여름:'☀️',가을:'🍂',겨울:'❄️'}[care.season(state.day)]||'🌱')+' '+care.season(state.day);$('hexTime').textContent='DAY '+state.day+' · '+String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');$('hexPause').textContent=w.paused?'▶ 계속':'⏸ 일시정지';$('hexSpeed').value=String(w.speed);}
-function drawStatus(){const mon=state.team.find(m=>m.instanceId===$('hexMon').value);if(!mon)return;const a=state.farm.actors[mon.instanceId];const labels={idle:'대기',moving:'이동 중',waiting:'시설 대기',acting:'행동 중'};const kind={attack:'공격 훈련',defense:'방어 훈련',speed:'속도 훈련',cage:'종족 AP 훈련',rest:'휴식',eat:'먹기',wander:'산책'};
+function drawStatus(){const mon=state.team.find(m=>m.instanceId===$('hexMon').value);if(!mon)return;const a=state.farm.actors[mon.instanceId];const labels={idle:'대기',moving:'이동 중',waiting:'시설 대기',acting:'행동 중'};const kind={attack:'공격 훈련',defense:'방어 훈련',speed:'속도 훈련',cage:'종족 AP 훈련',rest:'휴식',eat:'먹기',wander:a?.goal?.yielding?'자리 양보':'산책'};
+ const activity=(a?.mode==='moving'||a?.mode==='waiting')&&a.trafficWait>=.2?'통로 대기':labels[a?.mode]||'대기';
  const ar=state.farm.actors[mon.instanceId];$('hexAutoRest').checked=ar?.autoRest!==false;
- $('hexStatus').textContent=`${mon.name}: ${labels[a?.mode]||'대기'}${a?.goal?' · '+(a.goal.kind==='cage'?(cages.MAP[a.goal.cage]?.label||'종족 훈련'):(kind[a.goal.kind]||''))+' · '+({core:'중앙',training:'특별훈련장',track:'주행장',forest:'숲',rest:'휴식 구역'}[a.goal.zone]||'중앙') : ''}${a?.target?' · 목표 '+(a.target.stat||a.target.ap)+' '+a.target.value:''} | HP ${Math.ceil(mon.hp)}/${mon.maxHp} · 배고픔 ${Math.floor(mon.hunger)}/100 · 피로 ${Math.floor(mon.fatigue)} · 훈련 ${mon.training}`;
+ $('hexStatus').textContent=`${mon.name}: ${activity}${a?.goal?' · '+(a.goal.kind==='cage'?(cages.MAP[a.goal.cage]?.label||'종족 훈련'):(kind[a.goal.kind]||''))+' · '+({core:'중앙',training:'특별훈련장',track:'주행장',forest:'숲',rest:'휴식 구역'}[a.goal.zone]||'중앙') : ''}${a?.target?' · 목표 '+(a.target.stat||a.target.ap)+' '+a.target.value:''} | HP ${Math.ceil(mon.hp)}/${mon.maxHp} · 배고픔 ${Math.floor(mon.hunger)}/100 · 피로 ${Math.floor(mon.fatigue)} · 훈련 ${mon.training}`;
  care.ensureMon(mon);$('hexCareInfo').textContent=(mon.care.injured?'🩹 부상 ':'')+(mon.care.sick?'🤒 질병 ':'')+(!mon.care.injured&&!mon.care.sick?'건강':'')+' · 육성 패널티 '+(mon.evo?.penalties||0);
  $('hexBandage').disabled=!mon.care.injured;$('hexMedicine').disabled=!mon.care.sick;
  updateCageInfo();}
