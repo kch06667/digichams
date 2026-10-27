@@ -16,7 +16,7 @@
     "test:championship": "node tests/championship-core.cjs",
     "test:championship-browser": "python tests/championship-browser.py",
     "test:farm": "node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs && node tests/farm-core.cjs",
-    "test:farm:browser": "python3 tests/farm-dom-paint-browser.py"
+    "test:farm:browser": "python tests/farm-dom-paint-browser.py"
   },
   "devDependencies": {
     "jsdom": "30.1.3",
