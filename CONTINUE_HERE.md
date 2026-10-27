@@ -1,3 +1,15 @@
+# 최신 그래픽 통합 체크포인트 — 2026-10-28 (v0.23.2 사육장 원본 이미지)
+
+- 최신 `main` 코드(`fe410bd0`)에서 별도 브랜치 `feature/integrate-v0232-farm-art-20261028`를 생성해 작업. 기존 JS 기능을 구버전 ZIP으로 덮어쓰지 않았다.
+- 제공 ZIP과 **완전히 같은** `assets/farm/hex_farm_v0232.webp` 106,788바이트를 Git blob `3041c6d7`에서 GitHub 저장소 경로로 복원. SHA-256 `67f92692d36b8cedae3db3abe6293c2e757799d57600acb6eac0eb96cc8ebccc`.
+- ZIP CSS의 `v0.23.2 map visual skin` 블록 2,956자만 최신 `src/hex-farm.css` 뒤에 추가. 해시 검증 일치. 이전 사육장 시뮬레이션/동선 CSS를 제거하지 않았다.
+- GitHub Actions **40572205819 성공**: 최신 farm-core/UI/CSS를 두 HTML에 안전 동기화하고, 정확한 WebP 체크섬·인라인/분리 CSS 검사 + farm/navigation/avoidance/save recovery/championship Node 테스트 통과. `standalone.html`에는 그림을 인라인 data URI로 포함, `index.html`은 별도 이미지 사용.
+- 실제 이미지 로딩/PC·모바일 터치 E2E: 제공 ZIP 기반 예비 테스트 성공, 최신 GitHub 브랜치는 `tests/farm-graphics-browser.py`의 PR CI로 최종 검증 필요.
+- 다음: 그래픽 PR 브라우저 검사 성공 → `main` 병합 → Android 실기 확인 → 첫 진화/전투 애니메이션·넉백·전체 플레이 회귀 점검.
+- 운영 원칙 그대로: **업데이트마다 전체 ZIP 만들거나 전송하지 않음**. ROM/NDS 원본 공개/커밋 금지. 상세 `docs/V0232_FARM_ART_INTEGRATION.md`.
+
+---
+
 # 최신 완료 체크포인트 — 2026-10-28 사육장 성능·구세이브 복구
 
 - GitHub `main` 병합: PR #7 `b138e49` (캐릭터/먹이 DOM 갱신 최소화 + 레벨 라벨 수정), PR #8 `30dda2c` (오래된 웹 세이브의 지도 밖 좌표 복구 + 진행 중 훈련 시간 보호).
