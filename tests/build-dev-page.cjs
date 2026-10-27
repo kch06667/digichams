@@ -44,3 +44,18 @@ test('externalized CSS preserves image and font relative path semantics', () => 
   assert.equal(relocateCssUrls('.x{background:url(data:image/png;base64,AAA) url(#mask) url(/root.png)}'),
     '.x{background:url(data:image/png;base64,AAA) url(#mask) url(/root.png)}');
 });
+
+
+test('performance monitor is included only in untracked developer HTML', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'digimon-dev-perf-'));
+  try {
+    const original = '<!doctype html><body><script>window.game = true;</script></body>';
+    fs.writeFileSync(path.join(root, 'index.html'), original);
+    const result = build({root});
+    const page = fs.readFileSync(path.join(root, 'index.dev.html'), 'utf8');
+    assert.match(page, /<script defer src="src\/dev-performance-overlay\.js"><\/script>/);
+    assert.match(page, /<\/body>$/);
+    assert.equal(fs.readFileSync(path.join(root, 'index.html'), 'utf8'), original);
+    assert.ok(result.developerBytes < result.originalBytes + 200);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
