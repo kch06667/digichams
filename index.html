@@ -1623,6 +1623,9 @@ function migrateStations(s){
 }
 const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
 const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
+// Validate actor coordinates once per live actor object (and again for restored JSON objects).
+// This is runtime-only metadata, never added to a saved game.
+const validatedActorCoordinates=new WeakSet();
 function ensure(s){
  s.world||={seconds:0,speed:1,paused:false,seed:12345,accumulator:0};
  s.farm||={actors:{},foods:[],nextFood:1,completed:0};
@@ -1638,7 +1641,32 @@ function ensure(s){
  for(const f of s.farm.foods)if(f.claim&&(!activeIds.has(f.claim)||s.farm.actors[f.claim]?.foodId!==f.id||s.farm.actors[f.claim]?.goal?.kind!=='eat'))delete f.claim;
  s.world.seconds=Math.max(0,Number(s.world.seconds)||0);
  if(![1,2,4].includes(s.world.speed))s.world.speed=1;
- for(const m of s.team){if(!m.instanceId)throw Error('Missing instanceId');s.farm.actors[m.instanceId]||={x:50,y:62,mode:'idle',pose:0,remaining:0,idleTime:0,autoRest:true};}
+ for(const m of s.team){
+  if(!m.instanceId)throw Error('Missing instanceId');
+  s.farm.actors[m.instanceId]||={x:50,y:62,mode:'idle',pose:0,remaining:0,idleTime:0,autoRest:true};
+  const a=s.farm.actors[m.instanceId];
+  if(validatedActorCoordinates.has(a))continue;
+  validatedActorCoordinates.add(a);
+  if(walkable(s,a.x,a.y))continue;
+  // Older saves can contain coordinates outside the expanded hex map.
+  // Recover to the closest unlocked tile without touching stats, resources or saves.
+  const anchor=Number.isFinite(a.x)&&Number.isFinite(a.y)?a:center('core');
+  const closest=openZones(s).reduce((best,id)=>
+   Math.hypot(anchor.x-center(id).x,anchor.y-center(id).y)<
+   Math.hypot(anchor.x-center(best).x,anchor.y-center(best).y)?id:best,'core');
+  const position=center(closest);
+  a.x=position.x;a.y=position.y;
+  a.route=null;a.routeKey=null;a.waitPosition=null;a.station=undefined;a.trafficWait=0;
+  a.id=m.instanceId;
+  if(a.goal&&walkable(s,a.goal.x,a.goal.y)){
+   // Preserve an already-running training/rest cycle without granting an early reward.
+   // A moving/waiting order still starts a new cycle when it reaches its station.
+   a.repositioning=a.repositioning===true||a.mode==='acting';
+   a.mode='moving';a.pose=2;
+  }else{
+   clear(s,a);
+  }
+ }
  for(const id of Object.keys(s.farm.actors))if(!s.team.some(m=>m.instanceId===id))delete s.farm.actors[id];
  s.saveVersion=Math.max(3,s.saveVersion||0);return s;
 }

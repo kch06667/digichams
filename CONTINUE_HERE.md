@@ -1,3 +1,13 @@
+# 개발 체크포인트 — 2026-10-28 오래된 사육장 좌표 복구
+
+- 사육장 렌더링 변경 PR #7 / `b138e49`는 `main` 통합 완료. 캐릭터/먹이의 불필요한 DOM 쓰기 생략 및 레벨업 시 목록 표시 갱신. GitHub Actions 및 PC/모바일 Chromium 4조건 스모크 확인.
+- 이번 복구 브랜치: `fix/farm-offmap-save-recovery-20261028`. `src/farm-core.js`가 구세이브에서 지도 밖 좌표를 최초 한 번만 검사·복구하고, 진행 중인 훈련의 남은 시간 및 기존 개체·능력치·자원은 유지한다. 목표 자체가 잘못된 경우만 명령을 취소한다.
+- `tools/sync-embedded-farm.py`에 farm-core 내장 블록까지 일치 검사를 추가. `tests/farm-offmap-recovery.cjs` 신규 **6/6 Node 통과** 및 기존 farm/navigation/avoidance/championship Node 통과.
+- 첫 Actions 실행은 HTML push 경합으로 실패했지만 **재실행 40568192105 성공**으로 두 HTML에 코어 스크립트 동기화가 완료됐다. 신규 Node 6개 및 기존 회귀검사도 통과했고 PR #8에 제출했다. main 병합 후 커밋을 기준으로 재개할 것.
+- 상세: `docs/FARM_OFFMAP_SAVE_RECOVERY.md`. 매 업데이트 ZIP 미생성 원칙 유지. v0.23.2 WebP 아트 실물은 여전히 미통합.
+
+---
+
 # 최신 체크포인트 — 2026-10-28 개발 성능 진단
 
 - GitHub `main` 성능 진단 PR #6 병합: `32ff7d3`. 개발용 `index.dev.html?perf=1`에서 FPS, 긴 프레임, Long Task, 이미지 요청 및 사용 가능 힙을 확인할 수 있다. 기능은 생성된 개발 페이지에만 포함되며 실제 배포 HTML·세이브는 변경하지 않는다.

@@ -4,13 +4,19 @@ on:
     branches:
       - perf/farm-paint-throttle-20261028
       - perf/farm-dom-diff-20261028
+      - fix/farm-offmap-save-recovery-20261028
     paths:
+      - src/farm-core.js
       - src/hex-farm-ui.js
       - src/hex-farm.css
       - tools/sync-embedded-farm.py
       - tests/farm-dom-paint-browser.py
+      - tests/farm-offmap-recovery.cjs
       - .github/workflows/sync-farm-branch.yml
   workflow_dispatch:
+concurrency:
+  group: farm-inline-sync-${{ github.ref }}
+  cancel-in-progress: true
 permissions:
   contents: write
 jobs:
@@ -35,6 +41,7 @@ jobs:
         run: |
           node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs
           node tests/farm-core.cjs
+          node --test tests/farm-offmap-recovery.cjs
           node tests/championship-core.cjs
       - name: Commit generated HTML back to this branch
         run: |

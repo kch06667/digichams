@@ -4,6 +4,7 @@ on:
     branches: [main]
   pull_request:
     paths:
+      - "src/farm-core.js"
       - "src/hex-farm-ui.js"
       - "src/hex-farm.css"
       - "index.html"
@@ -11,6 +12,7 @@ on:
       - "tools/sync-embedded-farm.py"
       - "tools/import-farm-graphics-v0232.py"
       - "tests/test_farm_graphics_import.py"
+      - "tests/farm-offmap-recovery.cjs"
       - ".github/workflows/verify-farm-sources.yml"
 permissions:
   contents: read
@@ -32,6 +34,7 @@ jobs:
         run: |
           node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs
           node tests/farm-core.cjs
+          node --test tests/farm-offmap-recovery.cjs
           node tests/championship-core.cjs
       - name: Safe graphics importer tests
         run: python3 -m unittest discover -s tests -p test_farm_graphics_import.py -v
