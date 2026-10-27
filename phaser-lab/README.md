@@ -49,6 +49,7 @@ node --test tests/phaser-lab.cjs tests/phaser-preview.cjs
 python3 -m unittest discover -s tests -p test_phaser_atlas.py -v
 ```
 
+The farm model has additional offline regression coverage in `node --test tests/phaser-farm.cjs`.
 The first tests run offline. The synthetic GIF conversion test needs Pillow.
 Full Phaser WebGL/Canvas rendering on physical Android still needs manual
 verification. The original DOM game and save format have not been migrated yet.
