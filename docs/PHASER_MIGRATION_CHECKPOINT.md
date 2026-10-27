@@ -18,7 +18,12 @@ challenge the championships. Player is the tamer/coach, not a manual move pilot.
   with fixed large radial facilities; user now wants smaller NDS-like cage
   cells, initial two rows expandable by progression, and bottom navigation.
   Implement later after ROM/UI reference review; don't silently mutate saves.
-- New `phaser-lab/` is a separate Phaser 3.90.0 prototype. No game state bridge
+- New `phaser-lab/` includes a separate Phaser 3.90.0 battle lab and a
+  *small hex cage farm lab* (`farm.html`/`farm-model.js`/`farm.js`). The cage
+  demo starts with two rows of 6 candidate slots and two occupied cages,
+  supports purchase, row expansion, training demo, four visible bites and
+  pan/zoom. Grid dimensions, prices and feeding portions are demo-only.
+  No game state bridge
   or production replacement is claimed.
 - `phaser-lab/logic.js` defines verified action IDs and simple independent
   rendering/math contract, also importable in Node tests.

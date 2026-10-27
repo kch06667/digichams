@@ -6,6 +6,9 @@ on:
       - 'phaser-lab/index.html'
       - 'phaser-lab/logic.js'
       - 'phaser-lab/game.js'
+      - 'phaser-lab/farm.html'
+      - 'phaser-lab/farm-model.js'
+      - 'phaser-lab/farm.js'
       - 'tools/build-phaser-preview.cjs'
       - '.github/workflows/phaser-safe-preview.yml'
   workflow_dispatch:
@@ -29,7 +32,7 @@ jobs:
           node-version: '22'
       - name: Prepare safe asset-free deploy artifact
         run: |
-          node --test tests/phaser-lab.cjs tests/phaser-preview.cjs
+          node --test tests/phaser-lab.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
           node tools/build-phaser-preview.cjs dist/phaser-preview
           test ! -d dist/phaser-preview/assets
           test ! -d dist/phaser-preview/local-assets

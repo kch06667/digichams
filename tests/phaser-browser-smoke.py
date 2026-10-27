@@ -35,6 +35,8 @@ def check_page(browser, mobile, base_url):
     page.wait_for_function("Boolean(window.DigiPhaserLab)", timeout=30000)
     page.locator("#game canvas").wait_for(timeout=10000)
     assert "준비 완료" in page.locator("#status").inner_text()
+    if (ROOT / "phaser-lab" / "local-assets" / "manifest.json").is_file():
+        assert "변환된 GIF 모션" in page.locator("#status").inner_text()
     assert page.evaluate("DigiPhaserLabLogic.selectAction('victory')") == 30
     assert page.evaluate("DigiPhaserLabLogic.selectAction('training')") == 32
     if mobile:
@@ -58,6 +60,59 @@ def check_page(browser, mobile, base_url):
     context.close()
 
 
+def check_farm(browser, mobile, base_url):
+    kwargs={"viewport":{"width":390,"height":844} if mobile
+            else {"width":1280,"height":800}}
+    if mobile:
+        kwargs.update({"is_mobile":True,"has_touch":True,
+                       "device_scale_factor":2})
+    context=browser.new_context(**kwargs)
+    page=context.new_page()
+    if VENDOR.is_file():
+        page.route(CDN,lambda route:route.fulfill(
+            path=str(VENDOR),content_type="application/javascript"))
+    errors=[]
+    page.on("pageerror",lambda error:errors.append(str(error)))
+    page.goto(base_url+"/phaser-lab/farm.html",wait_until="domcontentloaded")
+    page.wait_for_function("Boolean(window.DigiFarmLab)",timeout=30000)
+    canvas=page.locator("#farm canvas")
+    box=canvas.bounding_box()
+    assert box and box["width"] <= (390 if mobile else 1280)
+    assert page.evaluate("DigiFarmLabModel.initial().rows")==2
+    assert page.evaluate("DigiFarmLabModel.FOOD_BITES")==4
+    # Real mouse/touch selection in the game canvas at the second hex cell.
+    canvas.click(position={"x":221*box["width"]/800,
+                           "y":175*box["height"]/450})
+    page.wait_for_function(
+        "document.querySelector('#status').textContent.includes('2열 선택')",
+        timeout=5000)
+    page.locator("#buy").click()
+    page.wait_for_function(
+        "document.querySelector('#status').textContent.includes('배치 완료')",
+        timeout=5000)
+    page.locator("#feed").click()
+    page.wait_for_function(
+        "document.querySelector('#status').textContent.includes('먹이 배치')",
+        timeout=5000)
+    try:
+        page.wait_for_function(
+            "() => window.DigiFarmLab.snapshot().cages['0:1'].food === 0",
+            timeout=12000)
+    except Exception:
+        print("Farm feeding diagnostic:",
+              page.locator("#status").inner_text(),
+              page.evaluate("window.DigiFarmLab.snapshot()"),
+              errors)
+        raise
+    page.locator("#expand").click()
+    page.wait_for_function(
+        "document.querySelector('#status').textContent.includes('행 개방')",
+        timeout=5000)
+    assert not errors,f"Farm runtime JS errors: {errors}"
+    print("OK farm","touch" if mobile else "desktop","cage/feed/expand")
+    context.close()
+
+
 def main():
     handler = functools.partial(QuietHandler, directory=str(ROOT))
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -73,6 +128,8 @@ def main():
             try:
                 check_page(browser, False, host)
                 check_page(browser, True, host)
+                check_farm(browser, False, host)
+                check_farm(browser, True, host)
             finally:
                 browser.close()
     finally:

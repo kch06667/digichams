@@ -6,7 +6,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const source = path.join(root, 'phaser-lab');
 const output = process.argv[2] ? path.resolve(process.argv[2]) : path.join(root, 'dist', 'phaser-preview');
-const allow = ['index.html', 'game.js', 'logic.js'];
+const allow = ['index.html', 'game.js', 'logic.js', 'farm.html', 'farm.js', 'farm-model.js'];
 // Deliberately prohibit an output directory inside the source or repo root.
 if (output === root || output === source || output.startsWith(source + path.sep)) {
   throw Error('Refusing unsafe preview output directory');
