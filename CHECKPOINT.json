@@ -6,5 +6,20 @@
   "feature": "championship event calendar, 1v1/2v2/3v3 cups, semifinal/final, trophy and rank, one-time rewards, existing battle integration and save resume/forfeit",
   "source": "src/championship-core.js",
   "tests": "TEST_REPORT_v0.23.0.md",
-  "provenance": "temporary_balance, not ROM verified"
+  "provenance": "temporary_balance, not ROM verified",
+  "development_checkpoint": {
+    "id": "farm-render-and-save-recovery-2026-10-28",
+    "date": "2026-10-28",
+    "source_branch": "main",
+    "last_verified_merge": "30dda2c3800d811c6cda53b66d33077e0ce99035",
+    "changes": [
+      "avoid redundant DOM writes on idle actors and food",
+      "update farm roster labels on level-up",
+      "recover off-map actors from older web saves without early training rewards",
+      "include core in HTML source synchronization"
+    ],
+    "checks": "Farm core/navigation/avoidance/recovery (6 new tests), championship regression and source sync passed in GitHub Actions; earlier v0.23.2 snapshot Chromium 4 desktop/mobile combinations for DOM repaint passed.",
+    "remaining": "v0.23.2 WebP art not yet merged to main; Android physical device performance and save tests pending",
+    "delivery": "GitHub-first; no automatic full ZIP per update"
+  }
 }
