@@ -1,3 +1,15 @@
+# 최신 완료 체크포인트 — 2026-10-28 사육장 성능·구세이브 복구
+
+- GitHub `main` 병합: PR #7 `b138e49` (캐릭터/먹이 DOM 갱신 최소화 + 레벨 라벨 수정), PR #8 `30dda2c` (오래된 웹 세이브의 지도 밖 좌표 복구 + 진행 중 훈련 시간 보호).
+- 검증: Chromium으로 제공 ZIP에 동일 렌더링 함수를 적용한 `index/standalone × PC/터치` 4가지 테스트 통과. GitHub Actions에서 신규 좌표 복구 테스트 **6/6**, 기존 사육장 경로·충돌 회피·기본 코어·대회 회귀 통과. GitHub의 farm-core/hex-farm-ui/CSS와 두 HTML의 내장 코드 동기화 성공.
+- 검증된 로직이 병합되었으며 `npm run test:farm`, `npm run test:farm:browser`, `python3 tools/sync-embedded-farm.py --check`로 다시 테스트할 수 있다.
+- 그래픽: **v0.23.2 WebP 실물은 아직 main에 미병합.** 준비된 체크섬 검증 도구 `tools/import-farm-graphics-v0232.py`를 적용하고 PC/모바일 이미지 테스트 후 병합하는 것이 다음 과제.
+- Android 실제 기기에서의 FPS 개선폭·장시간 저장 안정성은 미측정. ROM 기반 밸런스·진화 규칙은 원작 검증 상태에 따르며 임시 수치를 원작 확정으로 말하지 않는다.
+- 전체 ZIP은 매 변경마다 생성/전달하지 않는다. 최신 source of truth는 GitHub `main`. 배포용 `standalone.html`은 필요할 때에만 갱신·배포한다.
+- `CHECKPOINT.json`의 `version: 0.23.0`은 현재 GitHub 웹게임 기반 버전을 뜻하며, 이번 개발 패치가 완전한 원작 이식이나 v0.23.2 그래픽 출시를 의미하지 않는다.
+
+---
+
 # 개발 체크포인트 — 2026-10-28 오래된 사육장 좌표 복구
 
 - 사육장 렌더링 변경 PR #7 / `b138e49`는 `main` 통합 완료. 캐릭터/먹이의 불필요한 DOM 쓰기 생략 및 레벨업 시 목록 표시 갱신. GitHub Actions 및 PC/모바일 Chromium 4조건 스모크 확인.
