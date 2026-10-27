@@ -16,3 +16,4 @@ node_modules/
 __pycache__/
 /index.dev.html
 /.dev-generated/
+/dist/
