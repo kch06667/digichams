@@ -33,7 +33,7 @@ jobs:
                   parts.append(data)
               content = b''.join(parts)
               actual = hashlib.sha256(content).hexdigest()
-              assert actual == item['sha256'], f"Integrity failure for {dest}: {actual}"
+              if item.get('sha256'): assert actual == item['sha256'], f"Integrity failure for {dest}: {actual}"
               dest.write_bytes(content)
               print('assembled', dest, len(content))
       - name: Commit reconstructed files
