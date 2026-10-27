@@ -1,4 +1,14 @@
-# 현재 재개 지점 — 2026-10-27 / v0.23.0 기반
+# 현재 재개 지점 — v0.23.0 기반 / 다른 환경에서 이어가기
+
+## 최신 통합 체크포인트
+- main의 기존 `160b852`와 작업 브랜치의 `a2ccb25`까지 병합. 병합 커밋 `93ec2a9`; 이후 이 인수인계 문서 갱신 포함.
+- 새 환경은 최신 main을 받은 뒤 AGENTS.md → 이 문서 → ROM_ANALYSIS_PROGRESS.md 순서로 읽는다. 변경 시작 전 git status를 확인하고 새 작업 브랜치를 만든다.
+- 게임 실행: 저장소 루트에서 `python3 -m http.server 8000 --bind 127.0.0.1`. index.html 사용; standalone.html은 단독 실행용.
+- 빠른 검사: `node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs`. 순수 Node 검사에는 npm 설치 불필요. 브라우저 검사에는 Python Playwright와 Chromium이 필요(AGENTS.md 참고).
+- `/workspace/scratch/digichams-private`는 기존 클라우드 인스턴스의 로컬 경로이며 다른 환경에 자동 복사되지 않는다. ROM 분석은 별도로 제공된 로컬 입력 경로를 `--rom`에 지정하고, `--output-dir`은 체크아웃 밖으로 지정한다. ROM이 없어도 게임 개발/대부분의 테스트는 가능.
+- 다음 작업: 시설 표지/픽셀 배경 개선 또는 고밀도 이동 문제 재현. ROM은 이름 후보와 종 ID 대응부터 추가 검증. 기존 완료 작업/검증 내역은 아래와 TEST_REPORT.md 참고.
+
+## 이전 작업 기록
 
 - 최신 완료: 세이브 불러오기 전 사본 검증/초기화, 화면 적용 오류 시 원상복구. 손상된 중첩 구조/경로/개체 ID를 거부하며 현재 게임·저장·백업 유지. 두 HTML 테스트 통과.
 - ROM 도구 완료: tools/rom-database.py로 FAT 6434/이름 6412/ARM9 overlay 22 및 도감 텍스트 1176항목 확인. 첫 216 이름 후보와 웹 이름 146개 정확 일치. 실제 종 ID/진화 조건은 미확정. 상세 ROM_ANALYSIS_PROGRESS.md 재사용.
