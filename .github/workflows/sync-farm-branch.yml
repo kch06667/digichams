@@ -1,0 +1,43 @@
+name: Sync farm inline bundles (performance branch)
+on:
+  push:
+    branches:
+      - perf/farm-paint-throttle-20261028
+    paths:
+      - src/hex-farm-ui.js
+      - src/hex-farm.css
+      - tools/sync-embedded-farm.py
+      - .github/workflows/sync-farm-branch.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rewrite only the two farm source blocks
+        run: |
+          python tools/sync-embedded-farm.py
+          python tools/sync-embedded-farm.py --check
+      - name: Core regressions
+        run: |
+          node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs
+          node tests/farm-core.cjs
+          node tests/championship-core.cjs
+      - name: Commit generated HTML back to this branch
+        run: |
+          git add index.html standalone.html
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Synchronize farm performance change into playable HTML bundles"
+            git push origin HEAD:perf/farm-paint-throttle-20261028
+          fi
