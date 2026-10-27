@@ -274,6 +274,67 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 
 /* Walkable connectors use the same core-to-plot graph as the simulation. */
 #farmPanel .hexPath{position:absolute;z-index:0;height:28px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
+
+/* v0.23.2 map visual skin (presentation only): independent of simulation code */
+#farmPanel .farmIntro h2{color:#d7fbff;text-shadow:0 0 13px #35bcfb58;letter-spacing:.025em;}
+#farmPanel .farmScrollFrame{border:1px solid #4da4c5;border-radius:13px;overflow:hidden;box-shadow:0 7px 28px #0008,0 0 0 1px #193954 inset;}
+#farmPanel .farmViewport{background:#082438;scrollbar-color:#80d9eb #163750;}
+#farmPanel .farmWorld{
+  background-color:#09283f;
+  background-image:url("assets/farm/hex_farm_v0232.webp");
+  background-size:920px 690px;
+  background-position:center center;
+  background-repeat:no-repeat;
+}
+#farmPanel .hexTile{
+ background:transparent!important;
+ border:0!important;
+ opacity:1;
+ filter:none;
+ transition:filter .16s ease;
+}
+#farmPanel .hexTile.locked{background:rgba(1,15,31,.26)!important;opacity:1;}
+#farmPanel .hexTile.core{background:transparent!important;}
+#farmPanel .hexTile:hover{filter:brightness(1.18) drop-shadow(0 0 6px #52dafa);}
+#farmPanel .hexTile.selected{filter:drop-shadow(0 0 10px #65f9ff);}
+#farmPanel .hexTile .hexInner{
+ width:97%;height:97%;background:transparent;
+ border:2px solid transparent;
+ display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+ gap:2px;padding:4px 8px 17px;
+ clip-path:inherit;
+}
+#farmPanel .hexTile:hover .hexInner,
+#farmPanel .hexTile:focus-visible .hexInner{border:2px solid #b9faff;}
+#farmPanel .hexTile.selected .hexInner{border:2px solid #ffe99d;}
+#farmPanel .hexTile .hexInner b{display:none;}
+#farmPanel .hexTile.locked .hexInner b{
+ display:block;position:absolute;top:18px;right:34px;font-size:22px;
+ background:#04172bdd;border:1px solid #5da5ba;border-radius:50%;
+ width:37px;height:37px;line-height:34px;text-align:center;
+}
+#farmPanel .hexTile .hexInner strong{
+ font-size:13px;font-weight:800;line-height:1.15;color:#f9fcff;
+ background:linear-gradient(120deg,#082a46e8,#063450ed);
+ padding:4px 9px;border:1px solid #65c9dabc;border-radius:7px;
+ text-shadow:0 1px 3px #000;
+ box-shadow:0 3px 7px #001b2e9c;
+}
+#farmPanel .hexTile .hexInner small{
+ color:#e6f7ff;background:#001322cf;padding:2px 7px;
+ border-radius:6px;font-size:10px;line-height:1.2;
+}
+#farmPanel .hexTile.locked .hexInner strong{color:#deeafa;}
+#farmPanel .hexTile.selected .hexInner strong{border-color:#ffe695;color:#ffeaa5;}
+#farmPanel .hexActor{z-index:8;}
+#farmPanel .hexActor img{filter:drop-shadow(0 2px 2px #031221) drop-shadow(0 0 3px #85f4eb60);}
+#farmPanel .hexActor span{background:#031e33e6;color:#fff7de;border:1px solid #5ac7d57f;padding:2px 5px;}
+#farmPanel .hexFood{z-index:7;filter:drop-shadow(0 2px 3px #031321);}
+#farmPanel .farmWorld.foodPlacement{cursor:crosshair;}
+#farmPanel .farmWorld.foodPlacement .hexTile{filter:brightness(.92);}
+#farmPanel .hexControls{background:linear-gradient(180deg,#11334a,#0b243e);border-color:#427d9c;}
+#farmPanel .farmNav button{border-color:#397eaa;}
+@media(prefers-reduced-motion:reduce){#farmPanel .hexTile{transition:none;}}
 </style><style id="championshipStyle">
 #championshipPanel{margin-top:16px}.championshipCalendar{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:12px 0}.championshipCup{background:rgba(30,61,75,.65);border:1px solid #537487;border-radius:10px;padding:12px}.championshipCup h3{font-size:16px;margin:0 0 8px}.championshipCup p{margin:5px 0;font-size:12px}.championshipCup button{margin-top:9px;width:100%}.championshipCup .champ-lock{color:#f5c48a}.championshipCup .champ-win{color:#82eac6}#championshipBracket{padding:9px;border:1px dashed #608297;border-radius:8px;margin:10px 0}#championshipHistory{opacity:.85}#championshipHistory p{margin:4px 0}
 </style></head><body><div class="wrap"><header class="top"><div class="brand"><div class="logo">🥚</div><div><h1>디지몬 챔피언십 · 웹 이식</h1><p>육성 · 로프 포획 · 자동 전투</p></div></div><div class="pill" id="dayPill">DAY 1 · 신입 사육사</div></header>
