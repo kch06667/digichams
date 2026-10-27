@@ -52,11 +52,26 @@ jobs:
                   out.parent.mkdir(parents=True, exist_ok=True)
                   out.write_text(content, encoding='utf-8')
                   print('restored', relative)
+      - name: Synchronize inline source blocks across both HTML versions
+        shell: python
+        run: |
+          import pathlib, re
+          pairs = [('farm-core-v0143','src/farm-core.js'),('hex-farm-v0143','src/hex-farm-ui.js'),('championship-core-v023','src/championship-core.js')]
+          for name in ('index.html','standalone.html'):
+              f = pathlib.Path(name)
+              text = f.read_text(encoding='utf-8')
+              for tag, source in pairs:
+                  content = pathlib.Path(source).read_text(encoding='utf-8').strip()
+                  pat = re.compile(r'(<script id="' + re.escape(tag) + r'">)([\s\S]*?)(</script>)')
+                  text, n = pat.subn(lambda m: m.group(1) + '\n' + content + '\n' + m.group(3), text, count=1)
+                  assert n == 1, (name, tag)
+              f.write_text(text, encoding='utf-8')
       - name: Commit reconstructed files
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          rm -rf .upload_chunks
           git add -A
           if ! git diff --cached --quiet; then git commit -m "build: reconstruct v0.24 checkpoint from verified chunks"; git push; fi
       - name: Verify pure Node tests and bundled scripts
