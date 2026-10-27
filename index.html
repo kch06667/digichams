@@ -268,6 +268,67 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 #farmPanel #hexSeason{display:inline-flex;padding:3px 6px;border-radius:6px;background:#203c4b;color:#fff0c2;font-weight:700;}
 @media(max-width:500px){#farmPanel .hexCareControls button{flex:1 1 115px;}}
 
+/* v0.23.2 map visual skin (presentation only): independent of simulation code */
+#farmPanel .farmIntro h2{color:#d7fbff;text-shadow:0 0 13px #35bcfb58;letter-spacing:.025em;}
+#farmPanel .farmScrollFrame{border:1px solid #4da4c5;border-radius:13px;overflow:hidden;box-shadow:0 7px 28px #0008,0 0 0 1px #193954 inset;}
+#farmPanel .farmViewport{background:#082438;scrollbar-color:#80d9eb #163750;}
+#farmPanel .farmWorld{
+  background-color:#09283f;
+  background-image:url("assets/farm/hex_farm_v0232.webp");
+  background-size:920px 690px;
+  background-position:center center;
+  background-repeat:no-repeat;
+}
+#farmPanel .hexTile{
+ background:transparent!important;
+ border:0!important;
+ opacity:1;
+ filter:none;
+ transition:filter .16s ease;
+}
+#farmPanel .hexTile.locked{background:rgba(1,15,31,.26)!important;opacity:1;}
+#farmPanel .hexTile.core{background:transparent!important;}
+#farmPanel .hexTile:hover{filter:brightness(1.18) drop-shadow(0 0 6px #52dafa);}
+#farmPanel .hexTile.selected{filter:drop-shadow(0 0 10px #65f9ff);}
+#farmPanel .hexTile .hexInner{
+ width:97%;height:97%;background:transparent;
+ border:2px solid transparent;
+ display:flex;flex-direction:column;justify-content:flex-end;align-items:center;
+ gap:2px;padding:4px 8px 17px;
+ clip-path:inherit;
+}
+#farmPanel .hexTile:hover .hexInner,
+#farmPanel .hexTile:focus-visible .hexInner{border:2px solid #b9faff;}
+#farmPanel .hexTile.selected .hexInner{border:2px solid #ffe99d;}
+#farmPanel .hexTile .hexInner b{display:none;}
+#farmPanel .hexTile.locked .hexInner b{
+ display:block;position:absolute;top:18px;right:34px;font-size:22px;
+ background:#04172bdd;border:1px solid #5da5ba;border-radius:50%;
+ width:37px;height:37px;line-height:34px;text-align:center;
+}
+#farmPanel .hexTile .hexInner strong{
+ font-size:13px;font-weight:800;line-height:1.15;color:#f9fcff;
+ background:linear-gradient(120deg,#082a46e8,#063450ed);
+ padding:4px 9px;border:1px solid #65c9dabc;border-radius:7px;
+ text-shadow:0 1px 3px #000;
+ box-shadow:0 3px 7px #001b2e9c;
+}
+#farmPanel .hexTile .hexInner small{
+ color:#e6f7ff;background:#001322cf;padding:2px 7px;
+ border-radius:6px;font-size:10px;line-height:1.2;
+}
+#farmPanel .hexTile.locked .hexInner strong{color:#deeafa;}
+#farmPanel .hexTile.selected .hexInner strong{border-color:#ffe695;color:#ffeaa5;}
+#farmPanel .hexActor{z-index:8;}
+#farmPanel .hexActor img{filter:drop-shadow(0 2px 2px #031221) drop-shadow(0 0 3px #85f4eb60);}
+#farmPanel .hexActor span{background:#031e33e6;color:#fff7de;border:1px solid #5ac7d57f;padding:2px 5px;}
+#farmPanel .hexFood{z-index:7;filter:drop-shadow(0 2px 3px #031321);}
+#farmPanel .farmWorld.foodPlacement{cursor:crosshair;}
+#farmPanel .farmWorld.foodPlacement .hexTile{filter:brightness(.92);}
+#farmPanel .hexControls{background:linear-gradient(180deg,#11334a,#0b243e);border-color:#427d9c;}
+#farmPanel .farmNav button{border-color:#397eaa;}
+@media(prefers-reduced-motion:reduce){#farmPanel .hexTile{transition:none;}}
+
 /* Placement targets the ground; actors must not steal selection clicks/taps. */
 #farmPanel .farmWorld.foodPlacement{cursor:crosshair;}
 #farmPanel .farmWorld.foodPlacement .hexActor{pointer-events:none;}
@@ -276,6 +337,19 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 #farmPanel .hexPath{position:absolute;z-index:0;height:28px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
 </style><style id="championshipStyle">
 #championshipPanel{margin-top:16px}.championshipCalendar{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:12px 0}.championshipCup{background:rgba(30,61,75,.65);border:1px solid #537487;border-radius:10px;padding:12px}.championshipCup h3{font-size:16px;margin:0 0 8px}.championshipCup p{margin:5px 0;font-size:12px}.championshipCup button{margin-top:9px;width:100%}.championshipCup .champ-lock{color:#f5c48a}.championshipCup .champ-win{color:#82eac6}#championshipBracket{padding:9px;border:1px dashed #608297;border-radius:8px;margin:10px 0}#championshipHistory{opacity:.85}#championshipHistory p{margin:4px 0}
+
+/* v0.23.1 — bracket cards scroll horizontally on narrow devices */
+.championshipBracketGrid{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;padding:8px 0 12px;scrollbar-width:thin}
+.championshipBracketRound{flex:0 0 min(205px,72vw);display:flex;flex-direction:column;gap:8px}
+.championshipBracketRound h4{font-size:12px;color:#a8d6e6;margin:0 0 4px}
+.championshipFixture{padding:9px;border:1px solid #526c7d;border-radius:8px;background:#152536;font-size:12px;min-height:65px}
+.championshipFixture .championshipSlot{display:block;overflow-wrap:anywhere;margin:2px 0}
+.championshipFixture .winner{color:#83efc7;font-weight:bold}
+.championshipFixture .waiting{color:#f5c48a}
+.championshipFixture .npcResult{color:#a2bfd0}
+#championshipHistory .championshipRecent{border-top:1px solid #3d566d;padding-top:8px;margin-top:8px}
+#championshipTrophies{margin:8px 0;display:flex;gap:8px;flex-wrap:wrap;font-size:12px}
+#championshipTrophies span{border:1px solid #526c7d;border-radius:7px;padding:6px}
 </style></head><body><div class="wrap"><header class="top"><div class="brand"><div class="logo">🥚</div><div><h1>디지몬 챔피언십 · 웹 이식</h1><p>육성 · 로프 포획 · 자동 전투</p></div></div><div class="pill" id="dayPill">DAY 1 · 신입 사육사</div></header>
 <div class="displaySwitcher" role="group" aria-label="화면 배치 선택">
  <span class="displaySwitcherLabel">🎮 화면 모드</span>
@@ -326,7 +400,7 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
  <div id="huntActionBar"><button id="explore" class="gold">🔎 탐색하기</button><button id="throwRope" class="primary" disabled>🪢 로프 선택</button><button id="huntBait" disabled>🍖 먹이 유인</button><button id="huntGrab" disabled>✋ 집어 올리기</button></div>
  </div></article><article class="panel"><h2>포획 정보</h2><div id="huntHud"><div>야생 HP<b id="huntHealth">—</b></div><div>도주까지<b id="huntEscape">—</b></div><div>로프 등급<b id="huntRopeTier">유년기용</b></div></div><div class="statline"><span>남은 로프</span><b id="huntRopes">3</b></div><div class="statline"><span>소모형 로프</span><b id="huntRopeCount">3</b></div><div class="statline"><span>미끼용 먹이</span><b id="huntFoodCount">5</b></div>
  <div class="divider"></div><p>1. 로프를 선택하고 <b>디지몬 주변에 원을 한 번</b> 그린 후 손을 떼.</p><p>2. 묶인 디지몬을 잡고 <b>바깥쪽으로 조금씩 당겨</b> 체력을 소진시켜.</p><p>3. 기절하면 <b>디지몬을 터치하거나 손 버튼</b>으로 데려와.</p><p class="small">로프 등급은 대회 승리로 상승. 정확한 등급·도주 시간·체력·도구 효과는 추후 ROM 검증. 영역별 출현 목록은 임시 배치.</p></article></div></section>
-<section id="battle" class="section"><div class="layout"><article class="panel"><h2>ROM 필드 AI 전투</h2><p class="muted">실제 NDS ROM에서 복원한 필드 배경 위에서 디지몬이 상하좌우 무빙을 유지하며 근접 평타를 우선하는 실시간 AI 자동 전투야. 최대 3 vs 3을 지원해.</p><div class="huntfield"><div class="row"><div><div class="small">내 디지몬</div><img class="spriteInline pixelSprite" id="myBattleSprite" data-sprite="코로몬" alt="내 디지몬"><b id="myBattleName">코로몬</b><div class="small" id="myBattleHp">50 / 50 HP</div></div><div style="font-size:30px">⚔</div><div><div class="small">상대</div><img class="spriteInline pixelSprite" id="enemyBattleSprite" data-sprite="고부리몬" alt="상대 디지몬"><b id="enemyName">고부리몬</b><div class="small" id="enemyHp">34 / 34 HP</div></div></div><div class="actions"><button id="newEnemy">상대 찾기</button><button class="primary" id="startBattle">자동 전투 시작</button></div></div><div class="divider"></div><div class="log" id="battleLog"></div></article><article class="panel"><h2>전투 규칙 (프로토타입)</h2><p>전투 중 이동·회피·근접 평타·필살기 선택은 독립 AI 규칙으로 구현했어. 승리 시 경험치와 포인트를 얻어.</p><p class="small">※ 원작의 전투 공식과 동일하다고 주장하는 값은 아니야. 실제 플레이를 바탕으로 밸런스를 조정할 수 있게 독립 규칙으로 구현했어. ROM의 배경 그래픽은 실제 파일이며, 배틀 판정 공식은 ROM에서 해독한 것이 아니야.</p><div class="stat"><div class="statline"><span>승리 횟수</span><b id="winsStat">0</b></div></div><div class="stat" style="margin-top:8px"><div class="statline"><span>패배 횟수</span><b id="lossesStat">0</b></div></div></article></div><article class="panel" id="championshipPanel"><div class="row"><h2>🏆 테이머 챔피언십</h2><span class="tag" id="championshipRank">도전자</span></div><p class="small">DAY 일정에 맞춰 참가하는 2라운드 토너먼트. 이 버전의 대회 이름·일정·상금·상대 구성은 <b>임시 확장판 설정</b>이야. 실제 NDS 규칙 검증 전까지 분리 관리해.</p><div id="championshipCalendar" class="championshipCalendar"></div><div id="championshipBracket" class="small" aria-live="polite"></div><div id="championshipHistory" class="small"></div></article></section>
+<section id="battle" class="section"><div class="layout"><article class="panel"><h2>ROM 필드 AI 전투</h2><p class="muted">실제 NDS ROM에서 복원한 필드 배경 위에서 디지몬이 상하좌우 무빙을 유지하며 근접 평타를 우선하는 실시간 AI 자동 전투야. 최대 3 vs 3을 지원해.</p><div class="huntfield"><div class="row"><div><div class="small">내 디지몬</div><img class="spriteInline pixelSprite" id="myBattleSprite" data-sprite="코로몬" alt="내 디지몬"><b id="myBattleName">코로몬</b><div class="small" id="myBattleHp">50 / 50 HP</div></div><div style="font-size:30px">⚔</div><div><div class="small">상대</div><img class="spriteInline pixelSprite" id="enemyBattleSprite" data-sprite="고부리몬" alt="상대 디지몬"><b id="enemyName">고부리몬</b><div class="small" id="enemyHp">34 / 34 HP</div></div></div><div class="actions"><button id="newEnemy">상대 찾기</button><button class="primary" id="startBattle">자동 전투 시작</button></div></div><div class="divider"></div><div class="log" id="battleLog"></div></article><article class="panel"><h2>전투 규칙 (프로토타입)</h2><p>전투 중 이동·회피·근접 평타·필살기 선택은 독립 AI 규칙으로 구현했어. 승리 시 경험치와 포인트를 얻어.</p><p class="small">※ 원작의 전투 공식과 동일하다고 주장하는 값은 아니야. 실제 플레이를 바탕으로 밸런스를 조정할 수 있게 독립 규칙으로 구현했어. ROM의 배경 그래픽은 실제 파일이며, 배틀 판정 공식은 ROM에서 해독한 것이 아니야.</p><div class="stat"><div class="statline"><span>승리 횟수</span><b id="winsStat">0</b></div></div><div class="stat" style="margin-top:8px"><div class="statline"><span>패배 횟수</span><b id="lossesStat">0</b></div></div></article></div><article class="panel" id="championshipPanel"><div class="row"><h2>🏆 테이머 챔피언십</h2><span class="tag" id="championshipRank">도전자</span></div><p class="small">DAY 일정에 맞춰 참가하는 2라운드 토너먼트. 이 버전의 대회 이름·일정·상금·상대 구성은 <b>임시 확장판 설정</b>이야. 실제 NDS 규칙 검증 전까지 분리 관리해.</p><div id="championshipCalendar" class="championshipCalendar"></div><div id="championshipTrophies" aria-label="우승 트로피"></div><div id="championshipBracket" class="small" aria-live="polite"></div><div id="championshipHistory" class="small"></div></article></section>
 
 <section class="section" id="romlibrary">
  <article class="panel">
@@ -340,24 +414,47 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 <section id="dex" class="section"><article class="panel"><div class="row"><h2>내 디지몬 / 도감</h2><span class="small" id="dexCount">1종</span></div><p class="muted">동료를 선택하면 사육장 관리 대상을 바꿀 수 있어.</p><div class="roster" id="roster"></div><div class="divider"></div><h2>진화 후보 · 목표 설정</h2><p class="muted">NDS 공략 기반 진화 477갈래. 목표를 지정하면 다른 진화를 하지 않고 해당 조건을 기다려. 목표를 해제하면 가능한 경로를 자동 선택해. AP 획득량·단계 수명·동시 조건 우선순위는 임시값이야.</p><div id="evolutionRules" class="small"></div><div class="actions"><button class="gold" id="evolve">✨ 진화 시도</button></div></article><article class="panel dexCatalogPanel" id="speciesCatalogPanel"><div class="row"><h2>원작 스프라이트 도감</h2><span id="catalogTotal" class="small">216종 · 40동작 프레임</span></div><p class="muted">파일에 들어 있던 전체 스프라이트를 검색·미리보기할 수 있어. 진화 및 능력치 수치는 일부 미검증이며, 도감에 보이는 것이 곧 포획 가능함을 뜻하지는 않아.</p><div class="catalogToolbar"><input type="search" id="catalogSearch" placeholder="이름 검색 (예: 워그레이몬 / warglaymon)" aria-label="디지몬 이름 검색"><select id="catalogStage" aria-label="성장 단계"><option value="all">전체 성장 단계</option><option value="fresh">유년기 I</option><option value="in-training">유년기 II</option><option value="rookie">성장기</option><option value="champion">성숙기</option><option value="ultimate">완전체</option><option value="mega">궁극체</option></select></div><div id="catalogStatus" class="small"></div><div id="catalogCards" class="catalogCards"></div><div class="catalogPaging"><button id="catalogPrev" type="button">◀ 이전</button><span id="catalogPage" class="small"></span><button id="catalogNext" type="button">다음 ▶</button></div><div id="catalogDetail" class="catalogDetail" aria-live="polite"></div></article></section>
 <div class="footer">세이브는 이 기기의 브라우저에 저장돼. PC와 Android 사이의 세이브 공유는 아직 미지원. 설치형 앱(PWA)으로 실행 가능하며, 네이티브 EXE/APK 패키지는 별도 빌드 단계야.</div></div><div class="toast hidden" id="toast"></div>
 <script id="championship-core-v023">
-/* v0.23 Championship calendar & brackets — playable extension, not decoded ROM tournament rules. */
+/* v0.23.1 Championship bracket engine. NPCs and schedules are EXPANSION PLACEHOLDERS, not ROM verified. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;if(root)root.DCChampionship=api;})(typeof globalThis!=='undefined'?globalThis:null,function(){
  'use strict';
+ // Seed order is stable so that a saved tournament's matchups never change after reloading.
+ // Each non-player participant has one trainer and an explicit team; no repeated-species filler.
+ const ROSTERS=Object.freeze({
+  novice:[
+   {id:'novice-gobu',trainer:'숲의 테이머',team:['고부리몬'],power:10},
+   {id:'novice-agu',trainer:'붉은 모자 테이머',team:['아구몬'],power:18},
+   {id:'novice-tenta',trainer:'곤충 연구가',team:['텐타몬'],power:12}
+  ],
+  regional:[
+   {id:'regional-gabu',trainer:'설원의 테이머',team:['가부몬','텐타몬'],power:24},
+   {id:'regional-grey',trainer:'화염 조련사',team:['그레이몬','가루몬'],power:34},
+   {id:'regional-devi',trainer:'어둠 연구가',team:['데블몬','엔젤몬'],power:28}
+  ],
+  grand:[
+   {id:'grand-metalgrey',trainer:'강철 테이머',team:['메탈그레이몬','가루몬','안드로몬'],power:48},
+   {id:'grand-wargrey',trainer:'용기의 도전자',team:['워그레이몬','메탈가루몬','엔젤몬'],power:72},
+   {id:'grand-dark',trainer:'암흑 전략가',team:['스컬그레이몬','데블몬','레이디데블몬'],power:52},
+   {id:'grand-speed',trainer:'질풍 테이머',team:['워가루몬','가부몬','피요몬'],power:53},
+   {id:'grand-cyborg',trainer:'기계 연구가',team:['사이버드라몬','안드로몬','메탈그레이몬'],power:57},
+   {id:'grand-wild',trainer:'황야의 테이머',team:['다크티라노몬','베지몬','텐타몬'],power:44},
+   {id:'grand-legend',trainer:'정상급 도전자',team:['메탈가루몬','워그레이몬','그레이몬'],power:64}
+  ]
+ });
  const CUPS=Object.freeze([
-  {id:'novice',name:'신인 테이머 컵',day:1,period:7,size:1,wins:0,prerequisite:null,prize:260,points:4,opponents:['고부리몬','아구몬'],title:'신인 우승자'},
-  {id:'regional',name:'지역 챔피언 컵',day:5,period:7,size:2,wins:2,prerequisite:'novice',prize:650,points:9,opponents:['가부몬','그레이몬'],title:'지역 챔피언'},
-  {id:'grand',name:'월드 챌린지 컵',day:10,period:10,size:3,wins:5,prerequisite:'regional',prize:1400,points:16,opponents:['메탈그레이몬','워그레이몬'],title:'그랜드 챔피언'}
+  {id:'novice',name:'신인 테이머 컵',day:1,period:7,size:1,wins:0,prerequisite:null,prize:260,points:4,teams:4,rounds:2,opponents:['고부리몬','아구몬'],title:'신인 우승자'},
+  {id:'regional',name:'지역 챔피언 컵',day:5,period:7,size:2,wins:2,prerequisite:'novice',prize:650,points:9,teams:4,rounds:2,opponents:['가부몬','그레이몬'],title:'지역 챔피언'},
+  {id:'grand',name:'월드 챌린지 컵',day:10,period:10,size:3,wins:5,prerequisite:'regional',prize:1400,points:16,teams:8,rounds:3,opponents:['메탈그레이몬','워그레이몬'],title:'그랜드 챔피언'}
  ]);
  const get=id=>CUPS.find(c=>c.id===id)||null;
- const base=()=>({active:null,crowns:{},history:[],sequence:0,rank:0,lastResult:null});
+ const base=()=>({active:null,crowns:{},history:[],matchHistory:[],sequence:0,rank:0,lastResult:null});
  function ensure(s){if(!s.championship||typeof s.championship!=='object')s.championship=base();const c=s.championship;
   if(!c.crowns||typeof c.crowns!=='object')c.crowns={};if(!Array.isArray(c.history))c.history=[];
+  if(!Array.isArray(c.matchHistory))c.matchHistory=[];
   c.sequence=Number.isSafeInteger(c.sequence)&&c.sequence>=0?c.sequence:0;
   c.rank=CUPS.reduce((n,cup,i)=>c.crowns[cup.id]?Math.max(n,i+1):n,0);
-  if(c.active&&(!get(c.active.cupId)||!Number.isInteger(c.active.round)||c.active.round<0||c.active.round>1))c.active=null;
+  if(c.active&&(!get(c.active.cupId)||!Number.isInteger(c.active.round)||c.active.round<0||c.active.round>=(c.active.bracket?get(c.active.cupId).rounds:2)))c.active=null;
   return c;
  }
- const stageRank={'유년기 I':0,'유년기 II':0,'성장기':1,'성숙기':2,'완전체':3,'궁극체':4};
  function eligible(s){return (s.team||[]).filter(m=>m&&m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage');}
  function nextDay(c,day){const now=Math.max(1,Math.floor(Number(day)||1));return now<=c.day?c.day:c.day+Math.ceil((now-c.day)/c.period)*c.period;}
  function requirements(s,cup){const cupDef=typeof cup==='string'?get(cup):cup;if(!cupDef)return ['존재하지 않는 대회'];
@@ -366,23 +463,54 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
   if((s.wins||0)<cupDef.wins)out.push('일반·대회 전투 '+cupDef.wins+'승 필요');
   if(cupDef.prerequisite&&!ch.crowns[cupDef.prerequisite])out.push(get(cupDef.prerequisite).name+' 우승 필요');
   const next=nextDay(cupDef,s.day);if(Number(s.day)!==next)out.push('DAY '+next+' 개최');
-  const roster=eligible(s);if(roster.length<cupDef.size)out.push('출전 가능 '+cupDef.size+'마리 필요');
+  if(eligible(s).length<cupDef.size)out.push('출전 가능 '+cupDef.size+'마리 필요');
   return out;
  }
+ function participant(bracket,id){return bracket?.participants.find(p=>p.id===id)||null;}
+ function winnerOf(bracket,a,b){const aa=participant(bracket,a),bb=participant(bracket,b);if(!aa||!bb||a==='player'||b==='player')return null;return aa.power>=bb.power?a:b;}
+ // Only auto-resolve NPC-vs-NPC matches. A player battle is never simulated or rewarded here.
+ function propagate(bracket){let changed=true;
+  while(changed){changed=false;
+   for(let r=0;r<bracket.rounds.length;r++)for(let i=0;i<bracket.rounds[r].length;i++){
+    const m=bracket.rounds[r][i];
+    if(!m.winner&&m.slots[0]&&m.slots[1]){const npc=winnerOf(bracket,m.slots[0],m.slots[1]);if(npc){m.winner=npc;m.source='npc-sim';changed=true;}}
+    if(m.winner&&r+1<bracket.rounds.length){const target=bracket.rounds[r+1][Math.floor(i/2)];const slot=i%2;
+     if(!target.slots[slot]){target.slots[slot]=m.winner;changed=true;}
+    }
+   }
+  }
+ }
+ function makeBracket(def,s,serial){const seeded=ROSTERS[def.id]||[];const playerNames=eligible(s).slice(0,def.size).map(m=>m.name);
+  const participants=[{id:'player',trainer:'내 팀',team:playerNames,power:0},...seeded.map(p=>({id:p.id,trainer:p.trainer,team:p.team.slice(),power:p.power}))];
+  if(participants.length!==def.teams)throw Error('대회 참가자 수가 맞지 않음: '+def.id);
+  const rounds=[];for(let r=0;r<def.rounds;r++){const matches=[];for(let i=0;i<def.teams/(2**(r+1));i++){
+   matches.push({id:'cup-'+serial+'-br-'+r+'-'+i,slots:r===0?[participants[2*i].id,participants[2*i+1].id]:[null,null],winner:null,source:null});
+  }rounds.push(matches);}
+  const bracket={teams:def.teams,participants,rounds,provenance:'temporary_balance'};propagate(bracket);return bracket;
+ }
  function enter(s,id){const def=get(id);const missing=requirements(s,def);if(missing.length)return {ok:false,missing};
-  const c=ensure(s);const serial=++c.sequence;c.active={id:'cup-'+serial,cupId:id,round:0,startedDay:Number(s.day)||1,awaiting:null};return {ok:true,active:c.active};}
- function nextMatch(s){const a=ensure(s).active;if(!a||a.awaiting)return null;const cup=get(a.cupId);return {cupId:a.cupId,round:a.round,matchId:a.id+'-round-'+a.round,opponent:cup.opponents[a.round],size:cup.size,name:cup.name};}
+  const c=ensure(s);const serial=++c.sequence;c.active={id:'cup-'+serial,cupId:id,round:0,startedDay:Number(s.day)||1,awaiting:null,bracket:makeBracket(def,s,serial)};return {ok:true,active:c.active};}
+ function nextMatch(s){const a=ensure(s).active;if(!a||a.awaiting)return null;const cup=get(a.cupId);
+  const m=a.bracket?.rounds[a.round]?.[0];const foe=m?participant(a.bracket,m.slots.find(id=>id&&id!=='player')):null;
+  if(a.bracket&&(!m||m.winner||!m.slots.includes('player')||!foe))return null;
+  return {cupId:a.cupId,round:a.round,matchId:a.id+'-round-'+a.round,opponent:foe?.team[0]||cup.opponents[a.round],opponentTeam:foe?.team.slice()||[cup.opponents[a.round]],trainer:foe?.trainer||'상대 테이머',size:cup.size,name:cup.name,rounds:a.bracket?.rounds.length||2};
+ }
  function beginMatch(s,matchId){const match=nextMatch(s);if(!match||match.matchId!==matchId)return {ok:false,reason:'대진이 일치하지 않아.'};
   if(eligible(s).length<match.size)return {ok:false,reason:'회복한 디지몬 '+match.size+'마리가 필요해.'};
   ensure(s).active.awaiting=match.matchId;return {ok:true,match};}
  function cancelUnstarted(s,matchId){const a=ensure(s).active;if(a&&a.awaiting===matchId)a.awaiting=null;}
  function finishMatch(s,matchId,won){const c=ensure(s),a=c.active;if(!a||a.awaiting!==matchId)return {ok:false,reason:'이미 정산한 경기 또는 다른 경기야.'};
   const matchIdExpected=a.id+'-round-'+a.round;if(matchId!==matchIdExpected)return {ok:false,reason:'대진 불일치'};
-  const def=get(a.cupId);a.awaiting=null;
-  if(!won){const result={cupId:a.cupId,cup:def.name,day:s.day,won:false,round:a.round,prize:0};c.history.unshift(result);c.history=c.history.slice(0,24);c.lastResult=result;c.active=null;return {ok:true,complete:true,won:false,result};}
+  const def=get(a.cupId),round=a.round,br=a.bracket,m=br?.rounds[round]?.[0];
+  const foe=m?participant(br,m.slots.find(id=>id&&id!=='player')):null;
+  a.awaiting=null;
+  if(m){m.winner=won?'player':foe?.id||null;m.source='battle';propagate(br);}
+  c.matchHistory.unshift({matchId,cupId:a.cupId,day:s.day,round,won:!!won,trainer:foe?.trainer||'상대 테이머',opponent:foe?.team.slice()||[def.opponents[round]]});c.matchHistory=c.matchHistory.slice(0,80);
+  if(!won){const result={cupId:a.cupId,cup:def.name,day:s.day,won:false,round,prize:0,...(br?{bracket:br}:{})};
+   c.history.unshift(result);c.history=c.history.slice(0,24);c.lastResult=result;c.active=null;return {ok:true,complete:true,won:false,result};}
   a.round++;
-  if(a.round<2)return {ok:true,complete:false,won:true,round:a.round};
-  const result={cupId:a.cupId,cup:def.name,day:s.day,won:true,round:1,prize:def.prize};
+  if(a.round<(br?def.rounds:2))return {ok:true,complete:false,won:true,round:a.round};
+  const result={cupId:a.cupId,cup:def.name,day:s.day,won:true,round,prize:def.prize,...(br?{bracket:br}:{})};
   c.crowns[a.cupId]=(c.crowns[a.cupId]||0)+1;c.rank=CUPS.reduce((n,cup,i)=>c.crowns[cup.id]?Math.max(n,i+1):n,0);
   s.facilityCredits=Math.max(0,Number(s.facilityCredits)||0)+def.prize;
   s.points=Math.max(0,Number(s.points)||0)+def.points;
@@ -390,11 +518,11 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
   return {ok:true,complete:true,won:true,result,prize:def.prize,rank:c.rank};
  }
  function interrupted(s,pendingBattle){const a=ensure(s).active;if(!a||!a.awaiting)return false;
-  // Only a truly started tournament fight should forfeit after a reload/crash.
   if(!pendingBattle||pendingBattle.tournamentMatchId!==a.awaiting){a.awaiting=null;return false;}
   return finishMatch(s,a.awaiting,false).ok;
  }
- return Object.freeze({CUPS,get,ensure,eligible,nextDay,requirements,enter,nextMatch,beginMatch,cancelUnstarted,finishMatch,interrupted});
+ function bracketFor(s){const c=ensure(s);return c.active?.bracket||c.lastResult?.bracket||null;}
+ return Object.freeze({CUPS,ROSTERS,get,ensure,eligible,nextDay,requirements,enter,nextMatch,beginMatch,cancelUnstarted,finishMatch,interrupted,bracketFor});
 });
 
 </script>
@@ -869,8 +997,7 @@ const ROM_BATTLE_HUD="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYA
   '가부몬':{name:'블루 블래스터',type:'orb',color:'#87e6ff'},
   '아르마몬':{name:'돌진 타격',type:'claw',color:'#f8dca2'},
   '쿠와가몬':{name:'강습 베기',type:'claw',color:'#ef98c4'},
-  '가루몬':{name:'돌진 타격',type:'claw',color:'#bee9ff'},
-  '엔젤몬':{name:'빛의 타격',type:'claw',color:'#fff0ae'},
+  '가루몬':{name:'돌진 타격',type:'claw',color:'#bee9ff'},  '엔젤몬':{name:'빛의 타격',type:'claw',color:'#fff0ae'},
   '고부리몬':{name:'강타',type:'claw',color:'#e5f8b3'},
   '워그레이몬':{name:'가이아 포스',type:'orb',color:'#ffb95b',cost:36},
   '블랙워그레이몬':{name:'가이아 포스',type:'orb',color:'#d0a4f2',cost:36},
@@ -908,6 +1035,7 @@ const ROM_BATTLE_HUD="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYA
  function alive(side){return fighters.filter(f=>f.side===side&&f.hp>0)}
  function reset(){cancelAnimationFrame(raf);running=false;finished=false;preview=false;elapsed=0;winElapsed=0;winningSide=-1;fx=[];bullets=[];events=[];stats={meleeAttempts:0,meleeHits:0,skillHits:0,specials:0,meleeSkills:0,rangedSkills:0,dodges:0,retreats:0,hits:0,misses:0,distance:0,knockDistance:0};specialCallout=null;cameraShake=0;skillSequence=null;popups=[];camera.x=(WORLD.w-FOV.w)/2;camera.y=(WORLD.h-FOV.h)/2;
   const count=Number(teamSelect.value)||3;const me=teamMembers(allySelect.value,0,count),other=teamMembers(enemySelect.value,1,count);
+  if(tournamentMatch?.opponentTeam?.length)other.splice(0,other.length,...tournamentMatch.opponentTeam.slice(0,count));
   fighters=[...me.map((n,i)=>fighter(n,0,i,count)),...other.map((n,i)=>fighter(n,1,i,count))];
   if(modeSelect.value==='owned'){const selected=[current(),...state.team.filter(m=>m!==current())].filter(m=>m.hp>0&&!m.egg&&m.location!=='storage').slice(0,count);fighters=fighters.filter(f=>f.side===1);selected.forEach((m,i)=>{const f=fighter(m.name,0,i,count);Object.assign(f,{instanceId:m.instanceId,hp:m.hp,max:m.maxHp,atk:m.atk,def:m.def,spd:m.spd,...BC.fighterVitals(m)});fighters.unshift(f);});}
   el('lbMetrics').textContent=metrics();log(`필드 준비 · ${me.join(' / ')} vs ${other.join(' / ')}`);el('lbStatus').textContent='전투 준비 완료 — 자동으로 이동·회피·추적·공격해.';draw();renderTeams();
@@ -936,7 +1064,7 @@ function settleMatch(won,aborted=false){if(settled)return;syncBattleHP();settled
  if(tournamentMatch){const result=DCChampionship.finishMatch(state,tournamentMatch.matchId,!!won&&!aborted);
   if(result.ok){if(result.complete&&result.won)say('🏆 '+result.result.cup+' 우승! 상금 '+result.prize+' 시설 Bit를 받았어.');
   else if(result.complete)say('대회 탈락. 다음 일정에 재도전할 수 있어.');
-  else say('준결승 승리! 결승 진출. 체력과 TP를 회복하고 다음 경기에 출전해.');}
+  else say('대회 다음 라운드 진출! 체력과 TP를 회복하고 다음 경기에 출전해.');}
   tournamentMatch=null;
  }
  say(aborted?'출전을 중단했어. 현재 HP와 패배 기록을 저장했어.':won?'내 디지몬이 승리했어. 출전 개체에게 경험치를 지급했어.':'내 디지몬이 패배했어. 휴식으로 회복해 줘.');render();save(false);
@@ -1639,6 +1767,17 @@ function ensure(s){
  s.world.seconds=Math.max(0,Number(s.world.seconds)||0);
  if(![1,2,4].includes(s.world.speed))s.world.speed=1;
  for(const m of s.team){if(!m.instanceId)throw Error('Missing instanceId');s.farm.actors[m.instanceId]||={x:50,y:62,mode:'idle',pose:0,remaining:0,idleTime:0,autoRest:true};}
+ // Repair legacy off-map positions before pathfinding. Preserve valid orders,
+ // but never grant an unfinished training action's reward during relocation.
+ for(const m of s.team){
+  if(m.egg||m.location==='storage')continue;
+  const a=s.farm.actors[m.instanceId];
+  if(walkable(s,a.x,a.y))continue;
+  const origin=center('core');a.x=origin.x;a.y=origin.y;
+  a.route=null;a.routeKey=null;a.waitPosition=null;a.trafficWait=0;
+  if(a.goal){a.mode='moving';a.repositioning=!!a.remaining&&a.goal.kind!=='wander'&&a.goal.kind!=='eat';}
+  else{a.mode='idle';a.pose=0;}
+ }
  for(const id of Object.keys(s.farm.actors))if(!s.team.some(m=>m.instanceId===id))delete s.farm.actors[id];
  s.saveVersion=Math.max(3,s.saveVersion||0);return s;
 }
@@ -1807,7 +1946,7 @@ const CFG=[
 for(const f of CFG)[f.x,f.y]=core.HEX_CENTERS[f.id];
 const byId=Object.fromEntries(CFG.map(x=>[x.id,x]));const ranks=['신입','브론즈','실버','골드'];
 let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
-function rank(){const w=state.wins||0,d=state.day||1;if(w>=9&&d>=10&&state.team.length>=3)return 3;if(w>=5&&d>=5&&state.team.length>=2)return 2;if(w>=2&&d>=3)return 1;return 0;}
+function rank(){const w=state.wins||0,d=state.day||1;const legacy=w>=9&&d>=10&&state.team.length>=3?3:w>=5&&d>=5&&state.team.length>=2?2:w>=2&&d>=3?1:0;return Math.max(legacy,DCChampionship.ensure(state).rank);}
 function prepare(){cages.ensure(state);if(!state.facilities||typeof state.facilities!=='object')state.facilities={};state.facilities.core=true;if(!Number.isFinite(state.facilityCredits))state.facilityCredits=0;if(!Number.isFinite(state.facilityPaidWins))state.facilityPaidWins=state.wins||0;if(!Number.isFinite(state.facilityPaidDays))state.facilityPaidDays=state.day||1;core.ensure(state);
  if(knownState!==state){knownState=state;knownDay=state.day;knownWins=state.wins||0;knownCompleted=state.farm.completed;lastTeam='';actors.clear();foodNodes.clear();document.querySelectorAll('.hexActor,.hexFood').forEach(n=>n.remove());}}
 function missing(f){const out=[];if(f.needs&&!state.facilities[f.needs])out.push('선행 구역 필요');if(state.day<f.day)out.push('DAY '+f.day);if((state.wins||0)<f.wins)out.push('대회 '+f.wins+'승');if(rank()<f.rank)out.push(ranks[f.rank]+' 등급');return out;}
@@ -1857,8 +1996,7 @@ function refreshCageFacilities(){
  if(cages.MAP[last])list.value=last;
  updateCageInfo();
 }
-function updateCageInfo(){
- const c=cages.info(state,$('hexCageSelect').value);if(!c)return;
+function updateCageInfo(){ const c=cages.info(state,$('hexCageSelect').value);if(!c)return;
  const apKey=Object.keys(c.ap)[0],m=state.team.find(x=>x.instanceId===$('hexMon').value);
  const owned=cages.owned(state,c.id);
  $('hexCageBuy').disabled=owned||c.needs.length>0||!c.affordable;
@@ -1881,11 +2019,11 @@ $('hexCageTrain').onclick=()=>{const c=$('hexCageSelect').value,m=$('hexMon').va
 const archive=document.createElement('div');archive.className='hexArchive';
 archive.innerHTML='<button type="button" id="hexExportSave">💾 세이브 파일 내보내기</button><button type="button" id="hexImportSave">📂 세이브 파일 불러오기</button><input id="hexArchiveFile" type="file" accept=".json,application/json" hidden><span class="hexArchiveNote">브라우저나 기기를 옮길 때 사용 · JSON 파일에는 ROM/이미지 없음</span>';
 controls.appendChild(archive);
-function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.0',state:JSON.parse(JSON.stringify(state))};}
+function getSaveData(){return {format:'digicham-save',exportVersion:1,exportedAt:new Date().toISOString(),gameVersion:'0.23.3',state:JSON.parse(JSON.stringify(state))};}
 function validateSaveStructures(next){
  const record=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
  const fail=()=>{throw Error('세이브의 내부 기록이 손상되어 있어. 현재 게임은 유지돼.');};
- const object=(v)=>{if(v!=null&&!record(v))fail();};
+ const object=v=>{if(v!=null&&!record(v))fail();};
  const numbers=(v,keys)=>{if(v)for(const k of keys)if(v[k]!=null&&!Number.isFinite(v[k]))fail();};
  const point=v=>{if(!record(v)||!Number.isFinite(v.x)||!Number.isFinite(v.y))fail();};
  for(const key of ['world','farm','facilities','cageFacilities','championship'])object(next[key]);
@@ -2112,7 +2250,7 @@ window.DCHexFarm={get state(){return state},tick:(seconds)=>{core.advance(state,
  const ui=id=>document.getElementById(id), stage=ui('huntStage'),canvas=ui('huntStageCanvas');
  if(!stage||!canvas||typeof DCHunt==='undefined')return;
  const ctx=canvas.getContext('2d');let encounter=null,arm=false,gesture=null,guide='',lastTime=performance.now();
- const zones={forest:{label:'숲',list:['코로몬','토코몬','파타몬','아구몬','쿠네몬','파르몬','고부리몬','테리어몬','플롯트몬']},coast:{label:'해변',list:['베타몬','고마몬','쉬라몬','브이몬','가부몬','코로몬','토코몬']},ruins:{label:'유적',list:['케라몬','임프몬','톱니몬','아구몬','가부몬','파피몬','코로몬']}};
+ const zones={forest:{label:'숲',list:['코로몬','토코몬','파타몬','아구몬','쿠네몬','파르몬','고부리몬','테리어몬','플롯트몬']},coast:{label:'해변',list:['베타몬','고마몬','쉬라몬','브이몬','가부몬','코로몬','토코몬']},ruins:{label:'유적',list:['케라몬','임프몬','톱니몬','아구몬','가부몬','텐타몬','코로몬']}};
  function zone(){return ui('huntZone').value in zones?ui('huntZone').value:'forest';}
  function active(){return !!encounter&&!['escaped','captured'].includes(encounter.mode);}
  function limits(){const w=state.wins||0;return w>=12?3:w>=6?2:w>=2?1:0;}
@@ -2219,14 +2357,30 @@ window.DCHexFarm={get state(){return state},tick:(seconds)=>{core.advance(state,
 (()=>{
  'use strict';const C=DCChampionship,$=id=>document.getElementById(id);
  const label=['도전자','신인 챔피언','지역 챔피언','그랜드 챔피언'];
+ const names=['8강','4강','결승'];
+ function bracketHtml(br){if(!br)return '';
+  return `<div class="championshipBracketGrid" role="group" aria-label="전체 대진표">${br.rounds.map((matches,r)=>{
+   const title=br.rounds.length===3?(r===0?'8강':r===1?'4강':'결승'):(r===0?'4강':'결승');
+   return `<div class="championshipBracketRound"><h4>${title}</h4>${matches.map(m=>{
+    const participants=m.slots.map(id=>br.participants.find(p=>p.id===id));
+    return `<div class="championshipFixture" aria-label="${title} 대진">${participants.map((p,i)=>{
+     const value=p?esc(p.trainer)+' · '+p.team.map(esc).join(' / '):'대기 중';
+     return `<span class="championshipSlot ${p?.id===m.winner?'winner':''} ${p?'':'waiting'}">${m.winner===p?.id&&p?'🏅 ':''}${value}</span>`;
+    }).join('')}<span class="${m.source==='npc-sim'?'npcResult':'waiting'}">${m.source==='npc-sim'?'NPC 경기 결과':m.winner?'경기 종료':'진행 대기'}</span></div>`;
+   }).join('')}</div>`;
+  }).join('')}</div>`;
+ }
  function renderChampionship(){const s=state,c=C.ensure(s);$('championshipRank').textContent=label[c.rank]||label[0];
   $('championshipCalendar').innerHTML=C.CUPS.map(def=>{
-   const blocks=C.requirements(s,def);const next=C.nextDay(def,s.day);const crowned=c.crowns[def.id]||0;
-   return `<div class="championshipCup"><h3>${esc(def.name)}</h3><p>DAY ${next} · ${def.period}일 주기 · ${def.size} vs ${def.size}</p><p>2라운드 · 우승 상금 ${def.prize} 시설 Bit · 포인트 +${def.points}</p><p class="champ-win">🏅 우승 ${crowned}회</p>${blocks.length?`<p class="champ-lock">🔒 ${blocks.map(esc).join(' · ')}</p>`:`<p class="champ-win">✓ 참가 가능</p>`}<button data-cup="${def.id}" ${blocks.length?'disabled':''}>${blocks.length?'참가 조건 미달':'🏆 대회 참가'}</button></div>`;
+   const blocks=C.requirements(s,def),next=C.nextDay(def,s.day),crowned=c.crowns[def.id]||0;
+   return `<div class="championshipCup"><h3>${esc(def.name)}</h3><p>DAY ${next} · ${def.period}일 주기 · ${def.size} vs ${def.size}</p><p>${def.teams}팀 · ${def.rounds}라운드 · 우승 상금 ${def.prize} 시설 Bit · 포인트 +${def.points}</p><p class="champ-win">🏅 우승 ${crowned}회</p>${blocks.length?`<p class="champ-lock">🔒 ${blocks.map(esc).join(' · ')}</p>`:`<p class="champ-win">✓ 참가 가능</p>`}<button data-cup="${def.id}" ${blocks.length?'disabled':''}>${blocks.length?'참가 조건 미달':'🏆 대회 참가'}</button></div>`;
   }).join('');
-  const a=c.active;
-  $('championshipBracket').innerHTML=a?`<b>현재 대진: ${esc(C.get(a.cupId).name)}</b><p>${a.round===0?'준결승':'결승'} · 상대 ${esc(C.get(a.cupId).opponents[a.round])} · 전투 결과는 실제 자동전투로 판정</p><button id="championshipFight" class="primary" ${a.awaiting?'disabled':''}>${a.awaiting?'전투 진행 중':'⚔ 다음 경기 출전'}</button>`:'진행 중인 대회가 없어. 일정과 참가 조건을 확인해 줘.';
-  $('championshipHistory').innerHTML=c.history.length?'<b>최근 대회 기록</b>'+c.history.slice(0,4).map(h=>`<p>DAY ${Number(h.day)||1} · ${esc(h.cup)} · ${h.won?'🏆 우승':'패배'} ${h.won?'+'+h.prize+' Bit':''}</p>`).join(''):'';
+  $('championshipTrophies').innerHTML=C.CUPS.map(def=>`<span>🏆 ${esc(def.name)} × ${c.crowns[def.id]||0}</span>`).join('');
+  const a=c.active,br=C.bracketFor(s),match=a?C.nextMatch(s):null;
+  $('championshipBracket').innerHTML=(a?`<b>현재 대진: ${esc(C.get(a.cupId).name)}</b><p>${a.round===0?(br?.rounds.length===3?'8강':'준결승'):a.round===br?.rounds.length-1?'결승':'준결승'} · 상대 테이머 ${esc(match?.trainer||'경기 준비 중')} · ${esc(match?.opponentTeam?.join(' / ')||'')} · 실제 자동 전투 판정</p><button id="championshipFight" class="primary" ${a.awaiting?'disabled':''}>${a.awaiting?'전투 진행 중':'⚔ 다음 경기 출전'}</button>`:
+   (br?'<b>마지막 대회 대진표</b>':'진행 중인 대회가 없어. 일정과 참가 조건을 확인해 줘.'))+bracketHtml(br);
+  $('championshipHistory').innerHTML=(c.history.length?'<b>최근 대회 기록</b>'+c.history.slice(0,4).map(h=>`<p>DAY ${Number(h.day)||1} · ${esc(h.cup)} · ${h.won?'🏆 우승':'패배'} ${h.won?'+'+h.prize+' Bit':''}</p>`).join(''):'')+
+   (c.matchHistory.length?'<div class="championshipRecent"><b>경기별 전적</b>'+c.matchHistory.slice(0,6).map(h=>`<p>DAY ${Number(h.day)||1} · ${esc(C.get(h.cupId)?.name||'대회')} ${Number(h.round)+1}차전 · ${esc(h.trainer||'상대 테이머')} (${(h.opponent||[]).map(esc).join(' / ')}) · ${h.won?'승리':'패배'}</p>`).join('')+'</div>':'');
  }
  $('championshipCalendar').addEventListener('click',e=>{const btn=e.target.closest('[data-cup]');if(!btn)return;const result=C.enter(state,btn.dataset.cup);if(!result.ok){toast(result.missing.join(' · '));return;}say(C.get(result.active.cupId).name+' 참가!');renderChampionship();save(false);});
  $('championshipBracket').addEventListener('click',e=>{if(!e.target.closest('#championshipFight'))return;const match=C.nextMatch(state);if(!match)return;
@@ -2235,7 +2389,6 @@ window.DCHexFarm={get state(){return state},tick:(seconds)=>{core.advance(state,
   if(!ok){C.cancelUnstarted(state,match.matchId);save(false);renderChampionship();}
  });
  window.DCChampionshipUI={render:renderChampionship};
- // Core render is defined before this adapter; append a safe refresh after every refresh.
  const originalRender=render;render=function(){originalRender();renderChampionship()};
  $('reset').addEventListener('click',()=>queueMicrotask(()=>renderChampionship()));
  $('hexArchiveFile')?.addEventListener('change',()=>queueMicrotask(()=>renderChampionship()));
