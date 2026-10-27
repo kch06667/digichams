@@ -35,6 +35,8 @@ def check_page(browser, mobile, base_url):
     page.wait_for_function("Boolean(window.DigiPhaserLab)", timeout=30000)
     page.locator("#game canvas").wait_for(timeout=10000)
     assert "준비 완료" in page.locator("#status").inner_text()
+    if (ROOT / "phaser-lab" / "local-assets" / "manifest.json").is_file():
+        assert "변환된 GIF 모션" in page.locator("#status").inner_text()
     assert page.evaluate("DigiPhaserLabLogic.selectAction('victory')") == 30
     assert page.evaluate("DigiPhaserLabLogic.selectAction('training')") == 32
     if mobile:
