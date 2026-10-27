@@ -52,8 +52,26 @@ try:
                 assert page.evaluate('state.team.map(m=>m.training)')==[m['training'] for m in saved['state']['team']]
                 page.evaluate("DCFarm.command(state,'a','stop');state.world.paused=false;DCHexFarm.tick(8);state.world.paused=true")
                 assert page.evaluate("state.team.find(m=>m.instanceId==='c').training")>0
+                traffic=page.evaluate("""() => {
+                    const base=JSON.parse(JSON.stringify(state.team[0]));
+                    state.team=['a','b','c','d'].map(instanceId=>({...JSON.parse(JSON.stringify(base)),instanceId,egg:false,hunger:0,fatigue:0}));
+                    state.farm.actors={};DCFarm.ensure(state);state.world.paused=false;
+                    const paths=[[20,50,80,50],[80,50,20,50],[50,20,50,80],[50,80,50,20]];
+                    Object.values(state.farm.actors).forEach((a,i)=>Object.assign(a,{x:paths[i][0],y:paths[i][1],mode:'moving',goal:{kind:'wander',x:paths[i][2],y:paths[i][3]}}));
+                    let minimum=Infinity;const arrived=new Set();
+                    for(let tick=0;tick<400;tick++){
+                        DCFarm.step(state,.05);
+                        const as=Object.values(state.farm.actors);
+                        as.forEach((a,i)=>{if(a.mode==='idle'){arrived.add(i);a.idleTime=-100;}});
+                        for(let i=0;i<as.length;i++)for(let j=i+1;j<as.length;j++)minimum=Math.min(minimum,Math.hypot(as[i].x-as[j].x,as[i].y-as[j].y));
+                    }
+                    state.world.paused=true;DCHexFarm.tick(0);
+                    return {minimum,arrived:arrived.size};
+                }""")
+                assert traffic['minimum']>=9.99 and traffic['arrived']==4,traffic
+                assert page.locator('.hexActor').count()==4
                 assert not errors,errors
-                print('PASS',entry,'touch' if mobile else 'desktop','separate stations / paths / queue / save',flush=True)
+                print('PASS' ,entry,'touch' if mobile else 'desktop','stations / queue / save / four-way avoidance',flush=True)
                 context.close()
         browser.close()
 finally:

@@ -30,3 +30,13 @@
 - 추가 진단: 열린 7구역에서 외곽 4시설까지 총 28쌍 이동을 0.05초 단위 표본 검사. 지면/통로 이탈 0, 이동속도 한도 초과 0.
 - 전후 캡처: test-output/farm-routing/index.html-{desktop,touch}-{before,after}.png. before는 d4b3a1e HTML을 동일 3개체 시나리오로 실행. 이미지는 로컬 ignored 출력, 외부 업로드 없음.
 - 한계: 이동 중 개체 상호 회피·혼잡 상황, 모든 시설 사이 서로 다른 작업 위치 간 충돌, 실제 Android 장기 사용 미검증. 통로/좌표 규칙은 확장판 설계이며 ROM 복원 아님.
+
+## 이동 회피 / 유휴 양보 후속 검증
+- 수정 전 farm-avoidance 초기 4건 중 3 실패: 정면 교행 최소 거리 약 0.8, 교차 약 0.57, 훈련 개체 관통.
+- `node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs`: 17/17 통과.
+- 회피 8건: 정면 교행, 교차, 고정 훈련 개체 통과, JSON 복원 결정성, 좁은 중앙-훈련장 통로, 4방향 교차, 목적지 유휴 개체 양보, 초기 겹침 탈출. 위치별 0.05초 검사에서 속도 한도 유지, 열린 지면/통로 유지, 이미 분리된 경우 최소 10 좌표단위 유지와 도착 확인.
+- 기존 핵심 10개 Node 스위트 모두 exit 0: farm-core/evolution-core/evolution-tree/sprite-catalog/cage-training/care-seasons/hunt-core/battle-core/battle-rest/championship-core.
+- `python3 tests/farm-routing-browser.py`: 두 HTML × PC/터치 4조합 통과. 기존 시설/대기/저장 검사와 4방향 교차의 최소 간격/전원 도착/표시 개체 수 확인. pageerror 없음.
+- `python3 tests/farm-placement-browser.py`: 두 HTML × PC/터치 4조합 통과. 먹이 배치/섭취/JSON 및 새로고침 저장 유지.
+- 이번 변경은 동적 이동 로직이며 새 그래픽 자산 없음. 기존 시설 스크린샷은 test-output/farm-routing에 재생성됨; 회피 전후 정지화면 비교는 수행하지 않음.
+- 실제 Android 장기 사용, 50개체 고밀도 성능, 작업 중 개체가 목적지를 막은 경우, 모든 대기열 포화 상황은 미검증. 그림 외곽이 아닌 발 위치 간격 검사다.

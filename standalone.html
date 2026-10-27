@@ -1529,15 +1529,62 @@ function routeTo(s,a,target){
  if(from!==to){if(from!=='core')points.push(center(from));points.push(center('core'));if(to!=='core')points.push(center(to));}
  points.push({x:target.x,y:target.y});return points;
 }
+// Small ground footprints, not sprite bounding boxes. Numbers are expansion UX.
+const PERSONAL_SPACE=10;
+function safeStride(s,a,p,peers){
+ if(!walkable(s,p.x,p.y))return false;
+ return peers.every(b=>{
+  const before=Math.hypot(a.x-b.x,a.y-b.y),after=Math.hypot(p.x-b.x,p.y-b.y);
+  // Old saves/spawn positions may overlap. Permit only movement that separates them.
+  if(before<PERSONAL_SPACE-1e-6)return after>before+1e-6;
+  return segmentDistance(b,a,p)>=PERSONAL_SPACE-1e-6;
+ });
+}
+function yieldIdle(s,a,target){
+ const actors=activeActors(s);
+ for(const b of actors){
+  if(b===a||b.mode!=='idle'||b.goal||Math.hypot(a.x-b.x,a.y-b.y)>PERSONAL_SPACE*2||Math.hypot(target.x-b.x,target.y-b.y)>PERSONAL_SPACE)continue;
+  const angle=Math.atan2(b.y-a.y,b.x-a.x);
+  for(const turn of [Math.PI/2,-Math.PI/2,Math.PI,0]){
+   const p={x:b.x+Math.cos(angle+turn)*18,y:b.y+Math.sin(angle+turn)*18};
+   if(!foodGround(s,p.x,p.y)||actors.some(c=>c!==b&&Math.hypot(c.x-p.x,c.y-p.y)<PERSONAL_SPACE))continue;
+   // Only idle actors yield: explicit training, rest and reserved meals are untouched.
+   b.goal={...p,kind:'wander',yielding:true};b.mode='moving';b.route=null;b.routeKey=null;b.pose=2;break;
+  }
+ }
+}
+function stride(s,a,p,amount){
+ const dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy),length=Math.min(d,amount);
+ if(d<1e-9)return true;
+ if(a.route.length===1)yieldIdle(s,a,p);
+ const peers=activeActors(s).filter(b=>b!==a&&Math.hypot(a.x-b.x,a.y-b.y)<PERSONAL_SPACE+amount+1);
+ // Consistent right-hand preference avoids symmetric head-on stand-offs.
+ const angles=[0,Math.PI/6,Math.PI/3,Math.PI/2,2*Math.PI/3,5*Math.PI/6,Math.PI,-Math.PI/6,-Math.PI/3,-Math.PI/2,-2*Math.PI/3];
+ for(const angle of angles){
+  const ux=dx/d*Math.cos(angle)-dy/d*Math.sin(angle),uy=dx/d*Math.sin(angle)+dy/d*Math.cos(angle);
+  const next={x:a.x+ux*length,y:a.y+uy*length};
+  if(!safeStride(s,a,next,peers))continue;
+  a.x=next.x;a.y=next.y;if(Math.abs(ux)>1e-9)a.face=ux<0?1:-1;a.pose=2;
+  a.trafficWait=0;return angle===0&&length>=d-1e-9;
+ }
+ a.pose=0;a.trafficWait=(a.trafficWait||0)+amount/CFG.moveSpeed;
+ return false;
+}
 function walk(s,a,target,dt){
  const key=target.x+','+target.y;
  if(a.routeKey!==key||!Array.isArray(a.route)||!a.route.length){a.routeKey=key;a.route=routeTo(s,a,target);}
  let travel=CFG.moveSpeed*dt;
  while(a.route.length){
-  const p=a.route[0],dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy);
-  if(d>1e-9&&Math.abs(dx)>1e-9)a.face=dx<0?1:-1;
-  if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.pose=2;return false;}
-  a.x=p.x;a.y=p.y;travel-=d;a.route.shift();
+  const p=a.route[0],d=Math.hypot(p.x-a.x,p.y-a.y);
+  if(d<1e-9){a.route.shift();continue;}
+  // A transit marker is not an action destination: walk around an occupied marker.
+  if(a.route.length>1&&d<PERSONAL_SPACE*2&&activeActors(s).some(b=>b!==a&&Math.hypot(p.x-b.x,p.y-b.y)<PERSONAL_SPACE)){
+   const next=a.route[1];
+   if([.25,.5,.75].every(t=>walkable(s,a.x+(next.x-a.x)*t,a.y+(next.y-a.y)*t))){a.route.shift();continue;}
+  }
+  if(!stride(s,a,p,travel))return false;
+  travel-=d;a.route.shift();
+  if(travel<1e-9&&a.route.length)return false;
  }
  a.routeKey=null;return true;
 }
@@ -1599,7 +1646,7 @@ function ensure(s){
 function rnd(s){s.world.seed=(Math.imul(s.world.seed,1664525)+1013904223)>>>0;return s.world.seed/4294967296;}
 function log(s,text){s.logs.unshift('[사육장] '+text);s.logs=s.logs.slice(0,60);}
 function actor(s,id){return s.farm.actors[id];}
-function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.station=undefined;a.route=null;a.routeKey=null;a.repositioning=false;a.idleTime=0;}
+function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.station=undefined;a.route=null;a.routeKey=null;a.repositioning=false;a.trafficWait=0;a.idleTime=0;}
 function destination(s,kind,options={}){
  if(kind==='cage'){
   const cage=options.cage;
