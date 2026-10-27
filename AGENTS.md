@@ -55,3 +55,4 @@
 - 시설/경로 변경 후 `node --test tests/farm-navigation.cjs`, `python3 tests/farm-routing-browser.py` 실행. 경로는 열린 외곽→중앙→목표 시설이며 station 예약과 남은 행동 타이머의 저장/복원 유지. test-output/farm-routing에 로컬 캡처 생성.
 - 이동 회피 변경 후 `node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs` 실행. 최소 발 간격은 10 좌표단위(확장 UX), 실제 스프라이트 외곽 크기와 구분. 명시적 행동을 회피를 위해 취소하지 않는다.
 - 세이브 가져오기 수정 시 `python3 tests/save-import-browser.py` 실행. 입력 사본을 먼저 검증/초기화하고, 실패 시 live state와 저장/백업을 유지해야 한다.
+- ROM 입력/도구는 ROM_ANALYSIS_PROGRESS.md 참조. `tools/rom-database.py`는 해시가 일치하는 제공 한국판을 읽기 전용 분석하고 체크아웃 밖으로만 출력. 출력 텍스트/원본/바이너리를 git add 하지 않는다. text_index는 아직 종 ID가 아니다.

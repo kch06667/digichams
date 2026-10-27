@@ -56,3 +56,9 @@
 - `python3 tests/save-import-browser.py`: 두 HTML 각각 손상 입력 9건 거부 및 live state/localStorage/기존 백업 불변 확인. 별도로 구세이브 수락, 입력 객체 불변, 강제 render 실패 시 이전 상태/저장/백업 복구 통과.
 - 기존 farm-placement-browser.py 및 farm-routing-browser.py 총 8조합 통과. 다른 게임 엔진은 변경하지 않음.
 - 브라우저 저장 용량 초과/권한 차단 시 기존 save 함수의 best-effort 동작은 유지; 저장장치 오류의 원자적 복구까지 보장한 것은 아님.
+
+## 제공 ROM 파이프라인
+- `python3 -m unittest discover -s tests -p test_rom_database.py -v`: 6/6 통과. FAT/FNT, 잘린 ROM/범위 초과, 위험 이름/순환 디렉터리, UTF-16LE 오프셋, 항목 수/인코딩/종료 오류, 오버레이 파일 참조 검증.
+- 실제 64MiB ROM에서 도구 실행 성공: FAT 6434, FNT 이름 6412, ARM9 overlay 22, 도감 문자열 1176, 이름 후보216, 웹 문자열 정확일치146.
+- 기존 manifest 6434행의 ID/오프셋/크기 전부 일치, 실행 후 ROM 해시 동일.
+- 미검증: 문자열 인덱스=종 ID 관계, 진화/AP/능력치 레코드, AI 및 압축 해제. 원작 규칙의 게임 반영은 없음.
