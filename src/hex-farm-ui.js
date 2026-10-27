@@ -155,7 +155,7 @@ $('hexImportSave').onclick=()=>$('hexArchiveFile').click();
 $('hexArchiveFile').addEventListener('change',async e=>{const file=e.target.files?.[0];if(!file)return;try{if(file.size>2_000_000)throw Error('세이브 파일이 너무 커.');const parsed=JSON.parse(await file.text());importSaveData(parsed);toast('세이브 불러오기 성공!');}catch(err){toast('불러오기 실패: '+(err.message||'파일 오류'));}finally{e.target.value='';}});
 
 function renderRoster(){const names=state.team.filter(m=>m.location!=='storage');const select=$('hexMon'),value=select.value;
- const key=names.map(m=>m.instanceId+':'+m.name).join('|');if(key===lastTeam)return;lastTeam=key;
+ const key=names.map(m=>m.instanceId+':'+m.name+':'+m.level).join('|');if(key===lastTeam)return;lastTeam=key;
  select.replaceChildren();names.forEach(m=>{const o=document.createElement('option');o.value=m.instanceId;o.textContent=m.name+' · Lv.'+m.level;select.appendChild(o);});
  if(names.some(m=>m.instanceId===value))select.value=value;else if(state.team[state.selected])select.value=state.team[state.selected].instanceId;
  for(const [id,node] of actors){if(!names.some(m=>m.instanceId===id)){node.remove();actors.delete(id);}}
@@ -180,8 +180,56 @@ function drawStatus(){const mon=state.team.find(m=>m.instanceId===$('hexMon').va
  care.ensureMon(mon);$('hexCareInfo').textContent=(mon.care.injured?'🩹 부상 ':'')+(mon.care.sick?'🤒 질병 ':'')+(!mon.care.injured&&!mon.care.sick?'건강':'')+' · 육성 패널티 '+(mon.evo?.penalties||0);
  $('hexBandage').disabled=!mon.care.injured;$('hexMedicine').disabled=!mon.care.sick;
  updateCageInfo();}
-function updateActors(){renderRoster();const monset=new Map(state.team.map(m=>[m.instanceId,m]));for(const [id,node] of actors){const m=monset.get(id),a=state.farm.actors[id];if(!m||!a)continue;node.style.left=(369+a.x*1.82)+'px';node.style.top=(262+a.y*1.56)+'px';node.querySelector('img').style.transform=`scaleX(${a.face||-1})`;if(node.dataset.pose!==String(a.pose)||node.dataset.mon!==m.name){const src=spriteUrl(m.name,a.pose||0);if(src)node.querySelector('img').src=src;node.dataset.pose=String(a.pose);node.dataset.mon=m.name;}node.classList.toggle('active',id===$('hexMon').value);const emote=node.querySelector('.hexEmote');if(emote){const happy=a.emoteUntil>state.world.seconds;emote.textContent=happy?a.emote:'';emote.classList.toggle('visible',happy);}}
- const used=new Set();for(const f of state.farm.foods){used.add(f.id);let node=foodNodes.get(f.id);if(!node){node=document.createElement('span');node.className='hexFood';node.textContent='🍖';node.title='바닥에 둔 먹이';node.classList.add('falling');node.addEventListener('animationend',()=>node.classList.remove('falling'),{once:true});$('farmWorld').appendChild(node);foodNodes.set(f.id,node);}node.style.left=(369+f.x*1.82)+'px';node.style.top=(262+f.y*1.56)+'px';}for(const [id,node] of foodNodes){if(!used.has(id)){node.remove();foodNodes.delete(id);}}}
+function updateActors(){
+ renderRoster();
+ const monset=new Map(state.team.map(m=>[m.instanceId,m]));
+ const chosen=$('hexMon').value;
+ for(const [id,node] of actors){
+  const m=monset.get(id),a=state.farm.actors[id];
+  if(!m||!a)continue;
+  // These properties are normally identical across consecutive frames.
+  // Skip unchanged DOM style/text writes to reduce paint invalidations.
+  const left=(369+a.x*1.82)+'px',top=(262+a.y*1.56)+'px';
+  if(node.style.left!==left)node.style.left=left;
+  if(node.style.top!==top)node.style.top=top;
+  const sprite=node.firstElementChild;
+  const facing='scaleX('+(a.face||-1)+')';
+  if(sprite.style.transform!==facing)sprite.style.transform=facing;
+  if(node.dataset.pose!==String(a.pose)||node.dataset.mon!==m.name){
+   const src=spriteUrl(m.name,a.pose||0);
+   if(src&&sprite.src!==src)sprite.src=src;
+   node.dataset.pose=String(a.pose);
+   node.dataset.mon=m.name;
+  }
+  const active=id===chosen;
+  if(node.classList.contains('active')!==active)node.classList.toggle('active',active);
+  const emote=node.lastElementChild;
+  if(emote){
+   const happy=a.emoteUntil>state.world.seconds;
+   const message=happy?a.emote:'';
+   if(emote.textContent!==message)emote.textContent=message;
+   if(emote.classList.contains('visible')!==happy)emote.classList.toggle('visible',happy);
+  }
+ }
+ const used=new Set();
+ for(const f of state.farm.foods){
+  used.add(f.id);
+  let node=foodNodes.get(f.id);
+  if(!node){
+   node=document.createElement('span');
+   node.className='hexFood';node.textContent='🍖';node.title='바닥에 둔 먹이';
+   node.classList.add('falling');
+   node.addEventListener('animationend',()=>node.classList.remove('falling'),{once:true});
+   $('farmWorld').appendChild(node);foodNodes.set(f.id,node);
+  }
+  const left=(369+f.x*1.82)+'px',top=(262+f.y*1.56)+'px';
+  if(node.style.left!==left)node.style.left=left;
+  if(node.style.top!==top)node.style.top=top;
+ }
+ for(const [id,node] of foodNodes){
+  if(!used.has(id)){node.remove();foodNodes.delete(id);}
+ }
+}
 function credit(amount,label){state.facilityCredits+=amount;say(label+': +'+format(amount)+' Bit');drawNumbers();drawDetails();save(false);}
 // All nursery quick controls now use the SAME timed farm engine as the hex panel.
 // Remove legacy onclicks to avoid immediate stat changes / duplicate Bit or food costs.
