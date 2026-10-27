@@ -1,10 +1,21 @@
 {
-  "checkpoint": "17",
-  "version": "0.23.0",
-  "date": "2026-10-27",
-  "based_on": "v0.22.0",
-  "feature": "championship event calendar, 1v1/2v2/3v3 cups, semifinal/final, trophy and rank, one-time rewards, existing battle integration and save resume/forfeit",
-  "source": "src/championship-core.js",
-  "tests": "TEST_REPORT_v0.23.0.md",
-  "provenance": "temporary_balance, not ROM verified"
+  "checkpoint": "21",
+  "version": "0.24.0-pre",
+  "date": "2026-10-28",
+  "based_on": [
+    "GitHub kch06667/digichams main aa6db16 2026-10-28 KST",
+    "local v0.23.2 graphical+championship snapshot"
+  ],
+  "integrated": [
+    "Codex farm reservation/nav/avoidance/idle yielding",
+    "food ground / Esc cancel",
+    "save import validation rollback",
+    "v0.23.1 4/8 team brackets and opponent rosters",
+    "v0.23.2 graphic skin and embedded standalone image",
+    "ROM inventory and sprite audit tools"
+  ],
+  "git_status": "GitHub branch created from main; full integrated source not yet pushed",
+  "confirmed_tests": "TEST_REPORT_v0.24.0-pre.md",
+  "rom": "Not bundled; user-supplied local ROM SHA-256 checked",
+  "provenance": "Codex main movement+save port; original graphics and tournament extension; many NDS game rules temporary_balance"
 }

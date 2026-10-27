@@ -114,7 +114,6 @@ def main():
     file=nds.file('ui/txt/db_txt_list_txt.dat')
     rows=decode_database(nds.span(file['rom_offset'],file['size']))
     if len(rows)!=1176:raise ValueError('Unexpected database size for this profile')
-    # First 216 entries are observed name strings; indices are NOT established species IDs.
     names=[{**r,'rom_offset':file['rom_offset']+r['file_offset']} for r in rows[:216]]
     web=json.loads((ROOT/'assets/species-catalog.json').read_text())['entries']
     strings={r['text'] for r in names}

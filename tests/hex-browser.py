@@ -75,11 +75,11 @@ with sync_playwright() as pw:
   assert probe('state.farm.actors[state.team[0].instanceId].y') < -60,probe('JSON.stringify(state.farm.actors[state.team[0].instanceId])')
   page.evaluate("DCHexFarm.core.command(state,state.team[0].instanceId,'speed')")
   assert probe('state.farm.actors[state.team[0].instanceId].goal.zone')=='track'
-  page.evaluate('DCHexFarm.tick(13)')
+  page.evaluate('DCHexFarm.tick(26)')
   assert probe('state.farm.actors[state.team[0].instanceId].x') > 140,probe('JSON.stringify(state.farm.actors[state.team[0].instanceId])')
-  page.evaluate("DCHexFarm.core.command(state,state.team[0].instanceId,'rest')")
+  page.evaluate("state.team[0].maxHp=1000;state.team[0].hp=10;DCHexFarm.core.command(state,state.team[0].instanceId,'rest')")
   assert probe('state.farm.actors[state.team[0].instanceId].goal.zone')=='rest'
-  page.evaluate('DCHexFarm.tick(19)')
+  page.evaluate('DCHexFarm.tick(44)')
   assert probe('state.farm.actors[state.team[0].instanceId].x') < -40,probe('JSON.stringify(state.farm.actors[state.team[0].instanceId])')
   assert page.locator('#hexFollow').count()==1
  run('purchased peripheral plots receive actual walking Digimon',peripheral)

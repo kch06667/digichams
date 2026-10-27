@@ -21,7 +21,7 @@ def audit(root):
                     frames = im.n_frames
                     for frame in range(frames):
                         im.seek(frame)
-                        im.load()  # Decode every frame; a valid header alone is insufficient.
+                        im.load()
                     total += 1
                     if frames == 1:
                         static.setdefault(species['name'], []).append(index)
@@ -30,7 +30,7 @@ def audit(root):
             except (OSError, ValueError) as exc:
                 errors.append({'path':str(relative),'error':str(exc)})
     return {'species_count':len(catalog),'checked_assets':total,'errors':errors,
-            'single_frame_by_species':static, 'single_frame_count':sum(map(len, static.values())),'large_canvases':sizes,
+            'single_frame_by_species':static,'single_frame_count':sum(map(len, static.values())),'large_canvases':sizes,
             'semantic_status':'INFERRED: existing mapping is community-guessed; successful decoding does not verify action meaning.',
             'unverified_indices':[6,27,36,38,39]}
 

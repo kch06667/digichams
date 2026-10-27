@@ -1,4 +1,8 @@
-# Digimon World Championship · Browser Expansion Prototype v0.23.0
+# Digimon World Championship · Browser Expansion v0.23.3 (integrated local checkpoint)
+
+**Before coding or uploading to GitHub:** read `START_HERE_v0233.md` and `TEST_REPORT_v0.23.3.md`.
+
+# Digimon World Championship · Browser Expansion Prototype v0.23.2
 
 Extract the full ZIP, then open `index.html` or `standalone.html`. Retains the earlier v0.14.2 game's battle, hunting, evolution, ROM art and sprite code; progressively integrates the user-approved hex farm.
 
@@ -67,3 +71,18 @@ Species-specific evolution rules, individual battle/win history, AP gains, stage
 - 대회별 상태, 준결승 진출 상태, 트로피, 이력을 기존 세이브 JSON에 보관. 중복 정산 방지 및 전투 중 이탈/새로고침 패배 처리.
 - **매우 중요**: 대회 이름, 7/10일 주기, 상대 구성, 2라운드, 상금은 ROM 미확인 `temporary_balance`. 원작 대회표가 아님.
 - 추가 테스트: `node tests/championship-core.cjs`, `python tests/championship-browser.py`, `python tests/championship-brackets-browser.py`.
+
+
+### v0.23.1 — 대회 4/8팀 대진·NPC 테이머 확장
+- 신인·지역 컵 4팀, 월드 컵 8팀 대진표를 출전 상태와 함께 보여줍니다. 실제 사용자 전투만 우승 판정에 반영합니다.
+- 팀별 NPC의 디지몬 구성을 전투에 반영하고 경기별 승패 기록, 트로피 전시, JSON 세이브 복구를 지원합니다.
+- 참가자/상금/스케줄은 여전히 ROM 미확인 임시 설정입니다.
+- Codex 로컬 이동 회피/Esc 취소 변경을 포함하지 않습니다. 최신 버전 병합 시 `MERGE_GUIDE_CHAMPIONSHIP.md`를 먼저 읽으세요.
+
+
+### v0.23.2 — playable farm graphics skin
+- Added a self-contained 920x690 pixel-styled facility map using derived original generated artwork, in `assets/farm/hex_farm_v0232.webp`. All 7 old hex coordinates and facility click areas are preserved.
+- Existing Digimon sprite animation, collision/feeding/navigation, cages/AP, tournaments and saved game state remain driven by their existing modules. This is a visual skin, not a new simulator.
+- The individual zones have visible selected/locked states, with improved UI labels, contrast, and actor name styling. Food placement continues to use the real game map.
+- `index.html` references the included WebP; `standalone.html` embeds its own copy. The full ZIP does not include Codex's unpublished local movement changes.
+- For merging into Codex's newer branch, use the separate graphics-only patch to avoid replacing JavaScript or player saves.

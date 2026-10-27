@@ -28,5 +28,4 @@ class SpriteAuditTests(unittest.TestCase):
             self.assertTrue(any(e['path'].endswith('_3.gif') for e in result['errors']))
             self.assertIn('INFERRED',result['semantic_status'])
 
-if __name__=='__main__':
-    unittest.main()
+if __name__=='__main__':unittest.main()

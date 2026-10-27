@@ -31,7 +31,7 @@ with sync_playwright() as pw:
   js("document.getElementById('train').click();document.getElementById('feed').click()")
   assert js('state.food')==base['food'],'food should not deduct until choosing map location'
   assert js("document.getElementById('farmWorld').classList.contains('foodPlacement')")
-  js("document.querySelector('[data-hex=core]').click()")
+  page.locator("[data-hex=core]").click()
   assert js('state.food')==base['food']-1,'feed should deduct only once when placed'
   assert js('state.farm.foods.length')==1
  run('old train and feed buttons route into timed hex simulation',legacy_timed)

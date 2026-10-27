@@ -1,6 +1,6 @@
 {
   "name": "digimon-championship-local-prototype",
-  "version": "0.23.0",
+  "version": "0.23.3",
   "private": true,
   "scripts": {
     "test": "node tests/farm-core.cjs",
@@ -12,7 +12,14 @@
     "test:hunt-browser": "python tests/hunt-browser.py",
     "test:battle": "node tests/battle-core.cjs",
     "test:championship": "node tests/championship-core.cjs",
-    "test:championship-browser": "python tests/championship-browser.py"
+    "test:championship-browser": "python tests/championship-browser.py",
+    "test:championship:expanded": "node tests/championship-bracket-expansion.cjs",
+    "test:championship:expanded-browser": "python tests/championship-v0231-browser.py",
+    "test:farm-graphics": "python tests/farm-graphics-browser.py",
+    "test:merge-movement": "node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs",
+    "test:merge-browser": "python tests/v0233-merge-browser.py",
+    "test:rom-tool": "python -m unittest discover -s tests -p test_rom_database.py -v",
+    "test:sprite-audit-tool": "python -m unittest discover -s tests -p test_sprite_audit.py -v"
   },
   "devDependencies": {
     "jsdom": "30.1.3",

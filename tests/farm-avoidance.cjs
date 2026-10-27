@@ -17,38 +17,14 @@ function simulate(s,seconds){
  }
  return {closest,arrived};
 }
-test('head-on walkers pass without overlap or deadlock',()=>{
- const s=scene([[20,55,80,55],[80,55,20,55]]);const result=simulate(s,12);
- assert.ok(result.closest>=9.99,`minimum distance ${result.closest}`);assert.equal(result.arrived.size,2);
-});
-test('crossing walkers keep separation and finish',()=>{
- const s=scene([[20,50,80,50],[50,20,50,80]]);const result=simulate(s,12);
- assert.ok(result.closest>=9.99,`minimum distance ${result.closest}`);assert.equal(result.arrived.size,2);
-});
+test('head-on walkers pass without overlap or deadlock',()=>{const s=scene([[20,55,80,55],[80,55,20,55]]);const r=simulate(s,12);assert.ok(r.closest>=9.99);assert.equal(r.arrived.size,2);});
+test('crossing walkers keep separation and finish',()=>{const s=scene([[20,50,80,50],[50,20,50,80]]);const r=simulate(s,12);assert.ok(r.closest>=9.99);assert.equal(r.arrived.size,2);});
 test('stationary training actor is not pushed or rewarded by passing traffic',()=>{
- const s=scene([[20,35,80,35],[50,35,50,35]]);const a=s.farm.actors['1'];
- Object.assign(a,{mode:'acting',goal:{x:50,y:35,zone:'core',kind:'cage'},station:0,remaining:100});
- const result=simulate(s,12);assert.ok(result.closest>=9.99);assert.ok(result.arrived.has(0));assert.equal(a.x,50);assert.equal(a.y,35);assert.equal(s.team[1].training,0);
+ const s=scene([[20,35,80,35],[50,35,50,35]]);const a=s.farm.actors['1'];Object.assign(a,{mode:'acting',goal:{x:50,y:35,zone:'core',kind:'cage'},station:0,remaining:100});
+ const r=simulate(s,12);assert.ok(r.closest>=9.99);assert.ok(r.arrived.has(0));assert.equal(a.x,50);assert.equal(a.y,35);assert.equal(s.team[1].training,0);
 });
-test('avoidance survives JSON save and reload deterministically',()=>{
- const s=scene([[20,55,80,55],[80,55,20,55]]);farm.advance(s,1.5);const copy=JSON.parse(JSON.stringify(s));
- farm.advance(s,10);farm.advance(copy,10);assert.deepEqual(copy,s);
-});
-test('head-on traffic passes through the narrow central-training connector',()=>{
- const s=scene([[50,20,50,-65],[50,-65,50,20]]);s.facilities={training:true};
- const result=simulate(s,20);assert.ok(result.closest>=9.99,`${result.closest}`);assert.equal(result.arrived.size,2);
-});
-test('four-way traffic eventually reaches all four distinct destinations',()=>{
- const s=scene([[20,50,80,50],[80,50,20,50],[50,20,50,80],[50,80,50,20]]);
- const result=simulate(s,20);assert.ok(result.closest>=9.99,`${result.closest}`);assert.equal(result.arrived.size,4);
-});
-test('an idle actor yields an occupied destination without changing training orders',()=>{
- const s=scene([[20,55,65,55],[65,55,65,55]]);
- Object.assign(s.farm.actors['1'],{mode:'idle',goal:null,idleTime:-100});
- const result=simulate(s,15);assert.ok(result.closest>=9.99);assert.ok(result.arrived.has(0));assert.equal(s.team[1].training,0);
-});
-test('initially overlapping movers separate and complete their orders',()=>{
- const s=scene([[50,50,20,50],[50,50,80,50],[50,50,50,20]]);
- const result=simulate(s,15);assert.equal(result.arrived.size,3);
- const as=Object.values(s.farm.actors);for(let i=0;i<as.length;i++)for(let j=i+1;j<as.length;j++)assert.ok(Math.hypot(as[i].x-as[j].x,as[i].y-as[j].y)>=10);
-});
+test('avoidance survives JSON save and reload deterministically',()=>{const s=scene([[20,55,80,55],[80,55,20,55]]);farm.advance(s,1.5);const copy=JSON.parse(JSON.stringify(s));farm.advance(s,10);farm.advance(copy,10);assert.deepEqual(copy,s);});
+test('head-on traffic passes through the narrow central-training connector',()=>{const s=scene([[50,20,50,-65],[50,-65,50,20]]);s.facilities={training:true};const r=simulate(s,20);assert.ok(r.closest>=9.99);assert.equal(r.arrived.size,2);});
+test('four-way traffic eventually reaches all four distinct destinations',()=>{const s=scene([[20,50,80,50],[80,50,20,50],[50,20,50,80],[50,80,50,20]]);const r=simulate(s,20);assert.ok(r.closest>=9.99);assert.equal(r.arrived.size,4);});
+test('an idle actor yields an occupied destination without changing training orders',()=>{const s=scene([[20,55,65,55],[65,55,65,55]]);Object.assign(s.farm.actors['1'],{mode:'idle',goal:null,idleTime:-100});const r=simulate(s,15);assert.ok(r.closest>=9.99);assert.ok(r.arrived.has(0));assert.equal(s.team[1].training,0);});
+test('initially overlapping movers separate and complete their orders',()=>{const s=scene([[50,50,20,50],[50,50,80,50],[50,50,50,20]]);const r=simulate(s,15);assert.equal(r.arrived.size,3);const as=Object.values(s.farm.actors);for(let i=0;i<as.length;i++)for(let j=i+1;j<as.length;j++)assert.ok(Math.hypot(as[i].x-as[j].x,as[i].y-as[j].y)>=10);});
