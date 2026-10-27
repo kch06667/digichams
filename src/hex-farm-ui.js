@@ -11,6 +11,7 @@ const CFG=[
  {id:'clinic',label:'치료 에리어',x:650,y:446,cost:570,day:3,wins:2,rank:1,needs:'rest',desc:'HP·부상·질병을 한 번에 치료하는 시설.'},
  {id:'forest',label:'숲 사육장',x:460,y:552,cost:900,day:5,wins:5,rank:2,needs:'clinic',desc:'미래 자연형 시설 후보. 현재 건설/표시만 가능하며 특수 행동은 아직 없음.'}
 ];
+for(const f of CFG)[f.x,f.y]=core.HEX_CENTERS[f.id];
 const byId=Object.fromEntries(CFG.map(x=>[x.id,x]));const ranks=['신입','브론즈','실버','골드'];
 let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
 function rank(){const w=state.wins||0,d=state.day||1;if(w>=9&&d>=10&&state.team.length>=3)return 3;if(w>=5&&d>=5&&state.team.length>=2)return 2;if(w>=2&&d>=3)return 1;return 0;}
@@ -36,7 +37,8 @@ $('farmWorld').addEventListener('click',e=>{
  if(foodPlacement){
   const rect=$('farmWorld').getBoundingClientRect();
   const x=(e.clientX-rect.left-369)/1.82,y=(e.clientY-rect.top-262)/1.56;
-  if(!core.placeFood(state,x,y))return toast('먹이가 부족하거나 바닥이 가득 찼어.');
+  if(!core.foodGround(state,x,y))return toast('개방된 사육장 바닥 안쪽에 먹이를 놓아 줘.');
+  if(!core.placeFood(state,x,y))return toast('먹이가 부족하거나 지금은 놓을 수 없어.');
   disarmFoodPlacement();render();save(false);updateActors();drawStatus();toast('선택한 위치에 먹이를 놓았어.');return;
  }
  const tile=e.target.closest('[data-hex]');if(tile)choose(tile.dataset.hex);

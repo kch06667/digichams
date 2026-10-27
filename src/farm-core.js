@@ -5,6 +5,23 @@ const SLOTS={attack:{x:25,y:35},defense:{x:50,y:22},speed:{x:75,y:35},rest:{x:73
 // Peripheral hex coordinates use the existing actor coordinate frame, mapped to world pixels by hex-farm-ui.js.
 // These are expansion UX positions, NOT coordinates extracted from the NDS ROM.
 const PLOTS={training:{x:50,y:-76,zone:'training'},track:{x:154,y:-18,zone:'track'},rest:{x:-54,y:118,zone:'rest'},forest:{x:50,y:198,zone:'forest'}};
+// Same pixel-space hex geometry as the UI; placement must stay on open ground.
+const HEX_CENTERS={core:[460,340],training:[460,128],garden:[270,234],track:[650,234],rest:[270,446],clinic:[650,446],forest:[460,552]};
+function foodGround(s,x,y){
+ if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+ const px=369+x*1.82,py=262+y*1.56;
+ return Object.entries(HEX_CENTERS).some(([id,[cx,cy]])=>{
+  if(id!=='core'&&!s.facilities?.[id])return false;
+  const dx=Math.abs(px-cx),dy=Math.abs(py-cy);
+  // A small inset keeps the meal inside the clipped hex border.
+  return dx<=102&&dy<=105-dx*113/220;
+ });
+}
+function occupants(s,a){
+ const zone=a.goal.zone||'core';
+ return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>s.farm.actors[m.instanceId])
+  .filter(b=>b!==a&&b?.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===a.goal.kind)).length;
+}
 const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
 const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
 function ensure(s){
@@ -62,9 +79,9 @@ function command(s,id,kind,options={}){ensure(s);const m=s.team.find(m=>m.instan
  a.goal=destination(s,kind,options);a.mode='moving';a.pose=2;return true;}
 function placeFood(s,x=50,y=65){
  ensure(s);
- if(s.food<=0||s.pendingBattle||s.farm.foods.length>=12||!Number.isFinite(x)||!Number.isFinite(y))return false;
+ if(s.food<=0||s.pendingBattle||s.farm.foods.length>=12||!foodGround(s,x,y))return false;
  s.food--;
- s.farm.foods.push({id:s.farm.nextFood++,x:Math.max(-369/1.82,Math.min((920-369)/1.82,x)),y:Math.max(-262/1.56,Math.min((690-262)/1.56,y)),age:0});
+ s.farm.foods.push({id:s.farm.nextFood++,x,y,age:0});
  return true;
 }
 // Each food item can be reserved by only one hungry active Digimon.
@@ -111,16 +128,17 @@ function step(s,dt,hooks={}){
    if(a.goal.kind==='eat'&&!s.farm.foods.some(f=>f.id===a.foodId)){clear(s,a);continue;}
    const waiting=a.mode==='waiting';
    const waitTarget=waiting&&a.waitPosition?a.waitPosition:null;
-   const dx=(waitTarget||a.goal).x-a.x,dy=(waitTarget||a.goal).y-a.y,d=Math.hypot(dx,dy),travel=CFG.moveSpeed*dt;
+   let dx=(waitTarget||a.goal).x-a.x,dy=(waitTarget||a.goal).y-a.y,d=Math.hypot(dx,dy);const travel=CFG.moveSpeed*dt;
    if(waiting){
     const zone=a.goal.zone||'core',kind=a.goal.kind;
-    const occupying=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===kind)).length;
+    const occupying=occupants(s,a);
     if(occupying>=2){
-     if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.pose=2;}
+     if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.pose=2;}
      else {a.x=(waitTarget||a.goal).x;a.y=(waitTarget||a.goal).y;a.pose=0;}
      continue;
     }
     a.waitPosition=null;
+    dx=a.goal.x-a.x;dy=a.goal.y-a.y;d=Math.hypot(dx,dy);
    }
    if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.mode='moving';a.pose=2;continue;}
    a.x=a.goal.x;a.y=a.goal.y;const kind=a.goal.kind;
@@ -128,7 +146,7 @@ function step(s,dt,hooks={}){
    if(kind!=='eat'){
     const zone=a.goal.zone||'core';
     const capacity=zone==='training'||zone==='track'||zone==='rest'?2:2;
-    const occupying=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===kind)).length;
+    const occupying=occupants(s,a);
     if(occupying>=capacity){
      // Queue outside the facility instead of stacking on the occupied action point.
      if(!a.waitPosition){
@@ -139,6 +157,7 @@ function step(s,dt,hooks={}){
      a.mode='waiting';a.pose=0;continue;
     }
     a.waitPosition=null;
+    dx=a.goal.x-a.x;dy=a.goal.y-a.y;d=Math.hypot(dx,dy);
    }
    a.mode='acting';a.remaining=kind==='rest'?CFG.restCycle:kind==='eat'?CFG.foodSeconds:trainDuration(m,hooks.periods,s.facilities);a.pose=kind==='rest'?13:kind==='eat'?14:32;continue;
   }
@@ -190,5 +209,5 @@ function step(s,dt,hooks={}){
  }
 }
 function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingBattle)return;s.world.accumulator+=Math.max(0,realSeconds)*s.world.speed;while(s.world.accumulator>=.05-1e-9){s.world.accumulator-=.05;if(s.world.accumulator<0)s.world.accumulator=0;step(s,.05,hooks);}}
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
