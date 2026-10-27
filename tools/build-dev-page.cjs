@@ -52,8 +52,8 @@ function build({root = path.resolve(__dirname, '..'), input = 'index.html'} = {}
   // It does nothing unless ?perf=1 is set in the address bar.
   const diagnosticScript = '<script defer src="src/dev-performance-overlay.js"></script>';
   const developerPage = generated.includes('</body>')
-    ? generated.replace('</body>', diagnosticScript + '\\n</body>')
-    : generated + '\\n' + diagnosticScript;
+    ? generated.replace('</body>', diagnosticScript + '\n</body>')
+    : generated + '\n' + diagnosticScript;
   fs.writeFileSync(outputFile, developerPage, 'utf8');
   return { input, output: path.relative(root, outputFile), originalBytes: Buffer.byteLength(source),
            developerBytes: Buffer.byteLength(developerPage), scripts: counters.script, styles: counters.style, files: written };
