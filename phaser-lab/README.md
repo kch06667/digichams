@@ -8,6 +8,9 @@ No main save, battle reward, evolution or ROM-backed AI logic is modified.
 1. From the repository root: `python3 -m http.server 8000 --bind 127.0.0.1`
 2. Open `http://127.0.0.1:8000/phaser-lab/` in a desktop browser.
 3. Use the buttons: auto battle, one training action, restart, sound toggle.
+4. Open `http://127.0.0.1:8000/phaser-lab/farm.html` for a separate small-hex cage prototype.
+   Click/tap individual cage tiles; buy additional cages, feed across four visible
+   bites, practice, expand from two rows and pan/zoom. No save data is touched.
 
 The demo loads **Phaser 3.90.0 from a version-pinned CDN**, so the browser needs
 internet access. Without exported GIF assets, the demo uses freshly drawn,
