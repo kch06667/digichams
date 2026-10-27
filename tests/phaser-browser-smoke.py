@@ -82,8 +82,7 @@ def check_farm(browser, mobile, base_url):
     canvas.click(position={"x":221*box["width"]/800,
                            "y":175*box["height"]/450})
     page.wait_for_function(
-        "document.querySelector('#status').textContent.includes('0:1') or "
-        "document.querySelector('#status').textContent.includes('1열')",
+        "document.querySelector('#status').textContent.includes('2열 선택')",
         timeout=5000)
     page.locator("#buy").click()
     page.wait_for_function(
