@@ -524,7 +524,6 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
  function bracketFor(s){const c=ensure(s);return c.active?.bracket||c.lastResult?.bracket||null;}
  return Object.freeze({CUPS,ROSTERS,get,ensure,eligible,nextDay,requirements,enter,nextMatch,beginMatch,cancelUnstarted,finishMatch,interrupted,bracketFor});
 });
-
 </script>
 <script>
 /* Digimon World Championship training cages v0.19.
@@ -1622,7 +1621,8 @@ $r('romGroup').onchange=filter;$r('romSearch').oninput=filter;$r('romMore').oncl
 })();
 </script>
 
-<script id="farm-core-v0143">/* user_design topology/time; numeric balance provisional, not ROM-verified. */
+<script id="farm-core-v0143">
+/* user_design topology/time; numeric balance provisional, not ROM-verified. */
 (function(root){
 'use strict';
 const SLOTS={attack:{x:25,y:35},defense:{x:50,y:22},speed:{x:75,y:35},rest:{x:73,y:68},cage:{x:50,y:35}};
@@ -1930,7 +1930,8 @@ function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingB
 const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script>
-<script id="hex-farm-v0143">/* v0.15.1 hex farm UI. New visual layout, reuses v0.14.2 game state and battle. */
+<script id="hex-farm-v0143">
+/* v0.15.1 hex farm UI. New visual layout, reuses v0.14.2 game state and battle. */
 (()=>{'use strict';
 const $=id=>document.getElementById(id), core=window.DCFarm, cages=window.DCCages, care=window.DCCare;
 if(!core||!cages||!care){console.error('Missing DCFarm or DCCages');return;}
