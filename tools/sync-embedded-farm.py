@@ -12,6 +12,7 @@ import re
 import sys
 
 SLOTS = {
+    'core': ('script', 'farm-core-v0143', Path('src/farm-core.js')),
     'js': ('script', 'hex-farm-v0143', Path('src/hex-farm-ui.js')),
     'css': ('style', 'hex-farm-style-v0143', Path('src/hex-farm.css')),
 }
@@ -33,6 +34,8 @@ def sync(root: Path, check: bool = False) -> list[str]:
             if len(matches) != 1:
                 raise ValueError(f'{name}: expected exactly one {ident} block; found {len(matches)}')
             old = matches[0].group(2)
+            if key == 'core' and not old.lstrip().startswith('/* user_design topology/time'):
+                raise ValueError(f'{name}: unexpected farm core block content')
             if key == 'js' and not old.lstrip().startswith('/* v0.15.1 hex farm UI'):
                 raise ValueError(f'{name}: unexpected farm JS block content')
             if key == 'css' and not old.lstrip().startswith('/* Progressive v0.14.3'):
