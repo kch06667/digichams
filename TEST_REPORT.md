@@ -20,3 +20,13 @@
 - 유니몬 m357_unimon_main_5.gif 없음. 실제 index.html은 #4 대체, standalone #5도 #4와 SHA-256 동일. 별도 #5_1.gif 존재하나 의미 미확정이므로 교체하지 않음.
 - 단일 프레임 3,676개(오류/모션 부재로 단정할 수 없음), 256px 초과 캔버스 0. 종별 단일 프레임 목록은 docs/audits/sprites-v023.json. #6/27/36/38/39 의미 미확정.
 - 감사 도구 합성 fixture 테스트 `python3 -m unittest discover -s tests -p test_sprite_audit.py -v`: 1/1 통과. 정상/다중프레임/누락/손상 구분.
+
+## 시설 자리·경로 개선 (2026-10-27 후속)
+- 수정 전 두 시설 사용자의 동일 좌표 겹침 재현. 직선 이동은 외곽 구역 사이를 가로질렀음.
+- `node --test tests/farm-navigation.cjs`: 9/9 통과. 기존 4건 + 두 자리/대기 해제, 지형·통로 이동, 중간 저장 복원 동일성, 구세이브 겹침 복구, 공격/방어 공유 대기열.
+- 기존 핵심 10개 스위트 모두 exit 0. farm-core의 훈련 주기 비교는 고정 이동 초 대신 실제 도착 시점을 기다리도록 변경. 보상 전 상태 및 15% 주기 단축 검증 유지.
+- `python3 tests/farm-routing-browser.py`: 두 HTML × PC/터치 4조합 통과. 실제 표시 좌표 58px 이상 분리, 연결 통로, 대기→훈련, 저장 복원, NDS/확장 화면 문서 폭 검사. pageerror 없음.
+- `python3 tests/farm-placement-browser.py`: 4조합 통과. 먹이 클릭/탭/섭취/JSON/새로고침 보존 유지.
+- 추가 진단: 열린 7구역에서 외곽 4시설까지 총 28쌍 이동을 0.05초 단위 표본 검사. 지면/통로 이탈 0, 이동속도 한도 초과 0.
+- 전후 캡처: test-output/farm-routing/index.html-{desktop,touch}-{before,after}.png. before는 d4b3a1e HTML을 동일 3개체 시나리오로 실행. 이미지는 로컬 ignored 출력, 외부 업로드 없음.
+- 한계: 이동 중 개체 상호 회피·혼잡 상황, 모든 시설 사이 서로 다른 작업 위치 간 충돌, 실제 Android 장기 사용 미검증. 통로/좌표 규칙은 확장판 설계이며 ROM 복원 아님.

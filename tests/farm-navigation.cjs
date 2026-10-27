@@ -35,3 +35,49 @@ test('stored actors do not occupy a facility or block active training',()=>{
  farm.command(s,'a','attack');farm.advance(s,6);
  assert.ok(s.team[0].training>0);
 });
+test('two facility users occupy distinct action points and a third waits',()=>{
+ const s=state();s.facilities={training:true};
+ s.team.push({...s.team[0],instanceId:'b'},{...s.team[0],instanceId:'c'});
+ for(const m of s.team)farm.command(s,m.instanceId,'attack');
+ farm.advance(s,12);
+ const acting=Object.values(s.farm.actors).filter(a=>a.mode==='acting');
+ assert.equal(acting.length,2);
+ assert.ok(Math.hypot(acting[0].x-acting[1].x,acting[0].y-acting[1].y)>=30);
+ assert.equal(s.farm.actors.c.mode,'waiting');
+ farm.command(s,'a','stop');farm.advance(s,8);
+ assert.ok(s.team[2].training>0,'queued actor eventually trains');
+});
+test('travel between outer facilities stays on open ground or connecting paths',()=>{
+ const s=state();s.facilities={training:true,rest:true};farm.ensure(s);
+ Object.assign(s.farm.actors.a,{x:-54,y:118});farm.command(s,'a','attack');
+ for(let i=0;i<400;i++){
+  farm.step(s,.05);const a=s.farm.actors.a;
+  assert.ok(farm.walkable(s,a.x,a.y),`off route at ${a.x},${a.y}`);
+  if(a.mode==='acting')break;
+ }
+ assert.equal(s.farm.actors.a.mode,'acting');
+});
+test('save mid-route resumes identically without duplicate rewards',()=>{
+ const s=state();s.facilities={training:true};farm.command(s,'a','attack');farm.advance(s,4);
+ const restored=JSON.parse(JSON.stringify(s));farm.advance(s,12);farm.advance(restored,12);
+ assert.deepEqual(restored,s);
+});
+test('old overlapping acting save moves second user before finishing its cycle',()=>{
+ const s=state();s.facilities={training:true};s.team.push({...s.team[0],instanceId:'b'});farm.ensure(s);
+ for(const a of Object.values(s.farm.actors))Object.assign(a,{x:50,y:-76,mode:'acting',remaining:.5,goal:{x:50,y:-76,zone:'training',kind:'attack'}});
+ farm.step(s,.05);assert.equal(s.farm.actors.b.mode,'moving');assert.equal(s.team[1].training,0);
+ farm.advance(s,1);assert.equal(s.team[1].training,0,'no rewards while repositioning');
+ farm.advance(s,3);assert.ok(s.team[1].training>0);
+ assert.ok(Math.abs(s.farm.actors.a.x-s.farm.actors.b.x)>=30);
+});
+test('shared expanded attack/defense queues reserve unique positions',()=>{
+ const s=state();s.facilities={training:true};
+ for(let i=0;i<5;i++)s.team.push({...s.team[0],instanceId:'b'+i});
+ for(const [i,m] of s.team.entries())farm.command(s,m.instanceId,i%2?'attack':'defense');
+ farm.advance(s,14);
+ const active=Object.values(s.farm.actors),waiting=active.filter(a=>a.mode==='waiting');
+ assert.equal(active.filter(a=>a.mode==='acting').length,2);
+ assert.equal(waiting.length,4);
+ assert.equal(new Set(waiting.map(a=>JSON.stringify(a.waitPosition))).size,4);
+ for(const a of waiting)assert.ok(farm.foodGround(s,a.waitPosition.x,a.waitPosition.y));
+});

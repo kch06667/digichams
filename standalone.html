@@ -271,6 +271,9 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 /* Placement targets the ground; actors must not steal selection clicks/taps. */
 #farmPanel .farmWorld.foodPlacement{cursor:crosshair;}
 #farmPanel .farmWorld.foodPlacement .hexActor{pointer-events:none;}
+
+/* Walkable connectors use the same core-to-plot graph as the simulation. */
+#farmPanel .hexPath{position:absolute;z-index:0;height:28px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
 </style><style id="championshipStyle">
 #championshipPanel{margin-top:16px}.championshipCalendar{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:12px 0}.championshipCup{background:rgba(30,61,75,.65);border:1px solid #537487;border-radius:10px;padding:12px}.championshipCup h3{font-size:16px;margin:0 0 8px}.championshipCup p{margin:5px 0;font-size:12px}.championshipCup button{margin-top:9px;width:100%}.championshipCup .champ-lock{color:#f5c48a}.championshipCup .champ-win{color:#82eac6}#championshipBracket{padding:9px;border:1px dashed #608297;border-radius:8px;margin:10px 0}#championshipHistory{opacity:.85}#championshipHistory p{margin:4px 0}
 </style></head><body><div class="wrap"><header class="top"><div class="brand"><div class="logo">🥚</div><div><h1>디지몬 챔피언십 · 웹 이식</h1><p>육성 · 로프 포획 · 자동 전투</p></div></div><div class="pill" id="dayPill">DAY 1 · 신입 사육사</div></header>
@@ -1511,10 +1514,66 @@ function foodGround(s,x,y){
   return dx<=102&&dy<=105-dx*113/220;
  });
 }
-function occupants(s,a){
- const zone=a.goal.zone||'core';
- return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>s.farm.actors[m.instanceId])
-  .filter(b=>b!==a&&b?.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===a.goal.kind)).length;
+function center(id){const [x,y]=HEX_CENTERS[id];return {x:(x-369)/1.82,y:(y-262)/1.56};}
+function openZones(s){return Object.keys(HEX_CENTERS).filter(id=>id==='core'||s.facilities?.[id]);}
+function zoneAt(s,p){return openZones(s).sort((a,b)=>Math.hypot(p.x-center(a).x,p.y-center(a).y)-Math.hypot(p.x-center(b).x,p.y-center(b).y))[0];}
+function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
+function walkable(s,x,y){
+ if(foodGround(s,x,y))return true;
+ if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+ return openZones(s).some(id=>id!=='core'&&segmentDistance({x,y},center('core'),center(id))<=9);
+}
+// Expansion topology, not recovered NDS movement: outer plots connect through core.
+function routeTo(s,a,target){
+ const from=zoneAt(s,a),to=zoneAt(s,target),points=[];
+ if(from!==to){if(from!=='core')points.push(center(from));points.push(center('core'));if(to!=='core')points.push(center(to));}
+ points.push({x:target.x,y:target.y});return points;
+}
+function walk(s,a,target,dt){
+ const key=target.x+','+target.y;
+ if(a.routeKey!==key||!Array.isArray(a.route)||!a.route.length){a.routeKey=key;a.route=routeTo(s,a,target);}
+ let travel=CFG.moveSpeed*dt;
+ while(a.route.length){
+  const p=a.route[0],dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy);
+  if(d>1e-9&&Math.abs(dx)>1e-9)a.face=dx<0?1:-1;
+  if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.pose=2;return false;}
+  a.x=p.x;a.y=p.y;travel-=d;a.route.shift();
+ }
+ a.routeKey=null;return true;
+}
+function facilityKey(a){return a.goal&&SLOTS[a.goal.kind]?(a.goal.zone||'core')+':'+((a.goal.zone||'core')==='core'?a.goal.kind:'shared'):null;}
+function activeActors(s){return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>actor(s,m.instanceId));}
+function stationPoint(a){const g=a.goal;return {x:g.x+(a.station===1?(g.zone==='core'&&g.x>50?-32:32):0),y:g.y};}
+function reserveStation(s,a){
+ const key=facilityKey(a);if(!key)return true;
+ const peers=activeActors(s).filter(b=>b!==a&&facilityKey(b)===key);
+ // Existing acting users get first claim when migrating saves without reservations.
+ const reserved=new Set(peers.filter(b=>Number.isInteger(b.station)).map(b=>b.station));
+ if(!Number.isInteger(a.station)||a.station<0||a.station>1||peers.some(b=>b.station===a.station&&b.mode==='acting')){
+  a.station=[0,1].find(n=>!reserved.has(n));
+ }
+ if(a.station!==undefined){a.waitPosition=null;return true;}
+ if(!a.waitPosition){
+  const c=center(a.goal.zone||'core');
+  // Bounded waiting positions; never grow queue rings outside the purchased hex.
+  const occupied=activeActors(s).filter(b=>b!==a).map(b=>b.waitPosition||((Number.isInteger(b.station)&&b.goal)?stationPoint(b):b));
+  outer:for(const dy of [30,12,-12,-30])for(const dx of [-32,0,32]){
+   const p={x:c.x+dx,y:c.y+dy};
+   if(foodGround(s,p.x,p.y)&&occupied.every(b=>Math.hypot(p.x-b.x,p.y-b.y)>=18)){a.waitPosition=p;break outer;}
+  }
+ }
+ return false;
+}
+function migrateStations(s){
+ const used=new Map();
+ for(const a of activeActors(s).filter(a=>a.mode==='acting'&&facilityKey(a))){
+  const key=facilityKey(a),taken=used.get(key)||new Set();used.set(key,taken);
+  if(!Number.isInteger(a.station)||a.station<0||a.station>1||taken.has(a.station))a.station=[0,1].find(n=>!taken.has(n));
+  if(a.station===undefined){a.mode='waiting';a.repositioning=true;continue;}
+  taken.add(a.station);
+  const p=stationPoint(a);
+  if(Math.hypot(a.x-p.x,a.y-p.y)>1e-6){a.mode='moving';a.repositioning=true;a.route=null;}
+ }
 }
 const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
 const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
@@ -1540,7 +1599,7 @@ function ensure(s){
 function rnd(s){s.world.seed=(Math.imul(s.world.seed,1664525)+1013904223)>>>0;return s.world.seed/4294967296;}
 function log(s,text){s.logs.unshift('[사육장] '+text);s.logs=s.logs.slice(0,60);}
 function actor(s,id){return s.farm.actors[id];}
-function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.idleTime=0;}
+function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.station=undefined;a.route=null;a.routeKey=null;a.repositioning=false;a.idleTime=0;}
 function destination(s,kind,options={}){
  if(kind==='cage'){
   const cage=options.cage;
@@ -1607,6 +1666,7 @@ function step(s,dt,hooks={}){
  for(const m of s.team)if(m.location!=='storage'&&!m.egg)
   m.hunger=Math.min(100,(Number(m.hunger)||0)+dt*CFG.hungerRate);
  assignFood(s);
+ migrateStations(s);
  for(const m of s.team){
   const id=m.instanceId,a=actor(s,id);a.id=id;if(m.location==='storage')continue;
   if(m.egg){m.hatchRemaining=(m.hatchRemaining??CFG.hatchSeconds)-dt;a.pose=0;if(m.hatchRemaining<=0){if(hooks.evolution?.hatch)hooks.evolution.hatch(s,m,hooks.lookup);else {delete m.egg;delete m.hatchRemaining;}log(s,'디지타마 부화 완료.');}continue;}
@@ -1620,39 +1680,18 @@ function step(s,dt,hooks={}){
   if(a.mode==='moving'||a.mode==='waiting'){
    if(!a.goal){clear(s,a);continue;}
    if(a.goal.kind==='eat'&&!s.farm.foods.some(f=>f.id===a.foodId)){clear(s,a);continue;}
-   const waiting=a.mode==='waiting';
-   const waitTarget=waiting&&a.waitPosition?a.waitPosition:null;
-   let dx=(waitTarget||a.goal).x-a.x,dy=(waitTarget||a.goal).y-a.y,d=Math.hypot(dx,dy);const travel=CFG.moveSpeed*dt;
-   if(waiting){
-    const zone=a.goal.zone||'core',kind=a.goal.kind;
-    const occupying=occupants(s,a);
-    if(occupying>=2){
-     if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.pose=2;}
-     else {a.x=(waitTarget||a.goal).x;a.y=(waitTarget||a.goal).y;a.pose=0;}
-     continue;
-    }
-    a.waitPosition=null;
-    dx=a.goal.x-a.x;dy=a.goal.y-a.y;d=Math.hypot(dx,dy);
+   const kind=a.goal.kind;
+   const available=reserveStation(s,a);
+   if(!available){
+    a.mode='waiting';
+    if(a.waitPosition){if(walk(s,a,a.waitPosition,dt))a.pose=0;}else a.pose=0;
+    continue;
    }
-   if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.mode='moving';a.pose=2;continue;}
-   a.x=a.goal.x;a.y=a.goal.y;const kind=a.goal.kind;
+   const target=facilityKey(a)?stationPoint(a):a.goal;
+   a.mode='moving';
+   if(!walk(s,a,target,dt))continue;
    if(kind==='wander'){a.goal=null;a.mode='idle';a.pose=0;continue;}
-   if(kind!=='eat'){
-    const zone=a.goal.zone||'core';
-    const capacity=zone==='training'||zone==='track'||zone==='rest'?2:2;
-    const occupying=occupants(s,a);
-    if(occupying>=capacity){
-     // Queue outside the facility instead of stacking on the occupied action point.
-     if(!a.waitPosition){
-      const peers=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='waiting'&&b.goal&&(b.goal.zone||'core')===zone&&b.goal.kind===kind).length;
-      const lane=peers%4,ring=Math.floor(peers/4);
-      a.waitPosition={x:a.goal.x+[-12,12,-12,12][lane]*(1+ring*.5),y:a.goal.y+[-10,-10,10,10][lane]*(1+ring*.5)};
-     }
-     a.mode='waiting';a.pose=0;continue;
-    }
-    a.waitPosition=null;
-    dx=a.goal.x-a.x;dy=a.goal.y-a.y;d=Math.hypot(dx,dy);
-   }
+   if(a.repositioning){a.repositioning=false;a.mode='acting';a.pose=kind==='rest'?13:32;continue;}
    a.mode='acting';a.remaining=kind==='rest'?CFG.restCycle:kind==='eat'?CFG.foodSeconds:trainDuration(m,hooks.periods,s.facilities);a.pose=kind==='rest'?13:kind==='eat'?14:32;continue;
   }
   if(a.mode!=='acting')continue;
@@ -1703,7 +1742,7 @@ function step(s,dt,hooks={}){
  }
 }
 function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingBattle)return;s.world.accumulator+=Math.max(0,realSeconds)*s.world.speed;while(s.world.accumulator>=.05-1e-9){s.world.accumulator-=.05;if(s.world.accumulator<0)s.world.accumulator=0;step(s,.05,hooks);}}
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
 </script>
 <script id="hex-farm-v0143">/* v0.15.1 hex farm UI. New visual layout, reuses v0.14.2 game state and battle. */
@@ -1729,7 +1768,7 @@ function missing(f){const out=[];if(f.needs&&!state.facilities[f.needs])out.push
 function canBuy(f){return f&&!state.facilities[f.id]&&!missing(f).length&&state.facilityCredits>=f.cost;}
 function format(n){return Math.floor(n).toLocaleString('ko-KR');}
 function tileHTML(f){const unlocked=!!state.facilities[f.id],isCore=f.id==='core';return `<button type="button" class="hexTile ${unlocked?'unlocked':'locked'} ${isCore?'core':''} ${selected===f.id?'selected':''}" data-hex="${f.id}" aria-label="${f.label}, ${unlocked?'개방':'잠김'}" style="left:${f.x}px;top:${f.y}px"><span class="hexInner"><b>${isCore?'🏡':unlocked?'🌿':'🔒'}</b><strong>${f.label}</strong><small>${unlocked?'개방 중':format(f.cost)+' Bit'}</small></span></button>`;}
-function drawTiles(){const layer=$('farmWorld');const nodes=Array.from(layer.querySelectorAll('.hexActor,.hexFood'));layer.innerHTML=CFG.map(tileHTML).join('');for(const node of nodes)layer.appendChild(node);drawDetails();drawNumbers();}
+function drawTiles(){const layer=$('farmWorld');const nodes=Array.from(layer.querySelectorAll('.hexActor,.hexFood'));layer.innerHTML=CFG.filter(f=>f.id!=='core'&&state.facilities[f.id]).map(f=>`<span class="hexPath" aria-hidden="true" style="left:460px;top:340px;width:${Math.hypot(f.x-460,f.y-340)}px;transform:translateY(-50%) rotate(${Math.atan2(f.y-340,f.x-460)}rad)"></span>`).join('')+CFG.map(tileHTML).join('');for(const node of nodes)layer.appendChild(node);drawDetails();drawNumbers();}
 function drawNumbers(){$('farmCredits').textContent=format(state.facilityCredits);$('farmRank').textContent=ranks[rank()];$('farmRoomCount').textContent=CFG.filter(f=>state.facilities[f.id]).length;$('farmWinCount').textContent=state.wins||0;}
 function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilities[f.id],needs=missing(f);
  const el=$('farmDetails');

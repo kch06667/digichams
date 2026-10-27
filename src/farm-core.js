@@ -17,10 +17,66 @@ function foodGround(s,x,y){
   return dx<=102&&dy<=105-dx*113/220;
  });
 }
-function occupants(s,a){
- const zone=a.goal.zone||'core';
- return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>s.farm.actors[m.instanceId])
-  .filter(b=>b!==a&&b?.mode==='acting'&&b.goal&&(b.goal.zone||'core')===zone&&(zone!=='core'||b.goal.kind===a.goal.kind)).length;
+function center(id){const [x,y]=HEX_CENTERS[id];return {x:(x-369)/1.82,y:(y-262)/1.56};}
+function openZones(s){return Object.keys(HEX_CENTERS).filter(id=>id==='core'||s.facilities?.[id]);}
+function zoneAt(s,p){return openZones(s).sort((a,b)=>Math.hypot(p.x-center(a).x,p.y-center(a).y)-Math.hypot(p.x-center(b).x,p.y-center(b).y))[0];}
+function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
+function walkable(s,x,y){
+ if(foodGround(s,x,y))return true;
+ if(!Number.isFinite(x)||!Number.isFinite(y))return false;
+ return openZones(s).some(id=>id!=='core'&&segmentDistance({x,y},center('core'),center(id))<=9);
+}
+// Expansion topology, not recovered NDS movement: outer plots connect through core.
+function routeTo(s,a,target){
+ const from=zoneAt(s,a),to=zoneAt(s,target),points=[];
+ if(from!==to){if(from!=='core')points.push(center(from));points.push(center('core'));if(to!=='core')points.push(center(to));}
+ points.push({x:target.x,y:target.y});return points;
+}
+function walk(s,a,target,dt){
+ const key=target.x+','+target.y;
+ if(a.routeKey!==key||!Array.isArray(a.route)||!a.route.length){a.routeKey=key;a.route=routeTo(s,a,target);}
+ let travel=CFG.moveSpeed*dt;
+ while(a.route.length){
+  const p=a.route[0],dx=p.x-a.x,dy=p.y-a.y,d=Math.hypot(dx,dy);
+  if(d>1e-9&&Math.abs(dx)>1e-9)a.face=dx<0?1:-1;
+  if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.pose=2;return false;}
+  a.x=p.x;a.y=p.y;travel-=d;a.route.shift();
+ }
+ a.routeKey=null;return true;
+}
+function facilityKey(a){return a.goal&&SLOTS[a.goal.kind]?(a.goal.zone||'core')+':'+((a.goal.zone||'core')==='core'?a.goal.kind:'shared'):null;}
+function activeActors(s){return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>actor(s,m.instanceId));}
+function stationPoint(a){const g=a.goal;return {x:g.x+(a.station===1?(g.zone==='core'&&g.x>50?-32:32):0),y:g.y};}
+function reserveStation(s,a){
+ const key=facilityKey(a);if(!key)return true;
+ const peers=activeActors(s).filter(b=>b!==a&&facilityKey(b)===key);
+ // Existing acting users get first claim when migrating saves without reservations.
+ const reserved=new Set(peers.filter(b=>Number.isInteger(b.station)).map(b=>b.station));
+ if(!Number.isInteger(a.station)||a.station<0||a.station>1||peers.some(b=>b.station===a.station&&b.mode==='acting')){
+  a.station=[0,1].find(n=>!reserved.has(n));
+ }
+ if(a.station!==undefined){a.waitPosition=null;return true;}
+ if(!a.waitPosition){
+  const c=center(a.goal.zone||'core');
+  // Bounded waiting positions; never grow queue rings outside the purchased hex.
+  const occupied=activeActors(s).filter(b=>b!==a).map(b=>b.waitPosition||((Number.isInteger(b.station)&&b.goal)?stationPoint(b):b));
+  outer:for(const dy of [30,12,-12,-30])for(const dx of [-32,0,32]){
+   const p={x:c.x+dx,y:c.y+dy};
+   if(foodGround(s,p.x,p.y)&&occupied.every(b=>Math.hypot(p.x-b.x,p.y-b.y)>=18)){a.waitPosition=p;break outer;}
+  }
+ }
+ return false;
+}
+function migrateStations(s){
+ const used=new Map();
+ for(const a of activeActors(s).filter(a=>a.mode==='acting'&&facilityKey(a))){
+  const key=facilityKey(a),taken=used.get(key)||new Set();used.set(key,taken);
+  if(!Number.isInteger(a.station)||a.station<0||a.station>1||taken.has(a.station))a.station=[0,1].find(n=>!taken.has(n));
+  if(a.station===undefined){a.mode='waiting';a.repositioning=true;continue;}
+  taken.add(a.station);
+  const p=stationPoint(a);
+  if(Math.hypot(a.x-p.x,a.y-p.y)>1e-6){a.mode='moving';a.repositioning=true;a.route=null;}
+ }
 }
 const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
 const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
@@ -46,7 +102,7 @@ function ensure(s){
 function rnd(s){s.world.seed=(Math.imul(s.world.seed,1664525)+1013904223)>>>0;return s.world.seed/4294967296;}
 function log(s,text){s.logs.unshift('[사육장] '+text);s.logs=s.logs.slice(0,60);}
 function actor(s,id){return s.farm.actors[id];}
-function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.idleTime=0;}
+function clear(s,a){for(const f of s.farm.foods)if(f.claim===a.id)delete f.claim;a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;a.foodId=null;a.waitPosition=null;a.station=undefined;a.route=null;a.routeKey=null;a.repositioning=false;a.idleTime=0;}
 function destination(s,kind,options={}){
  if(kind==='cage'){
   const cage=options.cage;
@@ -113,6 +169,7 @@ function step(s,dt,hooks={}){
  for(const m of s.team)if(m.location!=='storage'&&!m.egg)
   m.hunger=Math.min(100,(Number(m.hunger)||0)+dt*CFG.hungerRate);
  assignFood(s);
+ migrateStations(s);
  for(const m of s.team){
   const id=m.instanceId,a=actor(s,id);a.id=id;if(m.location==='storage')continue;
   if(m.egg){m.hatchRemaining=(m.hatchRemaining??CFG.hatchSeconds)-dt;a.pose=0;if(m.hatchRemaining<=0){if(hooks.evolution?.hatch)hooks.evolution.hatch(s,m,hooks.lookup);else {delete m.egg;delete m.hatchRemaining;}log(s,'디지타마 부화 완료.');}continue;}
@@ -126,39 +183,18 @@ function step(s,dt,hooks={}){
   if(a.mode==='moving'||a.mode==='waiting'){
    if(!a.goal){clear(s,a);continue;}
    if(a.goal.kind==='eat'&&!s.farm.foods.some(f=>f.id===a.foodId)){clear(s,a);continue;}
-   const waiting=a.mode==='waiting';
-   const waitTarget=waiting&&a.waitPosition?a.waitPosition:null;
-   let dx=(waitTarget||a.goal).x-a.x,dy=(waitTarget||a.goal).y-a.y,d=Math.hypot(dx,dy);const travel=CFG.moveSpeed*dt;
-   if(waiting){
-    const zone=a.goal.zone||'core',kind=a.goal.kind;
-    const occupying=occupants(s,a);
-    if(occupying>=2){
-     if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.pose=2;}
-     else {a.x=(waitTarget||a.goal).x;a.y=(waitTarget||a.goal).y;a.pose=0;}
-     continue;
-    }
-    a.waitPosition=null;
-    dx=a.goal.x-a.x;dy=a.goal.y-a.y;d=Math.hypot(dx,dy);
+   const kind=a.goal.kind;
+   const available=reserveStation(s,a);
+   if(!available){
+    a.mode='waiting';
+    if(a.waitPosition){if(walk(s,a,a.waitPosition,dt))a.pose=0;}else a.pose=0;
+    continue;
    }
-   if(d>travel){a.x+=dx/d*travel;a.y+=dy/d*travel;a.face=dx<0?1:-1;a.mode='moving';a.pose=2;continue;}
-   a.x=a.goal.x;a.y=a.goal.y;const kind=a.goal.kind;
+   const target=facilityKey(a)?stationPoint(a):a.goal;
+   a.mode='moving';
+   if(!walk(s,a,target,dt))continue;
    if(kind==='wander'){a.goal=null;a.mode='idle';a.pose=0;continue;}
-   if(kind!=='eat'){
-    const zone=a.goal.zone||'core';
-    const capacity=zone==='training'||zone==='track'||zone==='rest'?2:2;
-    const occupying=occupants(s,a);
-    if(occupying>=capacity){
-     // Queue outside the facility instead of stacking on the occupied action point.
-     if(!a.waitPosition){
-      const peers=Object.values(s.farm.actors).filter(b=>b!==a&&b.mode==='waiting'&&b.goal&&(b.goal.zone||'core')===zone&&b.goal.kind===kind).length;
-      const lane=peers%4,ring=Math.floor(peers/4);
-      a.waitPosition={x:a.goal.x+[-12,12,-12,12][lane]*(1+ring*.5),y:a.goal.y+[-10,-10,10,10][lane]*(1+ring*.5)};
-     }
-     a.mode='waiting';a.pose=0;continue;
-    }
-    a.waitPosition=null;
-    dx=a.goal.x-a.x;dy=a.goal.y-a.y;d=Math.hypot(dx,dy);
-   }
+   if(a.repositioning){a.repositioning=false;a.mode='acting';a.pose=kind==='rest'?13:32;continue;}
    a.mode='acting';a.remaining=kind==='rest'?CFG.restCycle:kind==='eat'?CFG.foodSeconds:trainDuration(m,hooks.periods,s.facilities);a.pose=kind==='rest'?13:kind==='eat'?14:32;continue;
   }
   if(a.mode!=='acting')continue;
@@ -209,5 +245,5 @@ function step(s,dt,hooks={}){
  }
 }
 function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingBattle)return;s.world.accumulator+=Math.max(0,realSeconds)*s.world.speed;while(s.world.accumulator>=.05-1e-9){s.world.accumulator-=.05;if(s.world.accumulator<0)s.world.accumulator=0;step(s,.05,hooks);}}
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

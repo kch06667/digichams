@@ -52,3 +52,4 @@
 - 테스트가 생성한 기존 results.json을 현재 실행 결과와 혼동하지 않는다. 실제 실행 내역은 TEST_REPORT.md 기록.
 - ROM_VERIFIED/GUIDE_VERIFIED/INFERRED/PLACEHOLDER는 의미·출처 검증에 따라 구분. 파일 존재만으로 모션 의미를 확정하지 않는다.
 - 스프라이트 감사: `python3 tools/audit-sprites.py --output /tmp/sprite-audit.json` (Pillow). 현재 알려진 누락 1개로 exit 1; docs/audits/sprites-v023.json 재사용. 도구 테스트: `python3 -m unittest discover -s tests -p test_sprite_audit.py -v`.
+- 시설/경로 변경 후 `node --test tests/farm-navigation.cjs`, `python3 tests/farm-routing-browser.py` 실행. 경로는 열린 외곽→중앙→목표 시설이며 station 예약과 남은 행동 타이머의 저장/복원 유지. test-output/farm-routing에 로컬 캡처 생성.

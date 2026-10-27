@@ -70,3 +70,6 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 /* Placement targets the ground; actors must not steal selection clicks/taps. */
 #farmPanel .farmWorld.foodPlacement{cursor:crosshair;}
 #farmPanel .farmWorld.foodPlacement .hexActor{pointer-events:none;}
+
+/* Walkable connectors use the same core-to-plot graph as the simulation. */
+#farmPanel .hexPath{position:absolute;z-index:0;height:28px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
