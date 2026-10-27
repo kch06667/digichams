@@ -11,9 +11,9 @@ test('deploy archive is allowlisted and never contains extracted game art',()=>{
   try{
     cp.execFileSync(process.execPath,[path.join(root,'tools/build-phaser-preview.cjs'),d]);
     const files=fs.readdirSync(d).sort();
-    assert.deepEqual(files,['build-info.json','game.js','index.html','logic.js']);
+    assert.deepEqual(files,['build-info.json','farm-model.js','farm.html','farm.js','game.js','index.html','logic.js']);
     const data=JSON.parse(fs.readFileSync(path.join(d,'build-info.json'),'utf8'));
-    assert.deepEqual(data.files,['index.html','game.js','logic.js']);
+    assert.deepEqual(data.files,['index.html','game.js','logic.js','farm.html','farm.js','farm-model.js']);
     assert.ok(!files.some(name=>/\.(?:nds|gif|png|webp|zip)$/i.test(name)));
   }finally{fs.rmSync(d,{recursive:true,force:true});}
 });
