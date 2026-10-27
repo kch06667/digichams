@@ -26,7 +26,8 @@
         reset:()=>{this.scene.restart();},
         zoom:dir=>{this.cameras.main.setZoom(
           Math.max(.75,Math.min(1.5,this.cameras.main.zoom+dir*.15)));this.redraw('배율 변경');},
-        select:(r,c)=>this.select(r,c)
+        select:(r,c)=>this.select(r,c),
+        snapshot:()=>JSON.parse(JSON.stringify(this.state))
       };
       buttons.forEach(id=>document.getElementById(id).disabled=false);
     }
