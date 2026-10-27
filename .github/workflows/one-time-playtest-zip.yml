@@ -1,0 +1,71 @@
+name: One-time private playtest ZIP
+on:
+  push:
+    branches:
+      - release/one-time-playtest-zip-20261028
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Validate current gameplay bundles
+        run: |
+          python3 tools/sync-embedded-farm.py --check
+          python3 -m unittest discover -s tests -p test_farm_graphics_integrated.py -v
+          node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs tests/farm-offmap-recovery.cjs
+          node tests/farm-core.cjs
+          node tests/championship-core.cjs
+      - name: Produce personal playable distribution (no ROM or source ZIP)
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import subprocess, zipfile
+          out = Path("playtest")
+          out.mkdir(exist_ok=True)
+          target = out / "Digimon_Championship_20261028_GitHub_Main_Playable.zip"
+          expected = ["index.html", "standalone.html", "sprite_catalog.html", "manifest.webmanifest", "package.json", "README.md"]
+          files = expected + [str(p) for top in ("assets", "src") for p in Path(top).rglob("*") if p.is_file()]
+          if any(not Path(p).is_file() for p in expected):
+              raise SystemExit("Missing playable entrypoint")
+          files = sorted(set(files))
+          disallowed = [p for p in files if p.lower().endswith((".nds", ".zip", ".7z", ".rar")) or "/.git/" in p]
+          if disallowed:
+              raise SystemExit("Refusing to bundle ROM/archives: " + repr(disallowed[:6]))
+          sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          instructions = ("디지몬 챔피언십 웹게임 · 개인 테스트 배포본\n"
+                          f"GitHub main 기반: 6c802cc04fff133cc6f197eeb5245a12ffeb93e0\n"
+                          f"ZIP 생성 체크포인트: {sha}\n\n"
+                          "PC: 압축을 모두 해제한 뒤 standalone.html을 Chrome/Edge로 엽니다.\n"
+                          "index.html은 같은 폴더에서 로컬 웹서버를 통해 여는 것이 권장됩니다.\n"
+                          "실행 예: python -m http.server 8000\n"
+                          "그 뒤 http://localhost:8000/index.html 접속.\n"
+                          "모바일: 파일로 열면 브라우저별 제약이 있을 수 있으므로 웹서버 접속 권장.\n"
+                          "테스트 버전: 일부 원작 시스템/밸런스는 구현 중이며 저장 파일(JSON) 백업을 권장합니다.\n"
+                          "원본 NDS ROM 및 과거 프로젝트 전체 ZIP은 포함하지 않았습니다.\n")
+          with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+              for p in files:
+                  z.write(p, arcname=p)
+              z.writestr("실행방법.txt", instructions)
+          print(f"PLAYTEST_ARCHIVE={target} | files={len(files)} | bytes={target.stat().st_size}")
+          with zipfile.ZipFile(target) as z:
+              bad = z.testzip()
+              assert bad is None, bad
+              assert "assets/farm/hex_farm_v0232.webp" in z.namelist()
+              assert "standalone.html" in z.namelist()
+              assert not any(p.lower().endswith((".zip", ".nds")) for p in z.namelist())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: one-time-digimon-playtest-20261028
+          path: playtest/Digimon_Championship_20261028_GitHub_Main_Playable.zip
+          retention-days: 7
+          compression-level: 0
