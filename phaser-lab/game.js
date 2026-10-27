@@ -31,6 +31,7 @@
 
   class LabScene extends Phaser.Scene {
     constructor() { super('Lab'); }
+    init(data) { this.requestedMode = data?.autoMode || 'idle'; }
     preload() {
       if (!manifest) return;
       for (const [id, sheet] of Object.entries(manifest.actions)) {
@@ -72,6 +73,8 @@
         sound: enabled => { soundEnabled = enabled; if (enabled && this.sound.context?.resume) this.sound.context.resume(); }
       };
       buttons.forEach(id => { document.getElementById(id).disabled = false; });
+      if (this.requestedMode === 'battle') this.beginBattle();
+      if (this.requestedMode === 'train') this.beginTrain();
     }
     drawStage() {
       const g = this.add.graphics();
@@ -163,13 +166,7 @@
         {fontFamily:'monospace',fontSize:'24px',fontStyle:'bold',color:'#fff3bf'}).setDepth(10).setOrigin(.5);
       this.tweens.add({targets:value,y:y-96,alpha:0,duration:550,onComplete:()=>value.destroy()});
     }
-    battle() {
-      this.scene.restart(); // reset independent demo and preserve main game save
-      // restart invokes create synchronously; start the new scene only on next tick.
-      this.time.delayedCall(0, () => {});
-      const start = () => {const scene=this.scene.get('Lab'); if(scene) scene.beginBattle();};
-      setTimeout(start, 70);
-    }
+    battle() { this.scene.restart({autoMode:'battle'}); }
     beginBattle() {
       if (this.mode !== 'idle') return;
       this.mode='battle'; this.turn=0;
@@ -216,13 +213,7 @@
             }});
         }});
     }
-    train() {
-      this.scene.restart();
-      setTimeout(()=>{
-        const scene=this.scene.get('Lab');
-        if(scene) scene.beginTrain();
-      },70);
-    }
+    train() { this.scene.restart({autoMode:'train'}); }
     beginTrain() {
       if(this.mode!=='idle')return;
       this.mode='training'; this.pose(this.left,'training');
