@@ -21,7 +21,8 @@
     if(!state||!action||typeof action.type!=='string')throw Error('Invalid farm transition');
     const s={...state,cages:{...state.cages}};
     const [row,col]=String(s.selected).split(':').map(Number);
-    const cage=s.cages[s.selected];
+    const targetKey=action.type==='bite'&&typeof action.at==='string'?action.at:s.selected;
+    const cage=s.cages[targetKey];
     const fail=message=>({state,message,changed:false});
     const ok=message=>({state:s,message,changed:true});
     switch(action.type){
@@ -45,9 +46,9 @@
         return ok('먹이 배치 · '+FOOD_BITES+'입 남음 (시연 수치)');
       case 'bite':
         if(!cage||cage.food<=0)return fail('먹이가 없어.');
-        s.cages[s.selected]={...cage,food:cage.food-1,
+        s.cages[targetKey]={...cage,food:cage.food-1,
           hunger:clamp(cage.hunger-6,0,100)};
-        return ok('한 입 먹음 · 남은 먹이 '+s.cages[s.selected].food+'/'+FOOD_BITES);
+        return ok('한 입 먹음 · 남은 먹이 '+s.cages[targetKey].food+'/'+FOOD_BITES);
       case 'train':
         if(!cage)return fail('훈련할 케이지를 선택해.');
         s.training=clamp(s.training+1,0,9999);
