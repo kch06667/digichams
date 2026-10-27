@@ -48,9 +48,15 @@ function build({root = path.resolve(__dirname, '..'), input = 'index.html'} = {}
         : '<link rel="stylesheet"' + attributes + ' href="' + relative + '">';
     });
   if (counters.script === 0) throw new Error('No inline game scripts found; source structure changed');
-  fs.writeFileSync(outputFile, generated, 'utf8');
+  // Opt-in performance overlay is referenced ONLY by generated developer HTML.
+  // It does nothing unless ?perf=1 is set in the address bar.
+  const diagnosticScript = '<script defer src="src/dev-performance-overlay.js"></script>';
+  const developerPage = generated.includes('</body>')
+    ? generated.replace('</body>', diagnosticScript + '\\n</body>')
+    : generated + '\\n' + diagnosticScript;
+  fs.writeFileSync(outputFile, developerPage, 'utf8');
   return { input, output: path.relative(root, outputFile), originalBytes: Buffer.byteLength(source),
-           developerBytes: Buffer.byteLength(generated), scripts: counters.script, styles: counters.style, files: written };
+           developerBytes: Buffer.byteLength(developerPage), scripts: counters.script, styles: counters.style, files: written };
 }
 
 if (require.main === module) {
