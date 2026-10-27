@@ -45,3 +45,8 @@
 - UI만 변경하여 전체 시뮬레이션 회귀는 반복하지 않음.
 - 임시 `/tmp/check-farm-status.py`로 실제 HTTP Chromium 검사: index/standalone × 390/1365px에서 통로 대기, 일반 이동, 자리 양보, 시설 대기, 유휴 상태를 주입하여 표시와 이전 문구 해제를 확인. 20개 확인 통과, pageerror 없음.
 - 이는 상태 표시 검사이며 실제 회피 동작 검증은 앞선 회피/경로 테스트 결과 참조.
+
+## 먹이 배치 Esc 취소
+- 임시 `/tmp/check-feed-escape.py`, 실제 HTTP Chromium에서 index/standalone × hexDrop/feed 총 4조합 통과.
+- Esc 취소 후 선택 모드 해제, 두 버튼 원래 문구 복귀, 반복 Esc에서 먹이 수와 바닥 먹이 배열 동일, pageerror 없음.
+- 입력/UI 변경만 있어 전체 게임 회귀는 반복하지 않음.

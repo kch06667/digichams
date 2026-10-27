@@ -1824,9 +1824,10 @@ function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilitie
 function centerOn(id='core',smooth=false){const f=byId[id]||byId.core,v=$('farmViewport');v.scrollTo({left:Math.max(0,f.x-v.clientWidth/2),top:Math.max(0,f.y-v.clientHeight/2),behavior:smooth?'smooth':'instant'});}
 function choose(id){if(!byId[id])return;selected=id;document.querySelectorAll('.hexTile').forEach(t=>t.classList.toggle('selected',t.dataset.hex===id));drawDetails();centerOn(id,true);}
 let foodPlacement=false;
-function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('사육장 지도에서 먹이를 놓을 위치를 눌러 줘.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
+function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('지도에서 먹이 위치를 선택해 줘. 버튼을 다시 누르거나 Esc로 취소할 수 있어.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
 function disarmFoodPlacement(){foodPlacement=false;$('hexDrop').textContent='🍖 바닥에 먹이 놓기';$('feed').textContent='🍖 먹이 주기';$('farmWorld').classList.remove('foodPlacement');}
 function toggleFoodPlacement(){if(foodPlacement)disarmFoodPlacement();else armFoodPlacement();}
+window.addEventListener('keydown',e=>{if(e.key==='Escape'&&foodPlacement){disarmFoodPlacement();toast('먹이 놓기를 취소했어.');}});
 $('farmWorld').addEventListener('click',e=>{
  if(foodPlacement){
   const rect=$('farmWorld').getBoundingClientRect();
