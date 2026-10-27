@@ -3,6 +3,8 @@
   "version": "0.23.0",
   "private": true,
   "scripts": {
+    "dev:build": "node tools/build-dev-page.cjs",
+    "test:dev": "node --test tests/build-dev-page.cjs",
     "test": "node tests/farm-core.cjs",
     "test:evolution": "node tests/evolution-core.cjs",
     "test:legacy": "node tests/regression.cjs",

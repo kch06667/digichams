@@ -1,3 +1,13 @@
+# 최신 개발 작업 방식 — 2026-10-28
+
+- 사용자 확정: 매 업데이트마다 전체 ZIP을 만들거나 전달하지 않는다. GitHub 커밋/브랜치와 이 파일을 체크포인트로 쓴다.
+- 기준은 GitHub `main` (2026-10-27 `aa6db16`), 새 작업 브랜치 `chore/modular-dev-workflow-20261028`. 첨부 v0.23.2 ZIP을 그대로 main에 덮어쓰지 않는다.
+- 개발용 페이지 생성: `node tools/build-dev-page.cjs` → `python3 -m http.server 8000 --bind 127.0.0.1` → `/index.dev.html`. 산출물은 Git 무시. 검사: `node --test tests/build-dev-page.cjs`.
+- 인라인/분리 코드 완전 통합과 이미지 런타임 최적화는 **별도 후속 단계**. 현재 `index.html` 및 `standalone.html`의 실제 사용자 실행 경로/기능은 변경하지 않았다.
+- 상세와 테스트의 한계는 `docs/DEVELOPMENT_WORKFLOW.md` 확인. 최신 main에서 실행 및 모바일 실기 테스트는 후속 검증 필요.
+
+---
+
 # 현재 재개 지점 — v0.23.0 기반 / 다른 환경에서 이어가기
 
 ## 최신 통합 체크포인트
