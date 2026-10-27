@@ -1,0 +1,33 @@
+name: Farm graphics desktop and touch smoke
+on:
+  pull_request:
+    paths:
+      - "assets/farm/hex_farm_v0232.webp"
+      - "src/hex-farm.css"
+      - "index.html"
+      - "standalone.html"
+      - "tests/farm-graphics-browser.py"
+      - "tests/test_farm_graphics_integrated.py"
+      - ".github/workflows/test-farm-graphics-visual.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Exact source and art consistency
+        run: |
+          python3 tools/sync-embedded-farm.py --check
+          python3 -m unittest discover -s tests -p test_farm_graphics_integrated.py -v
+      - name: Install Playwright Chromium
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Browser regression for both HTML builds (desktop and touch)
+        run: python3 tests/farm-graphics-browser.py

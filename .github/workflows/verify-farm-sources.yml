@@ -7,6 +7,9 @@ on:
       - "src/farm-core.js"
       - "src/hex-farm-ui.js"
       - "src/hex-farm.css"
+      - "assets/farm/hex_farm_v0232.webp"
+      - "tests/farm-graphics-browser.py"
+      - "tests/test_farm_graphics_integrated.py"
       - "index.html"
       - "standalone.html"
       - "tools/sync-embedded-farm.py"
@@ -38,3 +41,5 @@ jobs:
           node tests/championship-core.cjs
       - name: Safe graphics importer tests
         run: python3 -m unittest discover -s tests -p test_farm_graphics_import.py -v
+      - name: Verified WebP and embedded visual consistency
+        run: python3 -m unittest discover -s tests -p test_farm_graphics_integrated.py -v

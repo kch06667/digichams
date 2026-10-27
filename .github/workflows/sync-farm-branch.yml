@@ -1,14 +1,17 @@
-name: Sync farm inline bundles (performance branch)
+name: Sync farm inline bundles (development branches)
 on:
   push:
     branches:
       - perf/farm-paint-throttle-20261028
       - perf/farm-dom-diff-20261028
       - fix/farm-offmap-save-recovery-20261028
+      - feature/integrate-v0232-farm-art-20261028
     paths:
       - src/farm-core.js
       - src/hex-farm-ui.js
       - src/hex-farm.css
+      - assets/farm/hex_farm_v0232.webp
+      - tests/test_farm_graphics_integrated.py
       - tools/sync-embedded-farm.py
       - tests/farm-dom-paint-browser.py
       - tests/farm-offmap-recovery.cjs
@@ -33,10 +36,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Rewrite only the two farm source blocks
+      - name: Synchronize core/UI/CSS into both playable HTML pages
         run: |
           python tools/sync-embedded-farm.py
           python tools/sync-embedded-farm.py --check
+      - name: Verify exact art and visual style in both builds
+        run: |
+          if test -f assets/farm/hex_farm_v0232.webp; then
+            python3 -m unittest discover -s tests -p test_farm_graphics_integrated.py -v
+          fi
       - name: Core regressions
         run: |
           node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs

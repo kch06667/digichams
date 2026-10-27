@@ -21,5 +21,21 @@
     "checks": "Farm core/navigation/avoidance/recovery (6 new tests), championship regression and source sync passed in GitHub Actions; earlier v0.23.2 snapshot Chromium 4 desktop/mobile combinations for DOM repaint passed.",
     "remaining": "v0.23.2 WebP art not yet merged to main; Android physical device performance and save tests pending",
     "delivery": "GitHub-first; no automatic full ZIP per update"
+  },
+  "graphics_checkpoint": {
+    "id": "v0.23.2-farm-skin-integration",
+    "date": "2026-10-28",
+    "asset": "assets/farm/hex_farm_v0232.webp",
+    "asset_size_bytes": 106788,
+    "asset_sha256": "67f92692d36b8cedae3db3abe6293c2e757799d57600acb6eac0eb96cc8ebccc",
+    "css_marker": "v0.23.2 map visual skin",
+    "html_builds": [
+      "index.html",
+      "standalone.html"
+    ],
+    "existing_gameplay_preserved": true,
+    "synced_automation": "40572205819",
+    "qa": "source parity, WebP checksum and gameplay Node regression successful; PR browser QA pending",
+    "note": "graphics-only patch, not a declaration of complete NDS port"
   }
 }
