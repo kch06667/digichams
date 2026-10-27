@@ -11,7 +11,7 @@
     row>=0&&row<s.rows&&col>=0&&col<COLUMNS;
   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
   const initial=()=>({
-    rows:2,credits:600,selected:'0:0',training:10,
+    rows:2,credits:1200,selected:'0:0',training:10,
     cages:{
       '0:0':{hunger:60,food:0,name:'디지몬 A'},
       '1:0':{hunger:45,food:0,name:'디지몬 B'}
