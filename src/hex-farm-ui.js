@@ -13,7 +13,7 @@ const CFG=[
 ];
 for(const f of CFG)[f.x,f.y]=core.HEX_CENTERS[f.id];
 const byId=Object.fromEntries(CFG.map(x=>[x.id,x]));const ranks=['신입','브론즈','실버','골드'];
-let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
+let selected='core',knownState=null,lastTeam='',lastFrame=performance.now(),uiClock=0,persistClock=0,actorPaintClock=0,knownCompleted=0,knownDay=1,knownWins=0,actors=new Map(),foodNodes=new Map();
 function rank(){const w=state.wins||0,d=state.day||1;const legacy=w>=9&&d>=10&&state.team.length>=3?3:w>=5&&d>=5&&state.team.length>=2?2:w>=2&&d>=3?1:0;return Math.max(legacy,DCChampionship.ensure(state).rank);}
 function prepare(){cages.ensure(state);if(!state.facilities||typeof state.facilities!=='object')state.facilities={};state.facilities.core=true;if(!Number.isFinite(state.facilityCredits))state.facilityCredits=0;if(!Number.isFinite(state.facilityPaidWins))state.facilityPaidWins=state.wins||0;if(!Number.isFinite(state.facilityPaidDays))state.facilityPaidDays=state.day||1;core.ensure(state);
  if(knownState!==state){knownState=state;knownDay=state.day;knownWins=state.wins||0;knownCompleted=state.farm.completed;lastTeam='';actors.clear();foodNodes.clear();document.querySelectorAll('.hexActor,.hexFood').forEach(n=>n.remove());}}
@@ -196,7 +196,7 @@ function payWins(){if((state.wins||0)>state.facilityPaidWins){const n=state.wins
 function frame(now){const dt=Math.max(0,Math.min(.15,(now-lastFrame)/1000));lastFrame=now;
  if(!document.hidden){prepare();core.advance(state,dt,{xp:grantExperience,evolution:DCEvolution,lookup:speciesLookup});payWins();payDays();
  const n=state.farm.completed;if(n>knownCompleted){const gain=n-knownCompleted;knownCompleted=n;credit((20+(state.facilities.training?10:0))*gain,'자동 훈련 '+gain+'회 보상');render();save(false);}
- updateActors();uiClock+=dt;persistClock+=dt;if(uiClock>=.3){drawClock();drawStatus();drawNumbers();uiClock=0;}
+ actorPaintClock=Math.min(.2,actorPaintClock+dt);if(actorPaintClock>=1/30&&$('farmPanel').getClientRects().length){updateActors();actorPaintClock=0;}uiClock+=dt;persistClock+=dt;if(uiClock>=.3){drawClock();drawStatus();drawNumbers();uiClock=0;}
  if(persistClock>=6){save(false);persistClock=0;}}
  requestAnimationFrame(frame);}
 prepare();drawTiles();renderRoster();drawClock();refreshCageFacilities();drawStatus();requestAnimationFrame(()=>centerOn('core'));

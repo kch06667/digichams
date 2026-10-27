@@ -1,3 +1,23 @@
+# 최신 재개 지점 — 2026-10-28 성능 최적화 + 그래픽 안전 이식 도구
+
+- GitHub `main`이 기준. 이번 완료 병합: PR #2 / `5e00249` (사육장 화면 DOM 갱신 최대 30fps, 사육장 패널 숨김 시 화면 갱신 생략. 시간/육성 로직 변경 없음); PR #3 / `1fff61e` (v0.23.2 CSS/아트 안전 이식 도구 + 자동 검증).
+- 두 HTML의 JS가 GitHub Actions에서 자동 재생성되어 실제 플레이 경로에 반영됨. Actions 성공: https://github.com/kch06667/digichams/actions/runs/40561133209. 그래픽 임포트 도구 테스트 성공: https://github.com/kch06667/digichams/actions/runs/40561958541.
+- **중요: v0.23.2 아트 자체의 최신 main 통합은 미완료**. `assets/farm/hex_farm_v0232.webp`는 아직 GitHub 저장소에 없음. 기존 CSS 그대로, 새 그림이 표시되는 버전이라고 말하면 안 된다.
+- 사용자가 제공한 `Digimon_Championship_v0.23.2_Graphics_Playable.zip`을 받아 별도 브랜치에서 `python3 tools/import-farm-graphics-v0232.py --zip /absolute/path/to/ZIP`로 이미지/CSS만 적용한다. 이어서 `python3 tools/sync-embedded-farm.py --check`, Node/Playwright 테스트를 실시하고 변경 파일(아트·CSS·두 HTML)만 커밋한다. 자세한 사항 `docs/FARM_GRAPHICS_IMPORT.md`.
+- 첨부 ZIP 기반 로컬 시험에서는 importer 적용/재적용, 사육장 타일 7개/액터/먹이/이미지 브라우저 테스트 통과. 별도 최신 `main` 전체와 Android 실기 테스트는 아직 하지 않았다.
+- 사용자 운영 결정: 업데이트 때마다 전체 ZIP을 생성/전달하지 않는다. GitHub 기반 소형 코드 변경과 체크포인트만 기록한다. 배포 요청이 있을 때만 ZIP 생성.
+
+---
+# 최신 개발 작업 방식 — 2026-10-28
+
+- 사용자 확정: 매 업데이트마다 전체 ZIP을 만들거나 전달하지 않는다. GitHub 커밋/브랜치와 이 파일을 체크포인트로 쓴다.
+- 기준은 GitHub `main` (2026-10-27 `aa6db16`), 새 작업 브랜치 `chore/modular-dev-workflow-20261028`. 첨부 v0.23.2 ZIP을 그대로 main에 덮어쓰지 않는다.
+- 개발용 페이지 생성: `node tools/build-dev-page.cjs` → `python3 -m http.server 8000 --bind 127.0.0.1` → `/index.dev.html`. 산출물은 Git 무시. 검사: `node --test tests/build-dev-page.cjs`.
+- 인라인/분리 코드 완전 통합과 이미지 런타임 최적화는 **별도 후속 단계**. 현재 `index.html` 및 `standalone.html`의 실제 사용자 실행 경로/기능은 변경하지 않았다.
+- 상세와 테스트의 한계는 `docs/DEVELOPMENT_WORKFLOW.md` 확인. 최신 main에서 실행 및 모바일 실기 테스트는 후속 검증 필요.
+
+---
+
 # 현재 재개 지점 — v0.23.0 기반 / 다른 환경에서 이어가기
 
 ## 최신 통합 체크포인트

@@ -1,0 +1,23 @@
+name: Validate farm art importer
+on:
+  push:
+    branches:
+      - feature/farm-graphics-safe-import-20261028
+  pull_request:
+    paths:
+      - tools/import-farm-graphics-v0232.py
+      - tests/test_farm_graphics_import.py
+      - docs/FARM_GRAPHICS_IMPORT.md
+permissions:
+  contents: read
+jobs:
+  import-safety:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check safety and rollback
+        run: python3 -m unittest discover -s tests -p test_farm_graphics_import.py -v
