@@ -1,5 +1,8 @@
-# Latest checkpoint v0.23.0 (2026-10-27)
-# Follow `CONTINUE_HERE.md` first. Hexagonal farm supersedes corridor plans. Preserve game saves and make versioned ZIP checkpoints.
+# 개발 운영 정책 (2026-10-28, 사용자 최신 지시)
+- GitHub 최신 main을 기준으로 **별도 브랜치에서 변경**하고 커밋·이어받기 체크포인트를 남긴다. 사용자가 요청한 작업 범위 내에서 진행하되 기존 main 및 이전 작업을 무작정 덮어쓰지 않는다.
+- **매 업데이트마다 전체 ZIP을 만들거나 보내지 않는다.** ZIP은 명시적 요청/배포/주요 백업 시점에만 생성한다. 과거 지침의 '매번 버전 ZIP 체크포인트'보다 이 항목을 우선한다.
+- 6MB+ 게임 HTML을 매 턴 전체 출력/입력하지 않는다. 모듈별 변경, 소형 테스트, 로컬 dev 빌드를 우선한다. `docs/DEVELOPMENT_WORKFLOW.md` 참조.
+- `node tools/build-dev-page.cjs`는 읽기 전용인 `index.html`에서 개발용 진입점을 생성하며 게임 동작의 기존 소스를 교체하지 않는다.
 
 # Latest checkpoint v0.23.0 (2026-10-27)
 # Follow `CONTINUE_HERE.md` first. Hexagonal farm supersedes corridor plans. Preserve game saves and make versioned ZIP checkpoints.
