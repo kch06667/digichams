@@ -92,9 +92,16 @@ def check_farm(browser, mobile, base_url):
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('먹이 배치')",
         timeout=5000)
-    page.wait_for_function(
-        "document.querySelector('#status').textContent.includes('식사 완료')",
-        timeout=6000)
+    try:
+        page.wait_for_function(
+            "() => window.DigiFarmLab.snapshot().cages['0:1'].food === 0",
+            timeout=12000)
+    except Exception:
+        print("Farm feeding diagnostic:",
+              page.locator("#status").inner_text(),
+              page.evaluate("window.DigiFarmLab.snapshot()"),
+              errors)
+        raise
     page.locator("#expand").click()
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('행 개방')",
