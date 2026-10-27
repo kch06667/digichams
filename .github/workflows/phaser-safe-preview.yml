@@ -1,0 +1,41 @@
+name: Phaser safe web preview
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'phaser-lab/index.html'
+      - 'phaser-lab/logic.js'
+      - 'phaser-lab/game.js'
+      - 'tools/build-phaser-preview.cjs'
+      - '.github/workflows/phaser-safe-preview.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: github-pages-phaser-lab
+  cancel-in-progress: true
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare safe asset-free deploy artifact
+        run: |
+          node --test tests/phaser-lab.cjs tests/phaser-preview.cjs
+          node tools/build-phaser-preview.cjs dist/phaser-preview
+          test ! -d dist/phaser-preview/assets
+          test ! -d dist/phaser-preview/local-assets
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/phaser-preview
+      - id: deployment
+        uses: actions/deploy-pages@v4
