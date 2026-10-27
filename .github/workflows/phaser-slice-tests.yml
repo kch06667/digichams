@@ -45,5 +45,12 @@ jobs:
         run: |
           python3 -m pip install playwright==1.57.0
           python3 -m playwright install --with-deps chromium
+      - name: Convert privately held Agumon GIFs to local-only Phaser sheets
+        run: |
+          python3 -m pip install 'Pillow>=10,<13'
+          python3 tools/export-phaser-atlas.py --species 아구몬
+          test -f phaser-lab/local-assets/action_30.png
+          test -f phaser-lab/local-assets/action_32.png
+          test -f phaser-lab/local-assets/manifest.json
       - name: Desktop/touch browser smoke
         run: python3 tests/phaser-browser-smoke.py
