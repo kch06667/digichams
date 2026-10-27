@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Digimon · 육각형 케이지 배치 실험실</title>
+<style>
+:root{font:15px/1.45 system-ui,sans-serif;background:#0b2024;color:#e6f6ed}*{box-sizing:border-box}
+body{margin:0;padding:10px;min-height:100dvh}main{max-width:1000px;margin:auto}
+h1{font-size:1.2rem;margin:3px 0 6px}p{color:#acd1ca;margin:5px 0 10px}
+#farm{width:100%;aspect-ratio:16/9;border:1px solid #61a69d;border-radius:9px;overflow:hidden;background:#154c4c}
+nav{display:flex;flex-wrap:wrap;gap:7px;padding-top:10px}
+button,.link{font:inherit;padding:10px 12px;min-height:44px;border-radius:7px;cursor:pointer;border:1px solid #74afad;background:#20645e;color:#f3fff7}
+button:focus-visible,.link:focus-visible{outline:3px solid #ffe298;outline-offset:2px}
+.link{display:inline-flex;text-decoration:none;align-items:center}
+#status{min-height:38px;padding:9px 2px;color:#ffdfa1}
+small{color:#acd1ca}
+@media(max-width:540px){body{padding:5px}button,.link{flex:1 0 29%;text-align:center;justify-content:center;font-size:13px}}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<script defer src="./farm-model.js"></script>
+<script defer src="./farm.js"></script>
+</head>
+<body><main>
+<h1>사육장 · 작은 육각형 케이지</h1>
+<p>원작의 2열 시작·선택식 케이지를 참고한 독립 시제품. 실제 구매·육성 데이터는 저장되지 않습니다.</p>
+<div id="farm" aria-label="육각형 케이지 배치 화면"></div>
+<nav aria-label="케이지 조작">
+<button type="button" id="buy">케이지 구입</button>
+<button type="button" id="feed">먹이 주기</button>
+<button type="button" id="train">훈련 1회</button>
+<button type="button" id="expand">행 확장</button>
+<button type="button" id="zoomIn">확대 +</button>
+<button type="button" id="zoomOut">축소 −</button>
+<button type="button" id="reset">초기화</button>
+<a class="link" href="./">전투 실험실</a>
+</nav>
+<div role="status" aria-live="polite" id="status">게임 엔진 준비 중…</div>
+<small>모든 비용·훈련량·식사 횟수는 시연 수치이며 ROM 검증 값이 아닙니다. 타일 선택과 화면 드래그/터치를 지원합니다.</small>
+</main></body></html>
