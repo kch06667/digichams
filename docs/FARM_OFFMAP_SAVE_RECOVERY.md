@@ -19,7 +19,7 @@ node tests/farm-core.cjs
 python3 tools/sync-embedded-farm.py --check
 ```
 
-GitHub Actions 첫 검증 결과: 신규 복구 테스트 **6/6 통과**, 기존 경로/회피/사육장/대회 Node 회귀 통과. 워크플로의 첫 HTML push는 작업 중 원격 브랜치가 추가 변경되어 *non-fast-forward*로 거절됐고 동기화된 HTML 커밋은 아직 원격에 미반영이었다. 별도 완료 실행으로 재검증 후에만 main 병합한다.
+GitHub Actions 첫 검증 결과: 신규 복구 테스트 **6/6 통과**, 기존 경로/회피/사육장/대회 Node 회귀 통과. 첫 실행은 동시 브랜치 수정으로 HTML push가 *non-fast-forward* 거절됐지만, **GitHub Actions 실행 40568192105가 성공**해 최신 두 HTML에 동기화된 farm-core 코드를 커밋했다. 신규 Node 6개와 기존 farm/대회 회귀검사 통과. PR #8 제출.
 
 ## 제약
 - ROM 좌표를 해독한 구현이 아니라 구버전 **웹게임** 세이브 복구 정책이다.
