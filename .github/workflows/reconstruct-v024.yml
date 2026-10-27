@@ -1,0 +1,45 @@
+name: Reconstruct uploaded v0.24 checkpoint
+on:
+  push:
+    branches:
+      - integration/v0.23.3-safe
+    paths:
+      - ".upload_chunks/**"
+      - ".github/workflows/reconstruct-v024.yml"
+permissions:
+  contents: write
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Assemble chunked sources
+        shell: python
+        run: |
+          import base64, hashlib, json, pathlib
+          root = pathlib.Path('.')
+          manifest = json.loads((root / '.upload_chunks/manifest.json').read_text())
+          for item in manifest['files']:
+              dest = root / item['path']
+              dest.parent.mkdir(parents=True, exist_ok=True)
+              parts = []
+              for p in item['parts']:
+                  data = (root / '.upload_chunks' / p).read_bytes()
+                  if item.get('encoding') == 'base64':
+                      data = base64.b64decode(data)
+                  parts.append(data)
+              content = b''.join(parts)
+              actual = hashlib.sha256(content).hexdigest()
+              assert actual == item['sha256'], f"Integrity failure for {dest}: {actual}"
+              dest.write_bytes(content)
+              print('assembled', dest, len(content))
+      - name: Commit reconstructed files
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then git commit -m "build: reconstruct v0.24 checkpoint from verified chunks"; git push; fi
