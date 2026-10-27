@@ -3,10 +3,12 @@ on:
   push:
     branches:
       - perf/farm-paint-throttle-20261028
+      - perf/farm-dom-diff-20261028
     paths:
       - src/hex-farm-ui.js
       - src/hex-farm.css
       - tools/sync-embedded-farm.py
+      - tests/farm-dom-paint-browser.py
       - .github/workflows/sync-farm-branch.yml
   workflow_dispatch:
 permissions:
@@ -38,6 +40,6 @@ jobs:
         run: |
           git add index.html standalone.html
           if ! git diff --cached --quiet; then
-            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Synchronize farm performance change into playable HTML bundles"
-            git push origin HEAD:perf/farm-paint-throttle-20261028
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Synchronize farm source changes into playable HTML bundles"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
