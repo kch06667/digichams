@@ -1,0 +1,45 @@
+name: Sync hunting inline bundles (development branch)
+on:
+  push:
+    branches: [feat/hunt-resume-touch-safety-20261029]
+    paths:
+      - "src/hunt-core.js"
+      - "src/hunt-ui.js"
+      - "tools/sync-embedded-hunt.py"
+      - "tests/hunt-resume.cjs"
+      - ".github/workflows/sync-hunt-branch.yml"
+  workflow_dispatch:
+concurrency:
+  group: hunt-inline-sync-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Sync hunting scripts into BOTH original game bundles
+        run: |
+          python3 tools/sync-embedded-hunt.py
+          python3 tools/sync-embedded-hunt.py --check
+      - name: Verify hunting logic and savestate safety
+        run: |
+          node tests/hunt-core.cjs
+          node --test tests/hunt-resume.cjs
+      - name: Commit both full HTML games back to feature branch
+        run: |
+          git add index.html standalone.html
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Sync hunting resume and touch controls into both playable HTML bundles"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
