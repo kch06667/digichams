@@ -271,3 +271,13 @@ Branch: `feature/battle-result-readonly-bridge-20261028`.
 - 시연 도중/완료 후에도 **localStorage, 실제 세이브, 포획·육성, 승리 횟수, 대회 결과, 보상은 변경하지 않는다.** 기본 시연팀에는 JSON 대응 명단이 없으므로 결과 미리보기를 생성하지 않는다.
 - Node 회귀: 미완료 판정 거부, 2vs2 실전 계산 완료, 중복 종의 개별 HP/TP, 잘못된 인덱스·HP 거부, 호출자 세이브 불변 검증. Chromium PC·터치: JSON 등록 → 전투 → 결과 표시 → 세이브 불변 → 초기화 확인.
 - 차후 실제 정산 연결 전에는 저장 데이터의 안정적인 개체 ID, 전투 원복/취소, 결산 중복 방지, 이전 세이브 호환성과 기존 본게임 `settleMatch()`의 결과 일치 테스트가 필요하다. 이번 변경은 **전투 본게임 통합 완료가 아니다**.
+
+## 2026-10-28 — 원본 전투 정산을 위한 원자적 사본 정산 코어
+
+- Branch: `feature/atomic-battle-settlement-20261028`; new `src/battle-settlement-core.js`.
+- The current live gameplay and save data are **not changed**; the pure module only returns a NEW cloned state and receipt.
+- Requires matching `pendingBattle.id`, every unique stable `instanceId`, initial fighter HP/TP and a completed 1–3 ally match. No simulation-vs-save identity substitution and no replay after pending removal.
+- Applies the existing web game's settle ordering to the cloned state: HP/TP first, wins/losses, legacy +10 experience and +2 friendship on win, `DCEvolution.recordBattle`, `DCChampionship.finishMatch` where applicable, then pendingBattle removal.
+- Uses existing evolution/championship rule modules, not NDS-verified numeric data. Rollback is by discarding the copy; no browser storage write and no renderer change.
+- Test coverage: successful 2v2 with duplicate species/stable IDs, tampering/replay, tournament success/rejection, XP formula, original state immutable.
+- Next: compare the new settlement to legacy live `settleMatch` under randomized battle seeds and older saves; verify crash/forfeit behavior, then integrate using a guarded production entry point and backup before any real save write.
