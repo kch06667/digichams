@@ -66,7 +66,7 @@
         savePreview=preview;
         rosterChosen={...lead};
         farmHandoffPeer={parent,token,teamSize:choice.teamSize,
-          saveAllowed:choice.teamSize===1};
+          saveAllowed:true};
         const select=document.getElementById('rosterChoice');
         select.replaceChildren(new Option('기본 시연',''));
         roster.forEach(m=>select.add(new Option(
@@ -537,25 +537,18 @@
                c.teamIndices.length===farmHandoffPeer.teamSize&&
                this.sim.fighters.length===farmHandoffPeer.teamSize*2){
               const peer=farmHandoffPeer;
-              if(peer.saveAllowed&&peer.teamSize===1){
-                peer.parent.postMessage({
-                  type:'dc-phaser-finished-v1',token:peer.token,
-                  packet:{preview:this.lastBattleReport,
-                    initial:RT.snapshot(c.initialFighters),
-                    final:{finished:this.sim.finished,
-                      winner:this.sim.winner,elapsed:this.sim.elapsed,
-                      fighters:RT.snapshot(this.sim.fighters)}}
-                },location.origin);
-              }else{
-                // Multi-team results are deliberately read-only; the farm
-                // receives neither a save packet nor a settlement capability.
-                peer.parent.postMessage({
-                  type:'dc-phaser-multi-finished-v1',token:peer.token,
-                  preview:{winner:this.lastBattleReport.winner,
-                    elapsed:this.lastBattleReport.elapsed,
-                    teamSize:peer.teamSize}
-                },location.origin);
-              }
+              // Every complete 1v1/2v2/3v3 report goes to the
+              // original farm tab, where exact launch-time instance IDs
+              // and the latest persisted save are independently checked.
+              // Phaser never applies a save or awards experience itself.
+              peer.parent.postMessage({
+                type:'dc-phaser-finished-v1',token:peer.token,
+                packet:{preview:this.lastBattleReport,
+                  initial:RT.snapshot(c.initialFighters),
+                  final:{finished:this.sim.finished,
+                    winner:this.sim.winner,elapsed:this.sim.elapsed,
+                    fighters:RT.snapshot(this.sim.fighters)}}
+              },location.origin);
               farmHandoffPeer=null; // never send the same result twice
             }
             document.getElementById('battleReport').textContent=
@@ -571,7 +564,7 @@
           }
         }
         say(win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
-          '초 · 원본 세이브는 변경되지 않았어');
+          '초 · 사육장 탭에서 선택적으로 정산 가능 · 자동 저장 없음');
       }
     }
     beginBattle(){
