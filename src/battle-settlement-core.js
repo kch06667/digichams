@@ -98,6 +98,10 @@
     // All checks precede mutation; even a downstream rule error affects only
     // this local copy. No localStorage or original-state mutation here.
     const next=clone(state),won=final.winner===0;
+    // The original settleMatch removes pendingBattle BEFORE evolution;
+    // maybeEvolve intentionally refuses to run during any pending match.
+    // All input validation already succeeded, and only the cloned state changes.
+    delete next.pendingBattle;
     const nextById=new Map(next.team.map(mon=>[mon.instanceId,mon]));
     for(const change of changes){
       const mon=nextById.get(change.instanceId);
@@ -118,7 +122,6 @@
       cup=C.finishMatch(next,pending.tournamentMatchId,won);
       if(!cup.ok)throw Error('Tournament settlement rejected: '+cup.reason);
     }
-    delete next.pendingBattle;
     const receipt={battleId,winner:final.winner,won,
       elapsed:final.elapsed,participants:changes.map(c=>c.instanceId),
       tournamentMatchId:pending.tournamentMatchId||null,
