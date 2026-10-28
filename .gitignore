@@ -15,6 +15,7 @@ node_modules/
 /test-output/
 __pycache__/
 /index.dev.html
+/index.phaser.html
 /.dev-generated/
 /dist/
 # Local licensed/privately converted sprite sheets must never enter GitHub.
