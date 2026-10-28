@@ -10,7 +10,8 @@ const modules=['src/battle-settlement-core.js','src/battle-commit-core.js',
   'src/phaser-arena-entry-choice.js'];
 const fixture='<!doctype html><html><body><button id="lbStart"></button>'+
   '<select id="lbMode"></select><select id="lbTeamSize"></select>'+
-  '<script>root.DCEvolution=api;root.DCChampionship=api;'+
+  '<script id="championship-core-v023">root.DCChampionship=api;</script>'+
+  '<script>root.DCEvolution=api;'+
   'function bracketFor(s){};function settleMatch(){};'+
   'window.DCBattleArena={launchTournament(){}};'+
   "el('lbStart').onclick=()=>start(false);"+'</script></body></html>';
@@ -68,7 +69,7 @@ test('original game entry intercept is opt-in and never alters regular index and
   assert.match(chooser,/\[1,2,3\]\.includes\(size\)/);
   assert.match(chooser,/eligible\.length<size/);
   assert.match(chooser,/DCDevPhaserLaunch\.launch\(\{teamSize:size,leadIndex,/);
-  assert.match(bridge,/DCDevPhaserCommit\.capture\(live,\{teamSize,leadIndex\}\)/);
+  assert.match(bridge,/DCDevPhaserCommit\.capture\(live,\{teamSize,leadIndex,/);
   assert.match(bridge,/DCDevPhaserCommit\.stage/);
   assert.match(bridge,/dc-phaser-finished-v1/);
   assert.doesNotMatch(bridge,/dc-phaser-multi-finished-v1/);
