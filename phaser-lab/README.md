@@ -225,3 +225,24 @@ Do not select or publish NDS ROM files.
 not the original game's complete simulation. Main gameplay and save
 settlement remain in the original playable `index.html`; do not treat
 the lab's temporary combat statistics as permanent results.
+
+## Original arena navigation extraction (next fidelity milestone)
+
+The Phaser real-time practice fighters now use
+`src/arena-navigation-core.js` for their 2D **movement**, instead of
+the separate imitation movement code that was originally written for
+the prototype. This kernel transcribes the already-playable
+`index.html` arena's `think()` locomotion segment: approach/flank/
+disengage decisions, target-relative forward + sideways vectors,
+tactic weights, actor avoidance, edge repulsion, arena recentering
+and speed-dependent walking/running. It runs in the original 600×405
+logical coordinate system and projects into the 800×450 Phaser field.
+The old `index.html` and its standalone copy remain unchanged.
+
+This is **movement fidelity**, not full battle-engine migration:
+hit/skill timing, decision trees, victory and tournament settlement
+are still partly separate in Phaser. `tests/arena-navigation-core.cjs`
+and existing browser smoke tests check the shared movement kernel.
+A production parity effort must next extract attack/skill/dodge
+judgment and state transitions from `DCBattleArena` and confirm
+matching outcomes across both renderers.
