@@ -60,8 +60,10 @@ test('JS parser accepts browser-side game and test lab stays isolated', () => {
   assert.match(src,/Phaser\.Game/);
   assert.match(src,/RT\.createMatch/);
   assert.match(src,/RT\.step/);
-  assert.match(src,/type==='victory'\?30/);
-  assert.match(src,/type==='walk'\?2/);
+  assert.match(src,/L\.motionAction\(/,
+    'Phaser must use the rendering-only original action/fallback resolver');
+  assert.equal(L.motionAction({act:'victory',hp:50},new Set([0,30])),30);
+  assert.equal(L.motionAction({act:'walk',hp:50},new Set([0,2])),2);
   assert.doesNotMatch(src,/localStorage|saveVersion|\.nds/i);
   const html=fs.readFileSync(path.join(__dirname,'../phaser-lab/index.html'),'utf8');
   assert.match(html,/phaser@3\.90\.0/);
