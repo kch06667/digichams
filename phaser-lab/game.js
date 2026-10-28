@@ -32,15 +32,20 @@
         convertedPacks.delete(name);convertedPacks.set(name,existing);
         continue;
       }
-      const entry=Object.prototype.hasOwnProperty.call(localSpeciesCatalog.entries,name)?
-        localSpeciesCatalog.entries[name]:null;
+      // Legacy arena demonstration calls Palmon '팔몬'; the 216-species
+      // original GIF index uses its canonical Korean name '파르몬'.
+      // Remap ONLY this documented alias; the actual fighter/skill identity
+      // and original AI state are not renamed or modified.
+      const catalogName=name==='팔몬'?'파르몬':name;
+      const entry=Object.prototype.hasOwnProperty.call(localSpeciesCatalog.entries,catalogName)?
+        localSpeciesCatalog.entries[catalogName]:null;
       if(!entry)continue; // never substitute the wrong species' sprite
       try {
         const response=await fetch('./local-assets/'+entry.folder+'/manifest.json',
           {cache:'no-store'});
         if(!response.ok)continue;
         const candidate=await response.json();
-        if(candidate.species!==name||!L.validateManifest(candidate)||
+        if(candidate.species!==catalogName||!L.validateManifest(candidate)||
            Object.keys(candidate.actions).length!==entry.actions)
           throw Error('Invalid private species sprite manifest: '+name);
         convertedPacks.set(name,{species:name,folder:entry.folder,
