@@ -29,7 +29,7 @@
   const note=document.createElement('span');
   note.id='dc-phaser-arena-note';
   note.style.cssText='display:block;width:100%;font-size:12px;color:#bbefdc';
-  note.textContent='기존 전투가 기본값. Phaser는 내 디지몬 1~3대전 선택 가능 · 2/3대전은 저장 안 됨.';
+  note.textContent='기존 전투가 기본값. Phaser는 내 디지몬 1~3대전 · 종료 후 승인 시 백업·저장.';
   start.parentNode.insertBefore(note,start);
 
   start.addEventListener('click',event=>{
@@ -58,9 +58,8 @@
         // The legacy arena has NOT started. Close only its pre-battle modal;
         // Phaser runs the same original-autonomous AI on the separate tab.
         close.click();
-        note.textContent=size===1?
-          'Phaser 1대1 실행 · 원래 사육장에서 결과 승인 가능.':
-          'Phaser '+size+'대'+size+' 실행 · 결과 미리보기만 가능 · 저장 불가.';
+        note.textContent='Phaser '+size+'대'+size+
+          ' 실행 · 자동 저장 없음 · 전투 종료 후 사육장에서 승인 가능.';
       }else{
         note.textContent='Phaser 창을 열지 못했어. 팝업 차단을 확인해 줘.';
       }

@@ -31,7 +31,7 @@
   apply.style.cssText='position:fixed;right:12px;bottom:120px;z-index:10000;' +
     'padding:10px;border:2px solid #f5d68b;background:#62481f;' +
     'color:white;font:600 13px sans-serif;border-radius:9px';
-  let pending=null;
+  let pending=null,activeSession=null;
   // The two tabs never share the full save. Retain only the launch
   // fingerprint and one validated result packet in the ORIGINAL farm tab.
   apply.addEventListener('click',()=>{
@@ -81,7 +81,15 @@
 
   function launch(options={}){
     let payload,launchRecord,teamSize,leadIndex,tactic;
-    pending=null;apply.hidden=true;apply.disabled=false;
+    // A second match must not replace a completed, unapproved settlement.
+    // Nor may a parallel popup race the same underlying save snapshot.
+    if(pending){notice.textContent='이전 전투 결과를 먼저 저장하거나 페이지를 새로고침해 줘.';
+      return false;}
+    if(activeSession&&!activeSession.popup.closed){
+      notice.textContent='이미 열린 Phaser 전투 탭이 있어.';return false;
+    }
+    activeSession=null;
+    apply.hidden=true;apply.disabled=false;
     try {
       // The existing playable game defines global lexical `state`.
       // Read it on user click, not at page load (avoids stale roster).
@@ -100,7 +108,7 @@
       if(eligible[0]!==lead||eligible.length<teamSize)
         throw Error('선봉이 출전 불가능하거나 출전 마릿수가 부족해.');
       payload = snapshot(live);
-      launchRecord=teamSize===1?DCDevPhaserCommit.capture(live):null;
+      launchRecord=DCDevPhaserCommit.capture(live,{teamSize,leadIndex});
       if (!globalThis.crypto?.getRandomValues) throw Error('안전한 브라우저 환경이 필요해.');
     } catch (error) {
       notice.textContent = '연습전 연결 불가: ' + error.message;
@@ -116,6 +124,7 @@
       notice.textContent = '팝업이 차단됐어. 이 사이트의 새 탭 열기를 허용해 줘.';
       return false;
     }
+    activeSession={token,popup};
     let done = false;
     const onReady = event => {
       if (done || event.source !== popup || event.origin !== origin ||
@@ -126,14 +135,15 @@
       popup.postMessage({type:'dc-phaser-roster-v1',token,payload,
         handoff:{teamSize,leadIndex,tactic}},origin);
       notice.textContent = '명단 전달 완료 · '+teamSize+'대'+teamSize+
-        ' · '+(teamSize===1?'저장 승인 가능':'결과 저장 안 됨');
+        ' · 종료 후 결과 검증 및 선택적 저장 가능';
     };
     const onFinished=event=>{
       if(event.source!==popup||event.origin!==origin||
           event.data?.type!=='dc-phaser-finished-v1'||
           event.data.token!==token)return;
       window.removeEventListener('message',onFinished);
-      if(!done||teamSize!==1)return;
+      if(!done||activeSession?.token!==token)return;
+      activeSession=null;
       const packet=event.data.packet;
       try{
         // Pure staging performs all participant/HP/TP/identity checks
@@ -143,29 +153,20 @@
           eval('speciesLookup'));
         pending={packet,token,launch:launchRecord};
         apply.hidden=false;
-        notice.textContent='완료된 1대1 결과 확인 · 적용은 선택사항이야.';
+        notice.textContent='완료된 '+teamSize+'대'+teamSize+
+          ' 결과 검증 완료 · 백업 후 저장은 선택사항이야.';
       }catch(err){
         notice.textContent='결과 저장 불가: '+err.message+
           ' · 원본 세이브 변경 없음';
       }
     };
-    const onMultiFinished=event=>{
-      if(event.source!==popup||event.origin!==origin||
-          event.data?.type!=='dc-phaser-multi-finished-v1'||
-          event.data.token!==token||!done||teamSize===1)return;
-      window.removeEventListener('message',onMultiFinished);
-      const report=event.data.preview;
-      notice.textContent='Phaser '+teamSize+'대'+teamSize+' 종료 · '+
-        (report?.winner===0?'아군':'상대')+' 승리 · 결과 미리보기만 가능 · 저장 안 됨';
-    };
     window.addEventListener('message',onReady);
     window.addEventListener('message',onFinished);
-    window.addEventListener('message',onMultiFinished);
     setTimeout(() => {
       if (!done) {
         window.removeEventListener('message',onReady);
         window.removeEventListener('message',onFinished);
-        window.removeEventListener('message',onMultiFinished);
+        if(activeSession?.token===token)activeSession=null;
         notice.textContent = '연결 시간이 초과됐어. 팝업 탭을 확인해 줘.';
       }
     },15000);

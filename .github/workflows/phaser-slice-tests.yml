@@ -11,6 +11,7 @@ on:
       - 'src/dev-phaser-farm-launch.js'
       - 'src/dev-phaser-commit.js'
       - 'tests/phaser-owned-settlement.cjs'
+      - 'tests/phaser-multiteam-settlement.cjs'
       - 'tools/build-dev-page.cjs'
       - 'tests/build-dev-page.cjs'
       - 'tests/phaser-farm-handoff-browser.py'
@@ -78,7 +79,7 @@ jobs:
       - run: node --check src/dev-phaser-farm-launch.js
       - run: node --check src/phaser-arena-entry-choice.js
       - run: node --test tests/phaser-main-entry.cjs
-      - run: node --test tests/phaser-owned-settlement.cjs
+      - run: node --test tests/phaser-owned-settlement.cjs tests/phaser-multiteam-settlement.cjs
       - run: node --test tests/build-dev-page.cjs
       - run: node --check phaser-lab/realtime-core.js
       - run: node --check src/arena-original-core.js
@@ -128,7 +129,7 @@ jobs:
         run: python3 tests/phaser-duel-browser-smoke.py
       - name: Original playable game arena button opt-in and legacy fallback
         run: python3 tests/phaser-main-entry-browser.py
-      - name: Actual owned 2v2/3v3 Phaser readonly handoff (desktop/touch)
+      - name: Actual owned 2v2/3v3 Phaser approved save, backup and reload (desktop/touch)
         run: python3 tests/phaser-owned-multi-browser.py
       - name: Dev farm handoff and explicit settlement (desktop/touch; guarded backup)
         run: python3 tests/phaser-farm-handoff-browser.py

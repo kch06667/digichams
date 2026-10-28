@@ -1,6 +1,6 @@
-"""Original FULL GAME -> Phaser 2v2 / 3v3, read-only safety in desktop/touch.
+"""Original FULL GAME -> Phaser 2v2 / 3v3, approved verified save in desktop/touch.
 
-Never creates a writable multi-result or touches any user's real save.
+Uses test-only synthetic Digimon; no personal save is accessed.
 Synthetic roster is isolated inside each temporary Chromium context.
 """
 import functools
@@ -68,7 +68,7 @@ def check(browser,base,size,mobile):
       const x=window.DigiPhaserLab?.handoffInfo();
       return x?.teamSize===size;
     }""",arg=size,timeout=30000)
-    assert arena.evaluate("DigiPhaserLab.handoffInfo().saveAllowed") is False
+    assert arena.evaluate("DigiPhaserLab.handoffInfo().saveAllowed") is True
     assert arena.locator("#squadSize").input_value()==str(size)
     assert arena.locator("#squadSize").is_disabled()
     assert arena.locator("#rosterChoice").is_disabled()
@@ -88,16 +88,45 @@ def check(browser,base,size,mobile):
     result=arena.evaluate("DigiPhaserLab.battleResultPreview()")
     assert result and len(result["changes"])==size and result["saveApplied"] is False
     assert len(set(change["teamIndex"] for change in result["changes"]))==size
-    farm.wait_for_function("""() => {
-      const n=document.querySelector('#dc-phaser-farm-status')?.textContent;
-      return n?.includes('결과 미리보기만 가능');
-    }""",timeout=12000)
-    assert farm.locator("#dc-phaser-farm-apply").is_hidden()
+    # The original farm only offers this button after staging EVERY
+    # participant's result. It has not written any save automatically.
+    apply=farm.locator("#dc-phaser-farm-apply")
+    apply.wait_for(state="visible",timeout=12000)
+    assert "검증 완료" in farm.locator("#dc-phaser-farm-status").inner_text()
     assert farm.evaluate("""() =>
       localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY)===null""")
+    before=farm.evaluate("""() => {
+      const s=eval('state');
+      return {wins:s.wins,losses:s.losses,points:s.points,
+        ids:s.team.map(mon=>mon.instanceId)};
+    }""")
+    # Atomic testing-only checkpoint and user approval in the same task.
+    # Outside QA, the save guard rejects any stale/unsaved farm data.
+    farm.evaluate("""() => {
+      localStorage.setItem('dc_recreation_save',JSON.stringify(eval('state')));
+      document.querySelector('#dc-phaser-farm-apply').click();
+    }""")
+    farm.locator("#dc-phaser-engine").wait_for(state="attached",timeout=15000)
+    saved=farm.evaluate("""() => JSON.parse(
+      localStorage.getItem('dc_recreation_save'))""")
+    assert saved["wins"]+saved["losses"]==before["wins"]+before["losses"]+1,saved
+    assert saved["points"]==before["points"]+(2 if result["winner"]==0 else 0)
+    assert "pendingBattle" not in saved
+    assert [m["instanceId"] for m in saved["team"]]==before["ids"]
+    import math
+    for change in result["changes"]:
+        mon=saved["team"][change["teamIndex"]]
+        assert mon["hp"]==math.ceil(change["hpAfter"]),mon
+        assert mon["tp"]==math.floor(change["tpAfter"]),mon
+        assert mon["evo"]["battles"]>=1,mon
+    assert farm.evaluate("""() => Boolean(
+      localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY) &&
+      localStorage.getItem(DCDevPhaserCommit.FIRST_BACKUP_KEY)
+    )""")
+    assert farm.locator("#dc-phaser-farm-apply").is_hidden()
     assert not errors,errors
     print("OK original farm -> Phaser "+str(size)+"v"+str(size)+
-          " readonly", "touch" if mobile else "desktop")
+          " saved after explicit approval", "touch" if mobile else "desktop")
     ctx.close()
 
 def main():
