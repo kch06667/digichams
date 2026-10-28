@@ -198,7 +198,7 @@
       v.pose=type;
       const id=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
         type==='attack'?7:type==='cast'?7:type==='evade'?3:
-        type==='guard'?5:type==='walk'?2:0;
+        type==='guard'?5:type==='run'?3:type==='walk'?2:0;
       if(v.useArt&&this.loadedActions.has(id)){
         const cfg=manifest.actions[String(id)];
         v.sprite.setTexture(key(id),0).setScale(v.scale);
@@ -223,7 +223,7 @@
           Math.sin(time*.012+f.slot)*1.7:Math.sin(time*.003+f.slot)*.4;
         v.sprite.x=f.x;v.sprite.y=f.y-34+bob;
         // Original GIFs were left-facing. Flip when travelling right.
-        v.sprite.setFlipX(f.dir>0);
+        v.sprite.setFlipX((f.visualDir??f.dir)>0);
         v.sprite.setAlpha(f.hp<=0?.5:f.flash>0?.65:1);
         if(!v.useArt&&f.hp>0&&
            (f.act==='walk'||f.act==='evade')&&Math.floor(time/160)%2===1){
