@@ -80,7 +80,7 @@
   }
 
   function launch(options={}){
-    let payload,launchRecord,teamSize,leadIndex,tactic;
+    let payload,launchRecord,teamSize,leadIndex,tactic,opponents=null;
     // A second match must not replace a completed, unapproved settlement.
     // Nor may a parallel popup race the same underlying save snapshot.
     if(pending){notice.textContent='이전 전투 결과를 먼저 저장하거나 페이지를 새로고침해 줘.';
@@ -108,7 +108,23 @@
       if(eligible[0]!==lead||eligible.length<teamSize)
         throw Error('선봉이 출전 불가능하거나 출전 마릿수가 부족해.');
       payload = snapshot(live);
-      launchRecord=DCDevPhaserCommit.capture(live,{teamSize,leadIndex});
+      launchRecord=DCDevPhaserCommit.capture(live,{teamSize,leadIndex,
+        tournament:options.tournament||null});
+      if(launchRecord.tournament){
+        const cup=launchRecord.tournament;
+        opponents=cup.opponentTeam.map(name=>{
+          const species=eval('speciesLookup')(name);
+          if(!species||!Number.isFinite(species.hp)||
+             !Number.isFinite(species.atk)||!Number.isFinite(species.def)||
+             !Number.isFinite(species.spd))
+            throw Error('대회 상대 종족의 전투 능력치가 없어: '+name);
+          const maxHp=Math.round(70+species.hp*.40);
+          const vitals=DCBattleCore.fighterVitals(species);
+          return {name,hp:maxHp,maxHp,atk:species.atk,def:species.def,
+            spd:species.spd,maxTp:vitals.maxTp,tp:vitals.tp};
+        });
+        cup.opponents=opponents.map(x=>({...x}));
+      }
       if (!globalThis.crypto?.getRandomValues) throw Error('안전한 브라우저 환경이 필요해.');
     } catch (error) {
       notice.textContent = '연습전 연결 불가: ' + error.message;
@@ -133,9 +149,18 @@
       done = true;
       window.removeEventListener('message',onReady);
       popup.postMessage({type:'dc-phaser-roster-v1',token,payload,
-        handoff:{teamSize,leadIndex,tactic}},origin);
-      notice.textContent = '명단 전달 완료 · '+teamSize+'대'+teamSize+
-        ' · 종료 후 결과 검증 및 선택적 저장 가능';
+        handoff:{teamSize,leadIndex,tactic,
+          ...(launchRecord.tournament?{tournament:{
+            cupId:launchRecord.tournament.cupId,
+            matchId:launchRecord.tournament.matchId,
+            round:launchRecord.tournament.round,
+            trainer:launchRecord.tournament.trainer,
+            opponentTeam:launchRecord.tournament.opponentTeam.slice(),
+            size:teamSize,opponents:opponents.map(mon=>({...mon}))
+          }}:{})}},origin);
+      notice.textContent = (launchRecord.tournament?
+        '🏆 '+launchRecord.tournament.trainer+' 상대 대회전 · ': '명단 전달 완료 · ')+
+        teamSize+'대'+teamSize+' · 종료 후 선택적 저장 가능';
     };
     const onFinished=event=>{
       if(event.source!==popup||event.origin!==origin||
@@ -153,8 +178,8 @@
           eval('speciesLookup'));
         pending={packet,token,launch:launchRecord};
         apply.hidden=false;
-        notice.textContent='완료된 '+teamSize+'대'+teamSize+
-          ' 결과 검증 완료 · 백업 후 저장은 선택사항이야.';
+        notice.textContent=(launchRecord.tournament?'🏆 대회 경기 ':'')+
+          teamSize+'대'+teamSize+' 결과 검증 완료 · 저장 승인 가능';
       }catch(err){
         notice.textContent='결과 저장 불가: '+err.message+
           ' · 원본 세이브 변경 없음';
