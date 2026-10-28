@@ -31,7 +31,7 @@
       else if(cup.complete)
         say(next,'대회 탈락. 다음 일정에 재도전할 수 있어.');
       else
-        say(next,'대회 다음 라운드 진출! 체력과 TP를 회복하고 다음 경기에 출전해.');
+        say(next,'준결승 승리! 결승 진출. 체력과 TP를 회복하고 다음 경기에 출전해.');
     }
     say(next,staged.receipt.won
       ?'내 디지몬이 승리했어. 출전 개체에게 경험치를 지급했어.'
