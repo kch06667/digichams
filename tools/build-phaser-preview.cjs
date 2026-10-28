@@ -23,6 +23,8 @@ for(const file of allow){
   let safe=raw;
   if(file==='index.html'||file==='farm.html'){
     for(const core of safeCore){
+      // Navigation belongs only to the battle scene; farm doesn't import it.
+      if(file==='farm.html'&&core==='arena-navigation-core.js')continue;
       const from='../src/'+core,to='./engine-core/'+core;
       if(!safe.includes(from))throw Error('Missing core script: '+from);
       safe=safe.replace(from,to);
