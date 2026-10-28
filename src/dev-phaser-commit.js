@@ -18,15 +18,38 @@
     'def','spd','level','exp','friendship','egg','lost','location'];
   const fingerprint=mon=>Object.fromEntries(fields.map(key=>[key,mon?.[key]??null]));
   const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
-  function capture(state){
+  const active=mon=>mon&&typeof mon==='object'&&!mon.egg&&
+    !mon.lost&&mon.location!=='storage'&&Number.isFinite(mon.hp)&&mon.hp>0;
+  // An immutable lineup is captured inside the ORIGINAL farm tab before
+  // opening a new Phaser tab. Its internal per-mon instance IDs stay here.
+  function capture(state,{teamSize=1,leadIndex=null}={}){
     if(!state||state.pendingBattle||!Array.isArray(state.team)||
-       !Number.isSafeInteger(state.wins)||!Number.isSafeInteger(state.losses))
+       state.team.length<1||state.team.length>50||
+       !Number.isSafeInteger(state.wins)||!Number.isSafeInteger(state.losses)||
+       ![1,2,3].includes(teamSize))
       throw Error('Only an idle, valid farm can launch a saved battle');
-    return {team:state.team.map(fingerprint),wins:state.wins,losses:state.losses};
+    const first=leadIndex==null?state.team.findIndex(active):leadIndex;
+    if(!Number.isSafeInteger(first)||first<0||
+       first>=state.team.length||!active(state.team[first]))
+      throw Error('Invalid first fighter');
+    const lineupIndices=[first,...state.team.map((_,i)=>i).filter(i=>
+      i!==first&&active(state.team[i]))].slice(0,teamSize);
+    if(lineupIndices.length!==teamSize)
+      throw Error('Not enough healthy Digimon in the farm');
+    const ids=lineupIndices.map(i=>state.team[i].instanceId);
+    if(ids.some(id=>typeof id!=='string'||!id||id.length>128)||
+       new Set(ids).size!==ids.length)
+      throw Error('Missing or duplicate Digimon identity');
+    return {team:state.team.map(fingerprint),wins:state.wins,
+      losses:state.losses,lineupIndices};
   }
   function stage(state,launch,packet,battleId,lookup){
+    const size=launch?.lineupIndices?.length;
     if(typeof lookup!=='function'||!state||state.pendingBattle||
        !launch||!Array.isArray(launch.team)||
+       ![1,2,3].includes(size)||
+       launch.team.length!==state.team?.length||
+       new Set(launch.lineupIndices).size!==size||
        !Number.isSafeInteger(launch.wins)||!Number.isSafeInteger(launch.losses)||
        state.wins!==launch.wins||state.losses!==launch.losses||
        !packet||!packet.final||!Array.isArray(packet.initial)||
@@ -40,43 +63,67 @@
        packet.preview.winner!==packet.final.winner||
        packet.preview.elapsed!==packet.final.elapsed||
        !Array.isArray(packet.preview.changes)||
-       packet.preview.changes.length!==1||packet.initial.length!==1||
-       packet.final.fighters.length!==2||
+       packet.preview.changes.length!==size||
+       packet.initial.length!==size||
+       packet.final.fighters.length!==size*2||
        !/^[a-f0-9]{32}$/.test(battleId||''))
-      throw Error('Not a valid completed single-player dev battle');
-    const change=packet.preview.changes[0];
-    const i=change.teamIndex;
-    if(!Number.isSafeInteger(i)||i<0||i>=state.team.length||
-       !same(fingerprint(state.team[i]),launch.team[i]))
-      throw Error('Selected Digimon changed since the battle began');
-    const mon=state.team[i];
-    if(typeof mon.instanceId!=='string'||!mon.instanceId||
-       mon.egg||mon.lost||mon.location==='storage'||mon.hp<=0)
-      throw Error('Battle participant no longer eligible');
-    const before=packet.initial[0],after=packet.final.fighters[0],
-      foe=packet.final.fighters[1];
-    if(before.id!=='0-0'||after.id!=='0-0'||
-       before.side!==0||after.side!==0||before.slot!==0||after.slot!==0||
-       foe.side!==1||before.name!==mon.name||after.name!==mon.name||
-       change.name!==mon.name||change.fighterId!=='0-0'||
-       before.hp!==change.hpBefore||after.hp!==change.hpAfter||
-       before.tp!==change.tpBefore||after.tp!==change.tpAfter||
-       before.max!==mon.maxHp||after.max!==mon.maxHp||
-       before.hp!==mon.hp||(Number.isFinite(mon.tp)&&mon.tp!==before.tp)||
-       before.maxTp!==after.maxTp)
-      throw Error('Verified 1v1 result does not match selected farm Digimon');
-    // The pending marker belongs ONLY to this short-lived local clone.
-    // It never pauses or modifies the live game's ongoing farm state.
+      throw Error('Not a valid completed owned Phaser battle');
+    const allies=packet.final.fighters.filter(f=>f?.side===0);
+    const foes=packet.final.fighters.filter(f=>f?.side===1);
+    if(allies.length!==size||foes.length!==size||
+       foes.some((f,slot)=>f.slot!==slot||f.id!=='1-'+slot))
+      throw Error('Combat roster size mismatch');
+    const participants=[],initial=[],finalAllies=[];
+    for(let slot=0;slot<size;slot++){
+      const change=packet.preview.changes[slot];
+      const index=launch.lineupIndices[slot];
+      const before=packet.initial[slot];
+      const after=allies[slot];
+      const mon=state.team[index];
+      if(!change||!before||!after||
+         !Number.isSafeInteger(index)||index<0||index>=state.team.length||
+         change.teamIndex!==index||
+         !same(fingerprint(mon),launch.team[index]))
+        throw Error('Selected Digimon changed since the battle began');
+      if(typeof mon.instanceId!=='string'||!mon.instanceId||
+         mon.instanceId.length>128||!active(mon))
+        throw Error('Battle participant no longer eligible');
+      if(before.id!=='0-'+slot||after.id!=='0-'+slot||
+         before.side!==0||after.side!==0||
+         before.slot!==slot||after.slot!==slot||
+         before.name!==mon.name||after.name!==mon.name||
+         change.name!==mon.name||change.fighterId!=='0-'+slot||
+         before.hp!==change.hpBefore||after.hp!==change.hpAfter||
+         before.tp!==change.tpBefore||after.tp!==change.tpAfter||
+         before.max!==mon.maxHp||after.max!==mon.maxHp||
+         before.hp!==mon.hp||
+         (Number.isFinite(mon.tp)&&mon.tp!==before.tp)||
+         (Number.isFinite(mon.maxTp)&&mon.maxTp!==before.maxTp)||
+         before.maxTp!==after.maxTp||
+         !Number.isFinite(before.maxTp)||before.maxTp<=0||
+         !Number.isFinite(before.tp)||!Number.isFinite(after.tp)||
+         !Number.isFinite(after.hp)||after.hp<0||after.hp>after.max||
+         before.tp<0||before.tp>before.maxTp||
+         after.tp<0||after.tp>after.maxTp||
+         ['atk','def','spd'].some(key=>
+           Number.isFinite(before[key])&&before[key]!==mon[key]))
+        throw Error('Verified battle result does not match the farm Digimon');
+      participants.push(mon.instanceId);
+      initial.push({...before,instanceId:mon.instanceId});
+      finalAllies.push({...after,instanceId:mon.instanceId});
+    }
+    if(new Set(participants).size!==size)
+      throw Error('Duplicate participant identity');
     const prepared=JSON.parse(JSON.stringify(state));
-    prepared.pendingBattle={id:'phaser-dev-'+battleId,
-      participants:[mon.instanceId]};
-    const initial=[{...before,instanceId:mon.instanceId}];
-    const final={finished:true,winner:packet.final.winner,
-      elapsed:packet.final.elapsed,fighters:[
-        {...after,instanceId:mon.instanceId},foe
-      ]};
+    const id='phaser-dev-'+battleId;
+    prepared.pendingBattle={id,participants};
     return Commit.stageCopy(prepared,{
-      battleId:prepared.pendingBattle.id,initial,final,lookup
+      battleId:id,
+      initial,
+      final:{finished:true,winner:packet.final.winner,
+        elapsed:packet.final.elapsed,
+        fighters:[...finalAllies,...foes]},
+      lookup
     });
   }
   function persist(state,launch,packet,battleId,lookup,storage){
