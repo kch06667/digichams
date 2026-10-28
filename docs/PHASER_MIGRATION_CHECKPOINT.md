@@ -196,3 +196,22 @@ Feature branch: `feature/phaser-combat-parity-20261028`.
 - NEXT: formally extract original production `DCBattleArena` to a shared
   DOM-free simulation, compare deterministic trace outcomes, then replace
   the lab's provisional combat logic with the actual game simulation.
+
+## Original arena locomotion kernel extraction — 2026-10-28
+
+Branch `feature/arena-legacy-motion-20261028` extracts the exact
+**movement equations** (not the full arena AI state machine) from
+`index.html`'s `DCBattleArena.think()` into
+`src/arena-navigation-core.js`. Phaser's `realtime-core.js`
+now calls `DCArenaNavigation.advance()` rather than maintaining
+its own forward/orbit/avoidance geometry. It preserves the original
+600×405 motion world with calculated mapping into the Phaser viewport;
+runtime actor visual directions and walking/running GIF poses use
+the resulting motion state. Safe Pages deployment includes this
+new **JavaScript-only** module in the allowlist.
+
+Still missing: the original attack/skill/battle-settlement logic
+is still embedded in the old large HTML. This migration preserves
+the original HTML and current saves intact, and is an incremental
+path to full renderer-independent combat parity. Separate NDS ROM
+analysis remains ongoing with Codex.
