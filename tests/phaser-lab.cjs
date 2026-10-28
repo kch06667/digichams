@@ -106,6 +106,12 @@ test('JS parser accepts browser-side game and test lab stays isolated', () => {
   assert.match(src,/L.gifFrameTiming\(cfg.durationsMs\)/);
   assert.match(src,/duration:timing.extraMs\[i\]/);
   assert.match(src,/frameRate:timing.frameRate/);
+  assert.match(src,/if\(v\.useArt\)v\.sprite\.anims\.timeScale=simSpeed/,
+    'speed button must update already playing original sprite animations');
+  assert.match(src,/v\.sprite\.play\([\s\S]*?v\.sprite\.anims\.timeScale=simSpeed/,
+    'each new attack/skill/KO pose must inherit the active simulation speed');
+  assert.match(src,/animationTimeScale:/,
+    'browser QA should be able to inspect the per-sprite animation speed');
   assert.match(src,/L\.motionAction\(/,
     'Phaser must use the rendering-only original action/fallback resolver');
   assert.equal(L.motionAction({act:'victory',hp:50},new Set([0,30])),30);
