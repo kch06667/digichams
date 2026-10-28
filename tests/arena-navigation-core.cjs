@@ -19,7 +19,8 @@ test('extracted pace and margins retain original HTML equation and constants',()
   assert.deepEqual(N.WORLD,{w:600,h:405});
   assert.deepEqual(N.MARGIN,{left:16,right:16,top:66,bottom:22});
   assert.equal(N.originalPace(0),35*.9);
-  assert.equal(N.originalPace(50),(33+50*.85)*.9>54?54:54);
+  assert.equal(N.originalPace(10),(33+10*.85)*.9);
+  assert.equal(N.originalPace(50),54);
   assert.equal(N.originalPace(100),54);
 });
 test('approach/flank/disengage respond independently to distance and tactic',()=>{
