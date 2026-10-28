@@ -13,6 +13,7 @@ on:
       - 'phaser-lab/private-art-loader.js'
       - 'src/battle-core.js'
       - 'src/arena-navigation-core.js'
+      - 'src/arena-original-core.js'
       - 'src/care-core.js'
       - 'src/championship-core.js'
       - 'phaser-lab/logic.js'
@@ -45,7 +46,7 @@ jobs:
         run: npm install --ignore-scripts --no-save --no-package-lock phaser@3.90.0
       - name: Prepare safe asset-free deploy artifact
         run: |
-          node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
+          node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
           node tools/build-phaser-preview.cjs dist/phaser-preview
           test ! -d dist/phaser-preview/assets
           test ! -d dist/phaser-preview/local-assets
