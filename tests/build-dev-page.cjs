@@ -55,6 +55,9 @@ test('performance monitor is included only in untracked developer HTML', () => {
     const page = fs.readFileSync(path.join(root, 'index.dev.html'), 'utf8');
     assert.match(page, /<script defer src="src\/dev-performance-overlay\.js"><\/script>/);
     assert.match(page, /<script defer src="src\/dev-phaser-farm-launch\.js"><\/script>/);
+    assert.match(page, /<script defer src="src\/dev-phaser-commit\.js"><\/script>/);
+    assert.ok(page.indexOf('src/dev-phaser-commit.js')<
+      page.indexOf('src/dev-phaser-farm-launch.js'));
     assert.doesNotMatch(original,/dev-phaser-farm-launch/,
       'playable index.html must remain unchanged');
     assert.match(page, /<\/body>$/);
