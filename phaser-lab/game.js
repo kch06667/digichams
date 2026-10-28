@@ -109,6 +109,7 @@
       this.frameId=0;
       this.graphics=this.add.graphics().setDepth(7);
       this.projectileGraphics=this.add.graphics().setDepth(8);
+      this.particleColors=new Map();
       this.visuals=new Map();
       for(const actor of this.sim.fighters)this.addActor(actor);
       this.refreshActors();
@@ -294,8 +295,28 @@
           this.graphics.strokeCircle(f.x,f.y-34,35+Math.sin(time*.02)*3);
         }
       }
+      // Render bounded original-engine sparks and projectile history.
+      // Pure presentation: combat damage/timing remain in arena-original-core.
+      const tintOf=color=>{
+        if(!this.particleColors.has(color)){
+          if(this.particleColors.size>32)this.particleColors.clear();
+          this.particleColors.set(color,
+            Phaser.Display.Color.HexStringToColor(color||'#ffb451').color);
+        }
+        return this.particleColors.get(color);
+      };
+      for(const p of this.sim.particles||[]){
+        this.projectileGraphics.fillStyle(tintOf(p.color),p.alpha*.9);
+        this.projectileGraphics.fillCircle(p.x,p.y,p.radius);
+      }
       for(const shot of this.sim.projectiles){
-        const tint=Phaser.Display.Color.HexStringToColor(shot.color||'#ffb451').color;
+        const tint=tintOf(shot.color);
+        const trail=shot.trail||[];
+        for(let i=0;i<trail.length;i++){
+          const progress=(i+1)/(trail.length+1);
+          this.projectileGraphics.fillStyle(tint,progress*.42);
+          this.projectileGraphics.fillCircle(trail[i].x,trail[i].y,1+4*progress);
+        }
         this.projectileGraphics.fillStyle(tint,.35);
         this.projectileGraphics.fillCircle(shot.x,shot.y,13);
         this.projectileGraphics.fillStyle(tint,1);
@@ -339,6 +360,15 @@
           onComplete:()=>dmg.destroy()});
         if(e.special)this.cameras.main.zoomTo(1.04,100);
         if(e.special)this.time.delayedCall(165,()=>this.cameras.main.zoomTo(1,180));
+        const knockedOut=this.sim.fighters.some(f=>f.id===e.targetId&&f.hp<=0);
+        if(knockedOut){
+          const ko=this.add.text(e.x,e.y-95,'K.O.',{
+            fontSize:'27px',fontFamily:'sans-serif',fontStyle:'bold',
+            color:'#ffb39c',stroke:'#2c1020',strokeThickness:5
+          }).setOrigin(.5).setDepth(25);
+          this.tweens.add({targets:ko,alpha:0,y:e.y-125,duration:950,
+            onComplete:()=>ko.destroy()});
+        }
       }
       if(e.type==='skill'){
         const f=this.sim.fighters.find(a=>a.id===e.attackerId);
@@ -360,6 +390,13 @@
       if(e.type==='finish'){
         this.mode='finished';
         const win=e.winner===0?'아군':'상대';
+        this.cameras.main.zoomTo(1,160);
+        const banner=this.add.text(400,225,win+' 승리!',{
+          fontSize:'34px',fontFamily:'sans-serif',fontStyle:'bold',
+          color:'#fff0b8',backgroundColor:'#142b42d9',
+          padding:{x:24,y:14}
+        }).setOrigin(.5).setAlpha(0).setDepth(31);
+        this.tweens.add({targets:banner,alpha:1,duration:360});
         say(win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
           '초 · 원본 세이브는 변경되지 않았어');
       }
