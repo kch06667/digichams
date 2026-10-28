@@ -33,6 +33,8 @@ on:
       - 'src/championship-core.js'
       - 'tools/export-phaser-atlas.py'
       - 'tools/export-phaser-duel.py'
+      - 'tools/export-phaser-roster.py'
+      - 'tests/test_phaser_roster.py'
       - 'tests/test_phaser_duel.py'
       - 'tests/phaser-duel-browser-smoke.py'
       - '.gitignore'
@@ -91,6 +93,7 @@ jobs:
       - run: node --check tools/build-owned-battle-optin.cjs
       - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs tests/battle-legacy-storage.cjs tests/battle-owned-optin.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_*.py' -v
+      - run: python3 tools/export-phaser-roster.py --all --verify-only --all-actions
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
