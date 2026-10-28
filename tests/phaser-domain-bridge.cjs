@@ -130,13 +130,15 @@ test('browser-side bridge script parses, displays chosen tactic and core linkage
     assert.doesNotThrow(()=>new vm.Script(src,{filename:file}));
   }
   const game=fs.readFileSync(path.join(__dirname,'../phaser-lab/game.js'),'utf8');
-  assert.match(game,/B\.newEncounter/);
-  assert.match(game,/B\.plan/);
-  assert.match(game,/B\.apply/);
+  assert.match(game,/RT\.createMatch/);
+  assert.match(game,/RT\.step/);
   assert.match(game,/B\.train/);
+  assert.doesNotMatch(game,/this\.turn\s*%\s*2/);
   const html=fs.readFileSync(path.join(__dirname,'../phaser-lab/index.html'),'utf8');
   assert.match(html,/\.\.\/src\/battle-core\.js/);
   assert.match(html,/\.\.\/src\/care-core\.js/);
   assert.match(html,/\.\.\/src\/championship-core\.js/);
   assert.match(html,/id="tactic"/);
+  assert.match(html,/id="squadSize"/);
+  assert.match(html,/realtime-core\.js/);
 });
