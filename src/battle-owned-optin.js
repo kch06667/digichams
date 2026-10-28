@@ -42,7 +42,7 @@
       if(!mon)throw Error('Missing original roster participant');
       return {id:'owned-'+f.slot,side:0,slot:f.slot,
         instanceId:f.instanceId,name:mon.name,hp:mon.hp,max:mon.maxHp,
-        tp:mon.tp,maxTp:f.maxTp};
+        tp:Number.isFinite(mon.tp)?mon.tp:f.tp,maxTp:f.maxTp};
     });
     const final={finished:true,winner:won?0:1,elapsed,
       fighters:fighters.map(f=>({
