@@ -54,18 +54,33 @@
       try {
         const preview=B.inspectExport(event.data.payload);
         const roster=B.eligibleRoster(preview);
-        if(!roster.length)throw Error('전투 가능한 디지몬이 없어.');
+        const choice=event.data.handoff||{teamSize:1,leadIndex:roster[0]?.index,
+          tactic:'balanced'};
+        if(![1,2,3].includes(choice.teamSize)||
+           !Number.isSafeInteger(choice.leadIndex)||
+           !['balanced','aggressive','defensive','focus','conserve'].includes(choice.tactic))
+          throw Error('유효하지 않은 전투 구성');
+        const lead=roster.find(mon=>mon.index===choice.leadIndex);
+        if(!lead||roster.length<choice.teamSize)
+          throw Error('선봉이 출전 불가능하거나 출전 인원이 부족해.');
         savePreview=preview;
-        rosterChosen={...roster[0]};
-        farmHandoffPeer={parent,token};
+        rosterChosen={...lead};
+        farmHandoffPeer={parent,token,teamSize:choice.teamSize,
+          saveAllowed:choice.teamSize===1};
         const select=document.getElementById('rosterChoice');
         select.replaceChildren(new Option('기본 시연',''));
         roster.forEach(m=>select.add(new Option(
           m.name+' · HP '+m.hp+'/'+m.maxHp+' · 공격 '+m.atk,String(m.index))));
         select.value=String(rosterChosen.index);
-        document.getElementById('squadSize').value='1';
-        say('사육장 명단 연결 완료 · '+rosterChosen.name+
-          ' 선택 · 1대1 자동 전투 시작 버튼을 눌러줘 · 저장 없음');
+        select.disabled=true;
+        document.getElementById('squadSize').value=String(choice.teamSize);
+        document.getElementById('squadSize').disabled=true;
+        document.getElementById('tactic').value=choice.tactic;
+        document.getElementById('tactic').disabled=true;
+        say('사육장 명단 연결 완료 · 선봉 '+rosterChosen.name+
+          ' · '+choice.teamSize+'대'+choice.teamSize+' 자동 전투 · '+
+          (choice.teamSize===1?'완료 후 선택적 결과 저장 가능':
+            '다인전 결과 미리보기 전용 · 보상/세이브 변경 없음'));
       } catch(err) {
         say('사육장 연습전 명단 검증 실패: '+err.message+' · 저장 없음');
       }
@@ -235,6 +250,10 @@
         battleResultPreview:()=>this.lastBattleReport?
           JSON.parse(JSON.stringify(this.lastBattleReport)):null,
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
+        handoffInfo:()=>farmHandoffPeer?{
+          teamSize:farmHandoffPeer.teamSize,
+          saveAllowed:farmHandoffPeer.saveAllowed
+        }:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
         privatePackStatus:()=>{
           const latest=privatePacks.get(latestSpecies);
@@ -514,17 +533,29 @@
               c.teamIndices,c.initialFighters);
             // Only a validated, COMPLETE 1v1 result may be offered to
             // the original farm for optional explicit settlement.
-            if(farmHandoffPeer&&c.teamIndices.length===1&&
-               this.sim.fighters.length===2){
+            if(farmHandoffPeer&&
+               c.teamIndices.length===farmHandoffPeer.teamSize&&
+               this.sim.fighters.length===farmHandoffPeer.teamSize*2){
               const peer=farmHandoffPeer;
-              peer.parent.postMessage({
-                type:'dc-phaser-finished-v1',token:peer.token,
-                packet:{preview:this.lastBattleReport,
-                  initial:RT.snapshot(c.initialFighters),
-                  final:{finished:this.sim.finished,
-                    winner:this.sim.winner,elapsed:this.sim.elapsed,
-                    fighters:RT.snapshot(this.sim.fighters)}}
-              },location.origin);
+              if(peer.saveAllowed&&peer.teamSize===1){
+                peer.parent.postMessage({
+                  type:'dc-phaser-finished-v1',token:peer.token,
+                  packet:{preview:this.lastBattleReport,
+                    initial:RT.snapshot(c.initialFighters),
+                    final:{finished:this.sim.finished,
+                      winner:this.sim.winner,elapsed:this.sim.elapsed,
+                      fighters:RT.snapshot(this.sim.fighters)}}
+                },location.origin);
+              }else{
+                // Multi-team results are deliberately read-only; the farm
+                // receives neither a save packet nor a settlement capability.
+                peer.parent.postMessage({
+                  type:'dc-phaser-multi-finished-v1',token:peer.token,
+                  preview:{winner:this.lastBattleReport.winner,
+                    elapsed:this.lastBattleReport.elapsed,
+                    teamSize:peer.teamSize}
+                },location.origin);
+              }
               farmHandoffPeer=null; // never send the same result twice
             }
             document.getElementById('battleReport').textContent=

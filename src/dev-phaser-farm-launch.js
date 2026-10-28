@@ -79,15 +79,28 @@
     }};
   }
 
-  function launch(){
-    let payload,launchRecord;
+  function launch(options={}){
+    let payload,launchRecord,teamSize,leadIndex,tactic;
     pending=null;apply.hidden=true;apply.disabled=false;
     try {
       // The existing playable game defines global lexical `state`.
       // Read it on user click, not at page load (avoids stale roster).
       const live=eval('state');
+      teamSize=options.teamSize??1;
+      leadIndex=options.leadIndex??live.team.findIndex(m=>
+        m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage');
+      tactic=options.tactic??'balanced';
+      if(![1,2,3].includes(teamSize)||!Number.isSafeInteger(leadIndex)||
+         leadIndex<0||leadIndex>=live.team.length||
+         !['balanced','aggressive','defensive','focus','conserve'].includes(tactic))
+        throw Error('잘못된 Phaser 출전 설정');
+      const lead=live.team[leadIndex];
+      const eligible=[lead,...live.team.filter((m,i)=>i!==leadIndex)]
+        .filter(m=>m&&m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage');
+      if(eligible[0]!==lead||eligible.length<teamSize)
+        throw Error('선봉이 출전 불가능하거나 출전 마릿수가 부족해.');
       payload = snapshot(live);
-      launchRecord=DCDevPhaserCommit.capture(live);
+      launchRecord=teamSize===1?DCDevPhaserCommit.capture(live):null;
       if (!globalThis.crypto?.getRandomValues) throw Error('안전한 브라우저 환경이 필요해.');
     } catch (error) {
       notice.textContent = '연습전 연결 불가: ' + error.message;
@@ -110,15 +123,17 @@
         return;
       done = true;
       window.removeEventListener('message',onReady);
-      popup.postMessage({type:'dc-phaser-roster-v1',token,payload},origin);
-      notice.textContent = '읽기 전용 명단 전달 완료 · 새 탭에서 1대1 시작';
+      popup.postMessage({type:'dc-phaser-roster-v1',token,payload,
+        handoff:{teamSize,leadIndex,tactic}},origin);
+      notice.textContent = '명단 전달 완료 · '+teamSize+'대'+teamSize+
+        ' · '+(teamSize===1?'저장 승인 가능':'결과 저장 안 됨');
     };
     const onFinished=event=>{
       if(event.source!==popup||event.origin!==origin||
           event.data?.type!=='dc-phaser-finished-v1'||
           event.data.token!==token)return;
       window.removeEventListener('message',onFinished);
-      if(!done)return;
+      if(!done||teamSize!==1)return;
       const packet=event.data.packet;
       try{
         // Pure staging performs all participant/HP/TP/identity checks
@@ -134,12 +149,23 @@
           ' · 원본 세이브 변경 없음';
       }
     };
+    const onMultiFinished=event=>{
+      if(event.source!==popup||event.origin!==origin||
+          event.data?.type!=='dc-phaser-multi-finished-v1'||
+          event.data.token!==token||!done||teamSize===1)return;
+      window.removeEventListener('message',onMultiFinished);
+      const report=event.data.preview;
+      notice.textContent='Phaser '+teamSize+'대'+teamSize+' 종료 · '+
+        (report?.winner===0?'아군':'상대')+' 승리 · 결과 미리보기만 가능 · 저장 안 됨';
+    };
     window.addEventListener('message',onReady);
     window.addEventListener('message',onFinished);
+    window.addEventListener('message',onMultiFinished);
     setTimeout(() => {
       if (!done) {
         window.removeEventListener('message',onReady);
         window.removeEventListener('message',onFinished);
+        window.removeEventListener('message',onMultiFinished);
         notice.textContent = '연결 시간이 초과됐어. 팝업 탭을 확인해 줘.';
       }
     },15000);
