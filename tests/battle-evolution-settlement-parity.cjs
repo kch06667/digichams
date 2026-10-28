@@ -7,6 +7,7 @@ const vm = require('node:vm');
 const Evolution = require('../src/evolution-core.js');
 const Championship = require('../src/championship-core.js');
 const Settlement = require('../src/battle-settlement-core.js');
+const Commit = require('../src/battle-commit-core.js');
 const catalog = require('../assets/species-catalog.json').entries;
 
 const species = new Map(catalog.map(entry => [entry.name, entry]));
@@ -94,21 +95,16 @@ function originalSettle(file,source,input,args){
   assert.equal(ctx.settled,true);
   return {state,messages};
 }
-function withoutUiLogs(state){
-  const result=copy(state);
-  delete result.logs;
-  return result;
-}
 function runScenario(file,source,roster,winner,label,{tournament=false,evolvingIds=[]}={}){
   const initialState=game(roster);
   const result=matchup(initialState,winner,label,tournament);
   const baseline=JSON.stringify(initialState);
   const legacy=originalSettle(file,source,initialState,result);
-  const modern=Settlement.settleCopy(initialState,{
+  const modern=Commit.stageCopy(initialState,{
     battleId:result.battleId,initial:result.initial,
     final:result.final,lookup});
-  assert.deepEqual(withoutUiLogs(modern.state),withoutUiLogs(legacy.state),
-    file+' / '+label+': evolution and all gameplay data must match legacy');
+  assert.deepEqual(modern.state,legacy.state,
+    file+' / '+label+': evolution, logs and all gameplay data must match legacy');
   assert.equal(JSON.stringify(initialState),baseline,'settlement must not change the input save');
   assert.equal(modern.state.pendingBattle,undefined);
   for(const id of evolvingIds){
