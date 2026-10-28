@@ -477,3 +477,53 @@ py -m http.server 8000
 - **원본 `index.html`과 `standalone.html`은 변경하지 않음**.
   개인 세이브 JSON을 백업하고 시험해야 하며 실제 휴대폰 기기의 성능과
   최신 로컬 8팀 토너먼트는 별도 검증 과제다.
+
+
+## 2026-10-29 — 216종 전투 GIF 로컬 일괄 변환 + 전투 인원만 자동 로딩
+
+원작 스프라이트의 **종족 인식 범위는 전체 216종**으로 확대했다.
+원본 PNG/GIF나 변환 결과는 **절대 GitHub/Pages에 업로드하지 않는다.**
+`assets/species-catalog.json`과 `assets/sprite-index.json`에 이미
+등록된 이미지 파일만 사용한다. 새 ROM 스프라이트 추출은 하지 않는다.
+
+프로젝트 **최상위**에서 Python과 Pillow가 설치된 개인 PC에서 실행:
+
+```powershell
+py -m pip install Pillow
+py tools/export-phaser-roster.py --all
+# 특정 종만 빠르게 실험할 경우:
+py tools/export-phaser-roster.py --species 아구몬 --species 가부몬
+# ROM에서 의미를 아직 확인하지 않은 동작까지 40칸 전부 변환하려면:
+py tools/export-phaser-roster.py --all --all-actions
+# 생성 없이 216종 × 40칸의 원본 파일 존재 여부만 검증하려면:
+py tools/export-phaser-roster.py --all --all-actions --verify-only
+py -m http.server 8000
+```
+
+그다음 `http://127.0.0.1:8000/index.phaser.html?phaserBattle=1`의
+사육장 출전→Phaser 전투를 실행하거나, 독립 연습전인
+`http://127.0.0.1:8000/phaser-lab/`을 연다.
+로컬 일괄 변환은 `phaser-lab/local-assets/catalog.json`에
+디지몬 이름→`species/m###_xxx_main` 폴더의 **안전한 색인**을 생성한다.
+각 폴더에는 그 종의 `manifest.json`과 액션별 PNG가 생성된다.
+
+**성능 및 안전:** 시작할 때 목록 메타데이터만 읽고 **216종의 PNG를
+전부 열거나 다운로드하지 않는다**. 전투 직전 실제 참가한 **최대 6종**
+(아군·상대)을 읽고, 전투가 바뀌면 오래된 종의 텍스처/애니메이션을
+제거한다. 등록되지 않았거나 누락된 종은 해당 캐릭터만 임시 그래픽을
+쓴다. 사육·AI·공격 피해량·TP·전투 결과는 전혀 변경하지 않는다.
+개인 파일로 추가로 가져온 종은 자동 변환 그래픽보다 우선한다.
+자신이 가진 GIF의 장당 표시 시간과 프레임 수를 그대로 사용한다.
+
+**확인 범위:** 216종의 소스에서 기본 40 GIF 슬롯(8,640개)의
+**파일 존재 여부**를 검사할 수 있다. 유니몬 5번 동작은 ROM 비교에서
+수정된 `5_1` 원본을 사용한다. 기본 `--all`은 전투 및 주요
+행동에 필요한 13개 액션만 각 종에 변환하고, `--all-actions`를 주면
+40개를 모두 변환한다. 모든 **216종의 기술명, 모션 의미, 스프라이트
+위치/대칭/기술 이펙트까지 ROM 완전 일치했다고 검증한 것은 아니다.**
+또한 파일이 많고 실제 저장 용량이 커질 수 있어 게임 서버와 모바일에
+한꺼번에 로딩하지 않는다.
+
+테스트: `python3 -m unittest tests/test_phaser_roster.py` (가짜 216종,
+유니몬 보정, 누락 파일 차단) 및 CI의 6개 서로 다른 실제 종 3대3
+데스크톱/터치 렌더링. 생성된 `local-assets`는 Git에서 제외한다.
