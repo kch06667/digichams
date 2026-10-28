@@ -7,12 +7,13 @@
   const node=typeof module==='object'&&module.exports;
   const battle=root?.DCBattleCore||(node?require('../src/battle-core.js'):null);
   const techniques=root?.DigiArenaTechniques||(node?require('./arena-techniques.js'):null);
-  const api=factory(battle,techniques);
+  const navigation=root?.DCArenaNavigation||(node?require('../src/arena-navigation-core.js'):null);
+  const api=factory(battle,techniques,navigation);
   if(node)module.exports=api;
   if(root)root.DigiRealTimeCore=api;
-})(typeof globalThis!=='undefined'?globalThis:null,function(BC,TECH){
+})(typeof globalThis!=='undefined'?globalThis:null,function(BC,TECH,NAV){
   'use strict';
-  if(!BC||!TECH)throw Error('DCBattleCore and DigiArenaTechniques required');
+  if(!BC||!TECH||!NAV)throw Error('BattleCore, Techniques and legacy ArenaNavigation required');
   const FIELD=Object.freeze({left:55,right:745,top:155,bottom:355});
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
@@ -143,48 +144,16 @@
     return true;
   }
   function walk(s,f,foe,dt){
-    const dx=foe.x-f.x,dy=foe.y-f.y,d=Math.max(.01,Math.hypot(dx,dy));
-    const nx=dx/d,ny=dy/d,tx=-ny,ty=nx;
-    if(f.phaseTime<=0){
-      f.phase=f.phase==='approach'?'flank':f.phase==='flank'?'disengage':'approach';
-      f.phaseTime=range(s,.58,1.12);
-      if(rand(s)<.42)f.orbit*=-1;
-    }
-    let forward,swirl;
-    if(f.phase==='disengage'){
-      forward=d<78?-.76:d<115?-.2:.76;
-      swirl=1.09*f.orbit;
-    }else if(f.phase==='flank'){
-      forward=d>88?.62:d<35?-.21:.10;
-      swirl=1.31*f.orbit;
-    }else{
-      forward=d>49?.91:d<28?-.16:.13;
-      swirl=(d>124?.35:.90)*f.orbit;
-    }
-    const policy=BC.tactic(f.side===0?s.tactic:'balanced');
-    if(policy===BC.TACTICS.aggressive){forward+=.28;swirl*=.73}
-    if(policy===BC.TACTICS.defensive){forward-=.17;swirl*=1.14}
-    let vx=nx*forward+tx*swirl,vy=ny*forward+ty*swirl;
-    for(const other of s.fighters){
-      if(other===f||other.hp<=0)continue;
-      const sx=f.x-other.x,sy=f.y-other.y,dist=Math.hypot(sx,sy);
-      if(dist<36&&dist>.01){vx+=sx/dist*(36-dist)/12;vy+=sy/dist*(36-dist)/12}
-    }
-    vx+=(400-f.x)*.00025;
-    vy+=(258-f.y)*.00065;
-    if(f.x<FIELD.left+32)vx+=1.25;
-    if(f.x>FIELD.right-32)vx-=1.25;
-    if(f.y<FIELD.top+22)vy+=1.25;
-    if(f.y>FIELD.bottom-22)vy-=1.25;
-    const length=Math.max(1,Math.hypot(vx,vy));
-    const pace=(52+Math.min(f.spd,120)*.45)*(f.phase==='disengage'?1.1:1);
-    const x=f.x,y=f.y;
-    f.x=clamp(x+vx/length*pace*dt,FIELD.left,FIELD.right);
-    f.y=clamp(y+vy/length*pace*dt,FIELD.top,FIELD.bottom);
-    const travel=Math.hypot(f.x-x,f.y-y);
-    f.moveDistance+=travel;s.stats.movement+=travel;
-    if(Math.abs(f.x-x)>.1)f.dir=f.x>x?1:-1;
-    setAction(f,travel>0.15?'walk':'idle');
+    // Original playable HTML's motion equations now live in a single
+    // renderer-independent kernel. Phaser only supplies a scaled arena.
+    const motion=NAV.advance(f,foe,s.fighters,{
+      elapsed:s.elapsed,tactic:f.side===0?s.tactic:'balanced',
+      range:(a,b)=>range(s,a,b),random:()=>rand(s),
+      bounds:FIELD
+    },dt);
+    f.moveDistance+=motion.travel;
+    s.stats.movement+=motion.travel;
+    setAction(f,motion.travel>.15?motion.action:'idle');
   }
   function tickActor(s,f,dt){
     if(f.hp<=0)return;
