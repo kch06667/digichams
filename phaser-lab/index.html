@@ -50,6 +50,10 @@ a{color:#a8d8ff}
 <option value="focus">집중 공격</option>
 <option value="conserve">TP 절약</option>
 </select></label>
+<label class="tactic-label" for="rosterChoice">출전 디지몬
+<select id="rosterChoice" aria-label="연습 전투 출전 디지몬">
+<option value="">기본 시연</option>
+</select></label>
 <button id="battle" type="button">자동 전투 시연</button>
 <button id="train" type="button">훈련 1회</button>
 <button id="cups" type="button">대회 조건</button>
@@ -58,7 +62,7 @@ a{color:#a8d8ff}
 <button id="sound" type="button" aria-pressed="false">타격음 켜기</button>
 </nav>
 <section aria-label="기존 게임 세이브 보기">
-<label for="saveFile">기존 게임 세이브 JSON 읽기 (정보 확인만, 게임에 덮어쓰지 않음)</label>
+<label for="saveFile">기존 게임 세이브 JSON 읽기 (출전 디지몬 선택 가능 · 원본 저장 데이터 변경 없음)</label>
 <input id="saveFile" type="file" accept=".json,application/json">
 </section>
 <div id="pwaStatus" role="status" aria-live="polite"></div>
