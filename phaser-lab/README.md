@@ -100,3 +100,29 @@ The safe preview copies only these three allowlisted JS rule modules into
 `engine-core/` and rewrites their relative script URLs. No ROM graphics or
 binary files are included. Browser smoke tests cover both the unbundled and
 deployment builds (subject to CI settings).
+
+## Safe PWA installation and automatic web updates
+
+The `phaser-lab` preview now provides `manifest.webmanifest`, an original
+icon, `sw.js` and an opt-in update prompt. The site can be opened on PC or
+Android; when the browser supports installation, use **Install app** or
+**Add to Home screen**. Installation affordances vary by browser and platform.
+
+For CI-deployed GitHub Pages only, the build includes a pinned, MIT-licensed
+`phaser@3.90.0` under `vendor/` plus its license. After **one successful
+online visit and service worker installation**, the **safe lab** should reopen
+offline (battle/farm demos only). The source tree still references the CDN for
+unbundled development; offline capability is verified on the generated Pages
+bundle, not promised for every local setup.
+
+When a new commit reaches Pages, service worker cache names change using the
+build SHA. Existing cached JS is reused within that version, and a button
+invites the user to activate a waiting update; it never silently replaces
+game JS mid-battle. A full backup plan for the real game saves is still needed.
+Original Digimon graphics are intentionally **excluded** from all public Pages
+builds, even if present in repository history.
+
+Run `node tools/build-phaser-preview.cjs` after installing Phaser locally for
+an offline-capable safe bundle. `node --test tests/phaser-preview.cjs` checks
+the preview allowlist. Chromium smoke tests additionally verify offline
+navigations on CI.
