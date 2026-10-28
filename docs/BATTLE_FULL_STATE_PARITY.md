@@ -1,17 +1,33 @@
-# Original HTML vs cloned-state settlement parity — 2026-10-28
+# Owned-battle settlement parity / staged save transaction
 
-## Scope
-- Compare **actual extracted** `index.html` and `standalone.html` `grantExperience()`, `syncBattleHP()`, and `settleMatch()` against `DCBattleSettlement.settleCopy()`.
-- Same initial save and fighter results: 1v1, 2v2, 3v3, each win/loss; novice cup semifinal win then final win or loss.
-- Assert all **persisted gameplay fields** (team including evolution, HP/TP, level/XP, win/loss, points, cups, crowns, prizes, pending battle removal) are identical. Assert original state is untouched, double settlement rejected.
-- Intentional difference: the original `settleMatch` adds user-facing `state.logs` entries through `say()`, while `settleCopy` returns a receipt and does not write UI logs. Compare all game fields **except `logs`**, and separately assert this difference remains visible. Do not silently claim full byte-for-byte save equivalence.
-- Uses `speciesLookup=()=>null` in these deterministic tests. Thus real species-triggered evolution remains a separate parity gate.
+## 2026-10-29: result logs and safe commit preparation
 
-## Commands
-```sh
-node --test tests/battle-full-state-parity.cjs
-node --test tests/battle-settlement-core.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs
-```
+The new src/battle-commit-core.js provides two opt-in detached helpers. Neither is connected to production HTML or the Phaser preview.
 
-## Integration gate
-Do not enable live save-writing, UI log writes, production Phaser replacement, or save migration in this PR. Before a live integration PR, verify the UI log/receipt handoff, genuine evolution transformations with species lookup, old-save behavior, and failures during localStorage writes/rollback. Actual Android long-fight QA is still pending. Do not publish ROM or extracted art.
+- stageCopy(state, options): invokes the validated clone-only settlement and appends the **exact original** settleMatch outcome messages to its cloned state. The game evolution log comes first, then the cup message, then the fight message. Messages are prepended as [DAY n] entries; newest 60 retained.
+- persistCopy(state, options, storage): requires an explicitly injected readable/writable storage object. It verifies that the serialized saved dc_recreation_save equals the input state before and after staging. If stale or unreadable, abort. If valid, make exactly one full-state setItem and return the staged state **only after success**. It never deliberately changes its input state.
+- The existing settleCopy() remains pure gameplay-state/receipt computation without UI logs or persistence.
+
+## Regression coverage
+
+- tests/battle-full-state-parity.cjs: the actual index.html and standalone.html settleMatch functions compared with stageCopy for 1v1/2v2/3v3 wins/losses and novice cup semifinal/final. Compare **all saved fields including logs**, not just combat stats.
+- tests/battle-evolution-settlement-parity.cjs: same comparison with actual catalog lookups, evolutions and evolution/battle logs for Koromon, Patamon, same-species independent instances and championship evolution.
+- tests/battle-commit-safety.cjs: message format/order, log cap, one save write, no duplicate/stale-tab overwrite, rejected/replayed battles, missing and inaccessible storage, write exceptions, and a lookup callback mutating the active state.
+
+## Save-failure guarantees and limitations
+
+In a deterministic fake storage, a rejected setItem leaves the existing serialized save unchanged, and the source state is never intentionally changed. The *caller* must only adopt the new state after persistCopy succeeds and must show failure feedback if it throws.
+
+This is **not** proof of safety against real physical power loss, disk corruption, browser storage eviction, a storage implementation that writes then throws, or a multi-tab race outside the synchronous operation. Before production integration, ensure the exact pre-battle checkpoint is persisted and consistent with autosave; maintain a user-exportable backup.
+
+## Remaining gates before live save integration
+
+1. Test browser denied/quota/eviction cases and reload on desktop and physical Android; handle ambiguous writes and backup/recovery.
+2. Verify old save migration, tournament abandonment, evolving farm actors, and pre-battle checkpoint synchronisation.
+3. Wire the helper into *both* production HTML builds only in a separate reviewed change. Preserve UI error messages and adopt only on successful save.
+4. The web evolution balance is not fully NDS ROM-verified; do not claim original NDS accuracy.
+
+Run:
+    node --test tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs
+
+Do not commit new ROM or extracted game artwork.
