@@ -15,29 +15,48 @@ p{margin:5px 0 12px;color:#b9cada}
 #game canvas{display:block;outline:none}
 nav{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
 button{font:inherit;min-height:44px;padding:9px 15px;color:white;background:#235d82;border:1px solid #6f9ac3;border-radius:9px;cursor:pointer}
-button:focus-visible{outline:3px solid #ffd77c;outline-offset:2px}
+button:focus-visible,select:focus-visible{outline:3px solid #ffd77c;outline-offset:2px}
+select{font:inherit;min-height:44px;padding:6px 12px;color:#e7eff8;background:#143b56;border:1px solid #6f9ac3;border-radius:9px}
+.tactic-label{display:flex;align-items:center;gap:8px}
 button:active{transform:translateY(1px)}
 #status{min-height:24px;font-size:.93rem}.button-link{display:inline-flex;align-items:center;text-decoration:none;min-height:44px;padding:9px 15px;color:white;background:#235d82;border:1px solid #6f9ac3;border-radius:9px}
-small{color:#a4bace}
+small{color:#a4bace}section{display:flex;flex-direction:column;gap:5px;margin:10px 0}input[type=file]{max-width:100%;padding:9px;border:1px solid #486982;border-radius:8px}
 a{color:#a8d8ff}
 @media(max-width:500px){body{padding:6px}h1{font-size:1.1rem}button{flex:1 0 40%}#game{border-radius:7px}}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<script defer src="../src/battle-core.js"></script>
+<script defer src="../src/care-core.js"></script>
+<script defer src="../src/championship-core.js"></script>
+<script defer src="./domain-bridge.js"></script>
 <script defer src="./logic.js"></script>
 <script defer src="./game.js"></script>
 </head>
 <body>
 <main>
 <h1>Phaser 전투·훈련 수직 슬라이스</h1>
-<p>기존 게임과 분리된 실험 장면 · 저장 데이터 변경 없음 · 원작 규칙 재현 완료 아님</p>
+<p>기존 게임의 전술·TP·계절훈련·대회 규칙을 연결한 독립 시연 · 저장 데이터 변경 없음 · 공격 피해·전투 시간은 임시 연출</p>
 <div id="game" aria-label="전투 시험 화면"></div>
 <nav aria-label="실험 조작">
+<label class="tactic-label" for="tactic">전술
+<select id="tactic">
+<option value="balanced">균형</option>
+<option value="aggressive">공세</option>
+<option value="defensive">수비</option>
+<option value="focus">집중 공격</option>
+<option value="conserve">TP 절약</option>
+</select></label>
 <button id="battle" type="button">자동 전투 시연</button>
 <button id="train" type="button">훈련 1회</button>
+<button id="cups" type="button">대회 조건</button>
 <button id="reset" type="button">초기화</button>
 <a class="button-link" href="./farm.html">사육장 실험실</a>
 <button id="sound" type="button" aria-pressed="false">타격음 켜기</button>
 </nav>
+<section aria-label="기존 게임 세이브 보기">
+<label for="saveFile">기존 게임 세이브 JSON 읽기 (정보 확인만, 게임에 덮어쓰지 않음)</label>
+<input id="saveFile" type="file" accept=".json,application/json">
+</section>
 <div id="status" role="status" aria-live="polite">엔진 초기화 중…</div>
 <small>인터넷 연결 필요(CDN Phaser 3). 로컬 GIF 스프라이트시트는 변환 도구로 직접 생성하며 Git에 올리지 않습니다. 기존 게임은 저장소 루트의 index.html에서 별도로 실행합니다.</small>
 </main>

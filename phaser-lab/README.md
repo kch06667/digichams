@@ -76,3 +76,27 @@ not by replacing active JavaScript mid-game. This preview has no save data.
   comparing full battle outcomes and old-save roundtrips.
 - Keep handling of owner-provided copyrighted artwork private; obtain proper
   authorization before any public game release.
+
+## Step 3 — real rule-module bridge (read-only)
+
+`domain-bridge.js` now delegates **existing** Javascript engine functions:
+
+- `src/battle-core.js`: existing tactic selection, targeting policy, TP skill
+  threshold/cost, bounded TP updates. The prototype still uses demo-only
+  damage (36 skill / 18 normal), encounter scheduling and knockback; those are
+  **NOT** equivalent to the full original arena embedded in `index.html`.
+- `src/care-core.js`: seasonal training gain. Values remain earlier project
+  extension balance, not yet ROM-verified.
+- `src/championship-core.js`: real project cup availability rules. Click
+  **대회 조건** to view conditions for a *sample roster*.
+- Optional **세이브 JSON 읽기** reads a user-selected export, validates its
+  safe subset in browser memory, and shows a roster summary and actual cup
+  eligibility. It never writes localStorage, never overwrites original game
+  files, never sends this file to the public preview server, and never changes
+  the original game's active save. The import is *preview only*, not live
+  battle save integration.
+
+The safe preview copies only these three allowlisted JS rule modules into
+`engine-core/` and rewrites their relative script URLs. No ROM graphics or
+binary files are included. Browser smoke tests cover both the unbundled and
+deployment builds (subject to CI settings).

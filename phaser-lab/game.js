@@ -2,14 +2,16 @@
 (() => {
   'use strict';
   const status = document.getElementById('status');
-  const buttons = ['battle', 'train', 'reset', 'sound'];
+  const buttons = ['battle', 'train', 'reset', 'sound', 'cups'];
   const say = text => { status.textContent = text; };
   const L = window.DigiPhaserLabLogic;
-  if (!window.Phaser || !L) {
+  const B = window.DigiDomainBridge;
+  if (!window.Phaser || !L || !B) {
     say('Phaser 라이브러리를 불러오지 못했습니다. 인터넷 연결과 CDN 접근을 확인하세요.');
     return;
   }
   let manifest = null, soundEnabled = false, game;
+  let savePreview = B.previewSample();
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const actionKey = id => 'mon-' + id;
 
@@ -31,7 +33,7 @@
 
   class LabScene extends Phaser.Scene {
     constructor() { super('Lab'); }
-    init(data) { this.requestedMode = data?.autoMode || 'idle'; }
+    init(data) { this.requestedMode = data?.autoMode || 'idle'; this.requestedTactic = data?.tactic || 'balanced'; }
     preload() {
       if (!manifest) return;
       for (const [id, sheet] of Object.entries(manifest.actions)) {
@@ -62,6 +64,9 @@
       this.mode = 'idle';
       this.turn = 0;
       this.demoStat = 10;
+      this.encounter = B.newEncounter(this.requestedTactic);
+      this.left.hp = this.encounter.ally.hp;
+      this.right.hp = this.encounter.enemy.hp;
       this.pose(this.left, 'idle');
       this.pose(this.right, 'idle');
       this.updateHud();
@@ -70,7 +75,11 @@
         battle: () => this.battle(),
         train: () => this.train(),
         reset: () => this.scene.restart(),
-        sound: enabled => { soundEnabled = enabled; if (enabled && this.sound.context?.resume) this.sound.context.resume(); }
+        sound: enabled => { soundEnabled = enabled; if (enabled && this.sound.context?.resume) this.sound.context.resume(); },
+        encounterSnapshot: () => JSON.parse(JSON.stringify(this.encounter)),
+        cupPreview: () => B.cupPreview(savePreview),
+        importedSavePreview: () => JSON.parse(JSON.stringify(savePreview)),
+        trainingPreview: day => B.train(day, this.demoStat, 1)
       };
       buttons.forEach(id => { document.getElementById(id).disabled = false; });
       if (this.requestedMode === 'battle') this.beginBattle();
@@ -128,8 +137,8 @@
       }
     }
     updateHud() {
-      this.leftHp.setText('HP ' + this.left.hp + '/100');
-      this.rightHp.setText('HP ' + this.right.hp + '/100');
+      this.leftHp.setText('HP ' + this.encounter.ally.hp + '/100 · TP ' + Math.floor(this.encounter.ally.tp));
+      this.rightHp.setText('HP ' + this.encounter.enemy.hp + '/100 · TP ' + Math.floor(this.encounter.enemy.tp));
       this.statLabel.setText('훈련 보너스(임시): ' + this.demoStat);
     }
     resetActors() {
@@ -166,7 +175,7 @@
         {fontFamily:'monospace',fontSize:'24px',fontStyle:'bold',color:'#fff3bf'}).setDepth(10).setOrigin(.5);
       this.tweens.add({targets:value,y:y-96,alpha:0,duration:550,onComplete:()=>value.destroy()});
     }
-    battle() { this.scene.restart({autoMode:'battle'}); }
+    battle() { this.scene.restart({autoMode:'battle',tactic:document.getElementById('tactic').value}); }
     beginBattle() {
       if (this.mode !== 'idle') return;
       this.mode='battle'; this.turn=0;
@@ -175,8 +184,10 @@
     }
     attackCycle() {
       if (this.mode !== 'battle') return;
-      const actor = this.turn % 2 === 0 ? this.left : this.right;
-      const target = actor === this.left ? this.right : this.left;
+      const decision = B.plan(this.encounter);
+      if (!decision) return;
+      const actor = decision.side === 'ally' ? this.left : this.right;
+      const target = decision.side === 'ally' ? this.right : this.left;
       const sign = actor === this.left ? 1 : -1;
       this.resetActors();
       this.pose(actor,'moving');
@@ -187,8 +198,9 @@
           this.tweens.add({targets:actor.container,x:actor.container.x+sign*48,duration:115,
             onComplete:()=>{
               if(this.mode!=='battle')return;
-              const damage=36;
-              target.hp=Math.max(0,target.hp-damage);
+              const damage=decision.damage;
+              this.encounter=B.apply(this.encounter,decision);
+              target.hp=this.encounter[decision.other].hp;
               this.pose(target,'hit');
               this.impact(target.container.x-sign*36, target.container.y-78, damage);
               this.updateHud();
@@ -200,7 +212,7 @@
                 this.tweens.resumeAll();
                 this.tweens.add({targets:target.container,x:target.container.x+sign*knockback,
                   duration:230,ease:'Cubic.easeOut',onComplete:()=>{
-                    if(target.hp===0){
+                    if(this.encounter.winner){
                       this.mode='finished';this.pose(actor,'victory');this.pose(target,'hit');
                       say((actor===this.left?'테이머':'상대')+' 승리 · 30번 승리 모션 적용');
                     }else{
@@ -222,10 +234,11 @@
         this.pose(this.left,'attacking');
         this.tweens.add({targets:this.left.container,x:this.left.originX+36,y:280,duration:140,yoyo:true,
           onComplete:()=>{
-            this.demoStat=L.gainTrainingStat(this.demoStat,1);
+            const gain=B.train(1,this.demoStat,1);
+            this.demoStat=gain.next;
             this.updateHud();this.pose(this.left,'idle');
             this.mode='idle';
-            say('훈련 1회 완료 · 능력치 +1 (시연 수치, 원작 미검증)');
+            say('훈련 1회 완료 · 능력치 +'+gain.gained+' · '+gain.season+' 계절 보정 (기존 care-core, 수치 임시)');
           }});
       });
     }
@@ -262,6 +275,25 @@
     });
     document.getElementById('battle').addEventListener('click',()=>window.DigiPhaserLab?.battle());
     document.getElementById('train').addEventListener('click',()=>window.DigiPhaserLab?.train());
+    document.getElementById('saveFile').addEventListener('change',async e=>{
+      const file=e.currentTarget.files?.[0];
+      if(!file)return;
+      if(file.size>3*1024*1024){say('세이브 파일이 너무 커. 최대 3MB만 읽을 수 있어.');return;}
+      try {
+        const json=JSON.parse(await file.text());
+        const fresh=B.inspectExport(json);
+        savePreview=fresh;
+        const ready=fresh.team.filter(m=>m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage').length;
+        say('세이브 읽기 전용 확인 · DAY '+fresh.day+' · 디지몬 '+fresh.team.length+
+          '마리 · 출전 가능 '+ready+'마리 · 대회 조건 버튼으로 확인 가능');
+      } catch (err) {
+        say('세이브 미리보기 실패: '+err.message+' · 기존 데이터는 변경되지 않았어.');
+      }
+    });
+    document.getElementById('cups').addEventListener('click',()=>{
+      const cups=window.DigiPhaserLab?.cupPreview() || [];
+      say('기존 대회 규칙 (샘플 팀): '+cups.map(c=>c.name+(c.available?' 참가 가능':' '+c.missing.join(', '))).join(' / '));
+    });
     document.getElementById('reset').addEventListener('click',()=>window.DigiPhaserLab?.reset());
     document.getElementById('sound').addEventListener('click',e=>{
       soundEnabled=!soundEnabled;

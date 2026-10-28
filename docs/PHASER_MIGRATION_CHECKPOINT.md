@@ -77,3 +77,26 @@ Codex: NDS reverse engineering on separate branch; keep empirical frame
 evidence, provenance and exact GIF action mapping.
 Phaser track: renderer/atlas/tooling, mobile input, strong hit feel, small
 hex cage UI, game-domain adapter, safe web preview.
+
+## 2026-10-28 second integration checkpoint
+
+- Site: `https://kch06667.github.io/digichams/` (asset-free Pages demo).
+  The previous Pages configure 404 was resolved after owner enabled Pages;
+  successful workflow rerun: `40586958965`.
+- Feature track: `feature/phaser-legacy-core-adapter-20261028`.
+- New `phaser-lab/domain-bridge.js` executes original project battle
+  tactics/TP core, care seasons and championship requirements, rather than
+  independently reimplementing these rules in the lab.
+- `phaser-lab/index.html` can read a JSON game export to preview the real
+  Digimon roster and cup eligibility. This is read-only and doesn't modify
+  gameplay or stored saves.
+- The preview generator copies only three JavaScript rules files into
+  `engine-core/`; never add ROM extracts or copyrighted sprite art to Pages.
+- Remaining critical: original `index.html` arena combat time/AI/damage
+  and real player save mutation/compatibility are still NOT integrated.
+- **Visibility warning:** repository metadata reported a public repository
+  after the Pages change. The source tree already contains `assets/rom` and
+  `assets/rom_images` among other extracted-looking image files. The owner
+  should review whether these belong in any public repository and change
+  visibility / history exposure as appropriate. Our Pages preview explicitly
+  does not deploy these assets; that does not hide files already public in Git.
