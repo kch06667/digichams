@@ -56,6 +56,12 @@
     // Single synchronous write: never mutate input, emit UI success, or return
     // an adoptable state if the browser storage write rejects.
     storage.setItem(SAVE_KEY,serialized);
+    // Web Storage is synchronous. A storage adapter that reports success
+    // without retaining the complete payload must not yield an adoptable
+    // result. The caller handles this error; this helper never overwrites
+    // or rolls back an unrelated/newer saved snapshot.
+    if(storage.getItem(SAVE_KEY)!==serialized)
+      throw Error('Battle save verification failed after write');
     return staged;
   }
   return Object.freeze({SAVE_KEY,stageCopy,persistCopy});
