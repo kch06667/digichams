@@ -71,9 +71,42 @@ def check(browser,host,mobile=False):
     assert arena.evaluate("DigiPhaserLab.qaFinishCombat()")
     result=arena.evaluate("DigiPhaserLab.battleResultPreview()")
     assert result and not result["saveApplied"] and not result["rewardsApplied"],result
-    assert "연습전" in farm.locator("#dc-phaser-farm-launch").inner_text()
+    # The completed match is offered back to the original farm tab, but
+    # NEVER auto-applies it. Before clicking, backup keys must not exist.
+    apply=farm.locator("#dc-phaser-farm-apply")
+    apply.wait_for(state="visible",timeout=12000)
+    assert "완료된 1대1" in farm.locator("#dc-phaser-farm-status").inner_text()
+    assert farm.evaluate("""() => localStorage.getItem(
+      DCDevPhaserCommit.BACKUP_KEY) === null""")
+    baseline=farm.evaluate("""() => {
+      const s=eval('state');
+      // The existing farm can update each animation frame. Snapshot it in
+      // one synchronous task before approving the experimental commit.
+      return {wins:s.wins,losses:s.losses,points:s.points,
+        instanceId:s.team[0].instanceId};
+    }""")
+    # Reconcile the live farm and persisted snapshot, then approve within
+    # the same JS task so no animation tick can interleave.
+    farm.evaluate("""() => {
+      localStorage.setItem('dc_recreation_save',JSON.stringify(eval('state')));
+      document.querySelector('#dc-phaser-farm-apply').click();
+    }""")
+    farm.wait_for_load_state("domcontentloaded",timeout=15000)
+    farm.locator("#dc-phaser-farm-launch").wait_for(timeout=15000)
+    stored=farm.evaluate("""() => JSON.parse(
+      localStorage.getItem('dc_recreation_save'))""")
+    assert stored["wins"]+stored["losses"]==baseline["wins"]+baseline["losses"]+1,stored
+    assert stored["team"][0]["instanceId"]==baseline["instanceId"]
+    assert stored["team"][0]["evo"]["battles"]>=1
+    assert "pendingBattle" not in stored
+    assert farm.evaluate("""() => Boolean(
+      localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY) &&
+      localStorage.getItem(DCDevPhaserCommit.FIRST_BACKUP_KEY)
+    )""")
+    assert farm.locator("#dc-phaser-farm-apply").is_hidden()
     assert not errors,errors
-    print("OK dev farm -> Phaser read-only 1v1", "touch" if mobile else "desktop")
+    print("OK dev farm -> Phaser guarded 1v1 settlement",
+          "touch" if mobile else "desktop")
     ctx.close()
 
 def main():
