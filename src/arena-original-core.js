@@ -72,6 +72,9 @@
    const stats={meleeAttempts:0,meleeHits:0,skillHits:0,specials:0,
      meleeSkills:0,rangedSkills:0,dodges:0,retreats:0,hits:0,misses:0,
      distance:0,knockDistance:0};
+   const metrics=()=> '근접 '+stats.meleeHits+
+     ' · 회피 '+stats.dodges+' · 필살기 '+stats.specials;
+   // Rendering text only, not used by the original combat AI.
    function fighter(mon,side,slot,count){
      if(!mon||typeof mon.name!=='string'||!mon.name||mon.name.length>120)
        throw Error('Invalid fighter identity');
