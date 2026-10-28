@@ -119,7 +119,6 @@ def check_page(browser, mobile, base_url):
     assert page.evaluate("DigiDomainBridge.plan(Object.assign("
       "DigiDomainBridge.newEncounter('conserve'),{ally:"
       "Object.assign({},DigiDomainBridge.newEncounter('conserve').ally,{tp:30})})).action")=="normal"
-    import json
     sample={"format":"digicham-save","exportVersion":1,
       "state":{"day":10,"wins":6,
         "championship":{"crowns":{"novice":1,"regional":1}},
@@ -198,7 +197,6 @@ def check_farm(browser, mobile, base_url):
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('행 개방')",
         timeout=5000)
-    import json
     sample={"format":"digicham-save","exportVersion":1,
       "state":{"day":18,"wins":7,"team":[
         {"name":"아구몬 테스트","hp":187,"maxHp":255,"atk":40,"def":25,
