@@ -48,12 +48,15 @@
       phase:'approach',phaseTime:range(s,.65,1.1),
       orbit:rand(s)<.5?-1:1,knockVX:0,knockVY:0,flash:0,
       moveDistance:0,attacks:0,specials:0,dodges:0,
-      kind:spd>stat(source.atk,45)+14?'projectile':'melee'
+      kind:source.skillKind==='projectile'?'projectile':
+        source.skillKind==='melee'?'melee':slot===1?'projectile':'melee'
     };
   }
-  function createMatch({allies,opponents,tactic='balanced',seed=12345}={}){
+  function createMatch({allies,opponents,teamSize=3,tactic='balanced',seed=12345}={}){
     if(!BC.TACTICS[tactic])throw Error('Unknown tactic');
-    const left=allies??startingTeam(0),right=opponents??startingTeam(1);
+    if(!Number.isInteger(teamSize)||teamSize<1||teamSize>3)throw Error('Invalid team size');
+    const left=allies??startingTeam(0).slice(0,teamSize);
+    const right=opponents??startingTeam(1).slice(0,teamSize);
     if(!Array.isArray(left)||!Array.isArray(right)||
        left.length<1||left.length>3||right.length<1||right.length>3)
       throw Error('Each side needs 1-3 fighters');
@@ -284,5 +287,5 @@
   function snapshot(s){
     return JSON.parse(JSON.stringify(s));
   }
-  return Object.freeze({FIELD,createMatch,step,snapshot,alive});
+  return Object.freeze({FIELD,createMatch,step,snapshot,alive,defaultTeam:startingTeam});
 });
