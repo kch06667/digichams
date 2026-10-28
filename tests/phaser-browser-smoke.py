@@ -136,6 +136,41 @@ def check_farm(browser, mobile, base_url):
     context.close()
 
 
+def check_offline_preview(browser, host):
+    # Only safe allowlisted deployment output; no original sprite/ROM assets.
+    preview=ROOT / "dist" / "phaser-preview"
+    if not (preview/"index.html").is_file():
+        return
+    context=browser.new_context(viewport={"width":1100,"height":800},
+                                service_workers="allow")
+    page=context.new_page()
+    errors=[]
+    page.on("pageerror",lambda error:errors.append(str(error)))
+    site=host+"/dist/phaser-preview/"
+    page.goto(site,wait_until="domcontentloaded")
+    page.wait_for_function("Boolean(window.DigiPhaserLab)",timeout=30000)
+    assert page.evaluate("typeof DigiDomainBridge.plan")=="function"
+    assert page.evaluate("DigiPwaStatus().registered")
+    # Installation pre-caches exact allowlist, including vendored Phaser.
+    page.wait_for_function("navigator.serviceWorker.controller !== null",
+                           timeout=20000)
+    assert page.evaluate("DigiPwaStatus().controlled")
+    context.set_offline(True)
+    page.reload(wait_until="domcontentloaded")
+    page.wait_for_function("Boolean(window.DigiPhaserLab)",timeout=12000)
+    page.locator("#train").click()
+    page.wait_for_function(
+        "document.querySelector('#status').textContent.includes('훈련 1회 완료')",
+        timeout=7000)
+    page.goto(site+"farm.html",wait_until="domcontentloaded")
+    page.wait_for_function("Boolean(window.DigiFarmLab)",timeout=12000)
+    assert page.evaluate("DigiFarmLabModel.initial().rows")==2
+    assert not errors, f"offline preview JS errors: {errors}"
+    print("OK safe PWA offline: battle/training + farm after reload")
+    context.set_offline(False)
+    context.close()
+
+
 def main():
     handler = functools.partial(QuietHandler, directory=str(ROOT))
     server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
@@ -153,6 +188,7 @@ def main():
                 check_page(browser, True, host)
                 check_farm(browser, False, host)
                 check_farm(browser, True, host)
+                check_offline_preview(browser, host)
             finally:
                 browser.close()
     finally:

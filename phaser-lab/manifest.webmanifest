@@ -1,0 +1,19 @@
+{
+  "name": "디지몬 챔피언십 웹 확장판 · 개발 시연",
+  "short_name": "디지몬 실험실",
+  "description": "Phaser 전투와 사육장 개발용 웹앱. 원작 게임의 공식 배포물이 아닙니다.",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1829",
+  "theme_color": "#0e1829",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

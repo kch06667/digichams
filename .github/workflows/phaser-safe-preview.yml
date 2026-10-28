@@ -4,6 +4,10 @@ on:
     branches: [main]
     paths:
       - 'phaser-lab/index.html'
+      - 'phaser-lab/sw.js'
+      - 'phaser-lab/pwa.js'
+      - 'phaser-lab/icon.svg'
+      - 'phaser-lab/manifest.webmanifest'
       - 'phaser-lab/domain-bridge.js'
       - 'src/battle-core.js'
       - 'src/care-core.js'
@@ -34,12 +38,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Install pinned Phaser 3 for safe offline bundle
+        run: npm install --ignore-scripts --no-save --no-package-lock phaser@3.90.0
       - name: Prepare safe asset-free deploy artifact
         run: |
           node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
           node tools/build-phaser-preview.cjs dist/phaser-preview
           test ! -d dist/phaser-preview/assets
           test ! -d dist/phaser-preview/local-assets
+          test -s dist/phaser-preview/vendor/phaser.min.js
+          test -s dist/phaser-preview/vendor/PHASER_LICENSE.txt
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

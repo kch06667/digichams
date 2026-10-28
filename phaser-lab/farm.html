@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#102d3c">
+<link rel="manifest" href="./manifest.webmanifest">
 <title>Digimon · 육각형 케이지 배치 실험실</title>
 <style>
 :root{font:15px/1.45 system-ui,sans-serif;background:#0b2024;color:#e6f6ed}*{box-sizing:border-box}
@@ -17,8 +19,10 @@ button:focus-visible,.link:focus-visible{outline:3px solid #ffe298;outline-offse
 #status{min-height:38px;padding:9px 2px;color:#ffdfa1}
 small{color:#acd1ca}
 @media(max-width:540px){body{padding:5px}button,.link{flex:1 0 29%;text-align:center;justify-content:center;font-size:13px}}
+#pwaStatus{font-size:.88rem;color:#e9c879;margin:4px 0}#updateBtn{margin:4px 0;background:#3b6878}#updateBtn[hidden]{display:none}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+<script defer src="./pwa.js"></script>
 <script defer src="./farm-model.js"></script>
 <script defer src="./farm.js"></script>
 </head>
@@ -36,6 +40,8 @@ small{color:#acd1ca}
 <button type="button" id="reset">초기화</button>
 <a class="link" href="./">전투 실험실</a>
 </nav>
+<div id="pwaStatus" role="status" aria-live="polite"></div>
+<button type="button" id="updateBtn" hidden>새 버전 적용</button>
 <div role="status" aria-live="polite" id="status">게임 엔진 준비 중…</div>
 <small>모든 비용·훈련량·식사 횟수는 시연 수치이며 ROM 검증 값이 아닙니다. 타일 선택과 화면 드래그/터치를 지원합니다.</small>
 </main></body></html>
