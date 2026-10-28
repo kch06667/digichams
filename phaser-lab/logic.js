@@ -47,7 +47,11 @@
     for (const [name,entry] of records) {
       if (!name || name.length>80 || name==='__proto__' ||
           !entry || typeof entry !== 'object' ||
-          !new RegExp('^species/m[a-zA-Z0-9_-]+
+          typeof entry.folder !== 'string' ||
+          !entry.folder.startsWith('species/m') ||
+          !entry.folder.slice('species/m'.length) ||
+          [...entry.folder.slice('species/m'.length)].some(ch=>
+            !'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'.includes(ch)) ||
           !Number.isSafeInteger(entry.actions) || entry.actions<1 ||
           entry.actions>40 || paths.has(entry.folder)) return false;
       paths.add(entry.folder);
