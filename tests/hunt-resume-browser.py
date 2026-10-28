@@ -78,6 +78,9 @@ def run(browser,base,entry,mobile):
     "session":"tied","wild":pre["name"]},restored
  # No second lasso or rope cost is required after reload.
  assert page.locator("#throwRope").is_disabled()
+ # Chromium touch dispatch uses *viewport* coordinates. Reload resets scroll
+ # and leaves the canvas below the fold; move it into view before pulling.
+ page.locator("#huntStage").scroll_into_view_if_needed()
  rect=page.locator("#huntStage").bounding_box()
  for _ in range(12):
   if page.evaluate("DCHuntUI.encounter.mode")=="stunned":break
@@ -85,7 +88,10 @@ def run(browser,base,entry,mobile):
   start=(rect["x"]+pos["x"]*rect["width"],
          rect["y"]+pos["y"]*rect["height"])
   stroke([start,(rect["x"]+(pos["x"]-.20)*rect["width"],start[1])])
- assert page.evaluate("DCHuntUI.encounter.mode")=="stunned"
+ phase=page.evaluate("""() => ({mode:DCHuntUI.encounter.mode,
+   hp:DCHuntUI.encounter.hp,pulls:DCHuntUI.encounter.pulls,
+   hint:document.getElementById('huntInstructions').textContent})""")
+ assert phase["mode"]=="stunned",phase
  assert page.evaluate("state.huntSession.encounter.mode")=="stunned"
  page.locator("#huntGrab").tap() if mobile else page.locator("#huntGrab").click()
  page.locator("#huntGrab").evaluate("(el)=>el.click()")
