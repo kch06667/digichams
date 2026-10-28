@@ -54,7 +54,10 @@ def export(species, asset_root, output, actions=DEFAULT_ACTIONS):
             for j in range(gif.n_frames):
                 gif.seek(j)
                 frames.append(gif.convert("RGBA").copy())
-                durations.append(max(20, int(gif.info.get("duration") or 100)))
+                # Preserve genuine 10ms GIF delays (17 frames in the supplied
+                # 216-species set). Browser presentation depends on refresh
+                # rate, but atlas timing metadata must not silently add 10ms.
+                durations.append(max(10, int(gif.info.get("duration") or 100)))
             files.append((action, frames, durations))
 
     # Common canvas dimensions for all actions: prevent hit/victory scale jumps.
