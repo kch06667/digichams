@@ -85,7 +85,8 @@ a{color:#a8d8ff}
 <div id="pwaStatus" role="status" aria-live="polite"></div>
 <button type="button" id="updateBtn" hidden>새 버전 적용</button>
 <div id="status" role="status" aria-live="polite">엔진 초기화 중…</div>
-<small>기존 HTML 게임의 실제 전투 판정 함수를 가져왔어. 현재 Phaser는 전투 결과를 원본 세이브에 저장하지 않는 별도 시연 화면이야. 디지몬별 그래픽은 로컬 파일로만 불러오며 공개 배포본에는 포함하지 않아.</small>
+<div id="battleReport" role="status" aria-live="polite" style="margin:8px 0;color:#e9d9a8;overflow-wrap:anywhere"></div>
+<small>기존 HTML 게임의 실제 전투 판정 함수를 가져왔어. 세이브 JSON의 디지몬으로 전투하면 HP·TP 변화를 위에 읽기 전용으로 표시하지만, 원본 세이브·대회 결과·보상은 전혀 변경하지 않아. 디지몬별 그래픽은 로컬 파일로만 불러오며 공개 배포본에는 포함하지 않아.</small>
 </main>
 </body>
 </html>
