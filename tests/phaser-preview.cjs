@@ -20,6 +20,11 @@ test('deploy archive is allowlisted and never contains extracted game art',()=>{
     const html=fs.readFileSync(path.join(d,'index.html'),'utf8');
     assert.match(html,/engine-core\/battle-core\.js/);
     assert.doesNotMatch(html,/\.\.\/src\//);
+    const farmHtml=fs.readFileSync(path.join(d,'farm.html'),'utf8');
+    assert.match(farmHtml,/engine-core\/battle-core\.js/);
+    assert.match(farmHtml,/domain-bridge\.js/);
+    assert.match(farmHtml,/id="farmSaveFile"/);
+    assert.doesNotMatch(farmHtml,/\.\.\/src\//);
     const sw=fs.readFileSync(path.join(d,'sw.js'),'utf8');
     assert.doesNotMatch(sw,/__BUILD_ID__/);
     assert.match(sw,/digichams-safe-pwa-/);

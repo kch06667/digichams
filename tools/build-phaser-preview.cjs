@@ -21,7 +21,7 @@ const buildId=(process.env.GITHUB_SHA||'local-dev-v1').replace(/[^a-zA-Z0-9_-]/g
 for(const file of allow){
   const raw=fs.readFileSync(path.join(source,file),'utf8');
   let safe=raw;
-  if(file==='index.html'){
+  if(file==='index.html'||file==='farm.html'){
     for(const core of safeCore){
       const from='../src/'+core,to='./engine-core/'+core;
       if(!safe.includes(from))throw Error('Missing core script: '+from);

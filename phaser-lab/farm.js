@@ -1,10 +1,11 @@
 /* No original sprites, no save. Isolated hex cage concept using Phaser 3. */
 (() => {
   'use strict';
-  const M=window.DigiFarmLabModel, status=document.getElementById('status');
+  const M=window.DigiFarmLabModel,B=window.DigiDomainBridge,
+    status=document.getElementById('status');
   const buttons=['buy','feed','train','expand','zoomIn','zoomOut','reset'];
   const say=message=>{status.textContent=message;};
-  if(!M||!window.Phaser){say('Phaser CDN 로드 실패. 인터넷 연결을 확인해.');return;}
+  if(!M||!B||!window.Phaser){say('Phaser CDN 로드 실패. 인터넷 연결을 확인해.');return;}
   const hex=(cx,cy,r)=>Array.from({length:6},(_,i)=>{
     const a=Math.PI/6+i*Math.PI/3;return {x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r};
   });
@@ -27,6 +28,7 @@
         zoom:dir=>{this.cameras.main.setZoom(
           Math.max(.75,Math.min(1.5,this.cameras.main.zoom+dir*.15)));this.redraw('배율 변경');},
         select:(r,c)=>this.select(r,c),
+        loadRoster:preview=>this.loadRoster(preview),
         snapshot:()=>JSON.parse(JSON.stringify(this.state))
       };
       buttons.forEach(id=>document.getElementById(id).disabled=false);
@@ -58,6 +60,17 @@
         }
         if(best&&dist<53)this.select(best.row,best.col);
       });
+    }
+    loadRoster(preview){
+      // Old demo feeding timers must never act on a newly selected save preview.
+      this.time.removeAllEvents();this.biting.clear();
+      this.state=M.fromRoster(preview);
+      this.cameras.main.scrollY=0;
+      for(const id of ['buy','feed','train','expand'])
+        document.getElementById(id).disabled=true;
+      this.redraw('세이브 읽기 전용 · '+this.state.sourceDay+'일차 · 사육장 '+
+        Object.keys(this.state.cages).length+'마리 표시');
+      return this.state;
     }
     select(row,col){
       const r=M.transition(this.state,{type:'select',row,col});
@@ -114,6 +127,11 @@
           const feetR=this.add.rectangle(10,18,9,6,0xe59d62);
           body.add([shadow,feetL,feetR,torso,eyeL,eyeR]);
           this.sprites.push({body,baseY:p.y+1,id});
+          if(this.state.viewOnly){
+            const short=cage.name.length>9?cage.name.slice(0,8)+'…':cage.name;
+            add(this.add.text(p.x,p.y+34,short,
+              {fontFamily:'sans-serif',fontSize:'12px',color:'#f5f8d9'}).setOrigin(.5));
+          }
           if(cage.food>0){
             const scale=cage.food/M.FOOD_BITES;
             const food=add(this.add.ellipse(p.x+25,p.y+19,
@@ -124,15 +142,17 @@
       }
       // Small HUD; most viewport stays as an interactive game field.
       g.fillStyle(0x0e383b,.92);g.fillRoundedRect(15,8,770,66,9);
-      add(this.add.text(27,19,'케이지 '+Object.keys(this.state.cages).length+
-        ' · '+this.state.rows+'행 · Bit '+this.state.credits,
+      add(this.add.text(27,19,(this.state.viewOnly?'읽기 전용 · DAY '+this.state.sourceDay+' · ':'케이지 ')+
+        Object.keys(this.state.cages).length+'마리 · '+this.state.rows+'행 · Bit '+this.state.credits,
         {fontSize:'19px',color:'#e1f7eb'}));
       const cage=this.state.cages[selected];
-      const details=cage?
-        '선택 '+selected+' · '+cage.name+' · 허기 '+cage.hunger+
-          ' · 먹이 '+cage.food+'/'+M.FOOD_BITES:
-        '선택 '+selected+' · 빈 케이지 칸 · 구입 가능';
-      add(this.add.text(27,48,details+' · 훈련 '+this.state.training,
+      const details=cage?(this.state.viewOnly?
+          '선택 '+selected+' · '+cage.name+' · HP '+cage.hp+'/'+cage.maxHp+
+          ' · 허기 '+cage.hunger:
+          '선택 '+selected+' · '+cage.name+' · 허기 '+cage.hunger+
+          ' · 먹이 '+cage.food+'/'+M.FOOD_BITES):
+        '선택 '+selected+' · 빈 케이지 칸'+(this.state.viewOnly?'':' · 구입 가능');
+      add(this.add.text(27,48,details+(this.state.viewOnly?' · 원본 변경 없음':' · 훈련 '+this.state.training),
         {fontSize:'15px',color:'#e3d89f'}));
       if(message)say(message+' · '+(cage?'현재 '+cage.name:'빈 칸'));
     }
@@ -157,6 +177,18 @@
     ()=>window.DigiFarmLab?.zoom(1));
   document.getElementById('zoomOut').addEventListener('click',
     ()=>window.DigiFarmLab?.zoom(-1));
-  document.getElementById('reset').addEventListener('click',
-    ()=>window.DigiFarmLab?.reset());
+  document.getElementById('reset').addEventListener('click',()=>{
+    document.getElementById('farmSaveFile').value='';
+    window.DigiFarmLab?.reset();
+  });
+  document.getElementById('farmSaveFile').addEventListener('change',async e=>{
+    const file=e.currentTarget.files?.[0];
+    if(!file)return;
+    if(file.size>3*1024*1024){say('세이브는 최대 3MB까지 읽어.');return;}
+    try{
+      const data=B.inspectExport(JSON.parse(await file.text()));
+      const state=window.DigiFarmLab?.loadRoster(data);
+      if(state?.hiddenCount)say('읽기 전용 · 처음 30마리 표시 · 나머지 '+state.hiddenCount+'마리는 아직 화면 밖이야.');
+    }catch(err){say('세이브 미리보기 실패: '+err.message+' · 기존 상태를 유지했어.');}
+  });
 })();
