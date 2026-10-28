@@ -77,5 +77,38 @@
     return {day:1,wins:0,points:0,facilityCredits:100,team:[{
       name:'테이머',hp:100,maxHp:100,egg:false,lost:false,location:'farm'}]};
   }
-  return Object.freeze({tactics,newEncounter,plan,apply,train,cupPreview,previewSample});
+  function inspectExport(input){
+    if(!input||typeof input!=='object'||Array.isArray(input))
+      throw Error('세이브 JSON 객체가 아니야.');
+    if(input.format!=null&&(input.format!=='digicham-save'||input.exportVersion!==1))
+      throw Error('지원하지 않는 세이브 형식이야.');
+    const raw=input.format==='digicham-save'?input.state:input;
+    if(!raw||typeof raw!=='object'||Array.isArray(raw)||raw.pendingBattle||
+       !Number.isSafeInteger(raw.day)||raw.day<1||raw.day>100000||
+       !Array.isArray(raw.team)||raw.team.length<1||raw.team.length>50)
+      throw Error('잘못된 세이브이거나 전투 중인 데이터야.');
+    // Strictly pick a small allowlist of values; no references or mutations.
+    const safeNumber=(v,fallback=0)=>Number.isFinite(v)?clamp(v,0,999999):fallback;
+    const team=raw.team.map(m=>{
+      if(!m||typeof m!=='object'||typeof m.name!=='string'||!m.name||
+         m.name.length>120||!Number.isFinite(m.hp)||!Number.isFinite(m.maxHp)||
+         m.maxHp<=0)throw Error('디지몬 기록이 올바르지 않아.');
+      return {name:m.name,hp:clamp(m.hp,0,m.maxHp),maxHp:m.maxHp,
+        atk:safeNumber(m.atk),def:safeNumber(m.def),spd:safeNumber(m.spd),
+        tp:safeNumber(m.tp),maxTp:safeNumber(m.maxTp),
+        egg:!!m.egg,lost:!!m.lost,
+        location:m.location==='storage'?'storage':'farm'};
+    });
+    const crowns={};
+    for(const id of T.CUPS.map(cup=>cup.id)){
+      const count=raw.championship?.crowns?.[id];
+      if(Number.isSafeInteger(count)&&count>=0)crowns[id]=count;
+    }
+    return {day:raw.day,wins:safeNumber(raw.wins),points:safeNumber(raw.points),
+      facilityCredits:safeNumber(raw.facilityCredits),team,
+      championship:{active:null,crowns,history:[],sequence:0,rank:0,lastResult:null},
+      source:'read-only-save-preview'};
+  }
+  return Object.freeze({tactics,newEncounter,plan,apply,train,cupPreview,
+    previewSample,inspectExport});
 });
