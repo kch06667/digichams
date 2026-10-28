@@ -11,3 +11,7 @@ ROM 주소와 압축 해제 후 오프셋을 혼용하지 않는다. 의미 확�
 상위 레코드에 ROM SHA-256, source_file(ID/오프셋/크기/해시), record_count, text_decoding, name_block_interpretation, comparison 보존.
 UTF-16LE 디코딩 자체와 문자열 위치는 ROM_VERIFIED. 첫 216항목의 종 대응은 INFERRED. `text_index`를 species_id로 바꾸지 않는다.
 전체 원문/추출 텍스트는 저장소 밖 로컬 분석 산출물에 보관. 저장소에는 도구·테스트·요약만 유지.
+
+## 그래픽 복원 구조 (2026-10-28)
+`tools/rom_graphics.py`: source마다 NitroFS 경로/FAT ID/ROM 오프셋/크기/SHA-256 기록. NCER cell_index/file_offset/bounds/objects(x,y,width,height,tile,palette,bpp,flip)/transfer(source_offset,size)와 NANR animation_index/file_offset/loop_start/play_mode/frames(cell_index,duration_ticks,content_offset) 보존. NCER transfer.source_offset은 NCGR/NCBR 픽셀 payload 상대 오프셋이며 ROM 절대 오프셋이 아니다.
+프레임/좌표/팔레트 구조와 픽셀 대조는 ROM_VERIFIED 근거. action 이름과 미관찰 엔진 tick 속도는 INFERRED. 추출 PNG/APNG 및 전체 메타데이터는 저장소 밖에만 저장. GIF 비교는 여백 제거/BGR555 양자화 기준이며 기준점 위치와 게임 내 사용 의미를 검증하지 않는다.

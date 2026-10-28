@@ -1,3 +1,27 @@
+# 2026-10-28 그래픽 분석 체크포인트
+
+- 새 작업 브랜치 `analysis/rom-graphics-20261028`, 기준 main `aa6db16`. 원본은 이전과 동일 SHA-256의 읽기 전용 로컬 NDS.
+- `tools/rom_graphics.py`: NCLR 팔레트, NCGR 타일/NCBR 선형 픽셀, NCER 셀·OAM·VRAM 전송, NANR 애니메이션·프레임 tick, NSCR/NBS 일부 배치 해석. 새 추출 자산은 모두 저장소 밖.
+- **216종 × 40 = 8,640개 애니메이션 비교 완료.** 7,849개는 투명 여백 제거·BGR555 정밀도 정규화 후 모든 프레임 픽셀/순서 일치. 791개는 차이 존재. 프레임 기준점·게임 내 동작 의미 일치까지 뜻하지 않음.
+- 기존 GIF 시간은 8,640개 모두 `floor(tick*100/60)*10 ms`와 일치. 60Hz가 원작 엔진의 실제 실행 속도인지는 아직 미검증; GIF 제작 방식과 일치하는 관찰이다.
+- 유니몬 표준 #5 파일 없음. 저장소의 기존 `m357_unimon_main_5_1.gif`는 ROM #5와 픽셀/순서/tick 변환 일치. 현재 게임의 #4 대체는 검증된 원작 프레임과 다름; 별도 적용 대상.
+- 웹 `m326_kokatorimon_main` ↔ ROM `m326_cockatrimon_main` 명칭 차이는 명시적으로 대응, 픽셀 비교 수행. 종 ID 테이블 해독을 뜻하지 않음.
+- 아구몬 직접 확인: 40시퀀스·65셀. `.nanr` ROM 11,689,984, `.ncbr` 11,691,520, `.ncer` 11,703,296, `.nclr` 11,706,368. 순서/시간/위치/팔레트 참조는 구조로 검증. #26/27/36/39 색 변환 프레임은 기존 GIF와 차이가 있어 미확정 모션 이름으로 유지.
+- 특이 헤더: NANR 파일 크기 16/블록 크기 0; NSCR 선언 크기는 실제 FAT 파일보다 4바이트 큼. 프로파일 일치와 실제 범위를 별개 검사한다.
+- 최초 전체 구조검사: NANR 1318, NCBR 840, NCER 1319, NCLR 1527, NCGR 752, NSCR 97, NBS 89 파싱 성공. 예외 13건(0 tick 1건, NBS 변형 11건, NSCR 비표준 크기 1건)은 보고서에 남기고 추후 분석. 이 수치는 이후 단계에서 갱신 예정.
+- 훈련 `training/field_cm01_01` 96×112, 필드 `field/field_bm02_01` 416×272, 승리 배경 `battle_result/result_win_palette` 256×256을 직접 복원하고 시각 확인.
+- 로컬 결과: `/workspace/scratch/digichams-private/graphics/structure-audit.json`, `web-sprite-comparison.json`, 선택한 스프라이트별 PNG/APNG·메타데이터. APNG는 검토용(60Hz 가정), 원작 실행 추적을 대신하지 않음.
+- 합성 테스트 14/14 통과. 현재 게임 파일/세이브/기존 자산 수정 없음. 진화·능력치 규칙을 이번 그래픽 분석으로 복원한 것은 아님.
+
+실행:
+```sh
+python3 tools/rom_graphics.py --rom /path/to/game.nds --output-dir /outside/checkout/graphics --audit --compare-web
+python3 tools/rom_graphics.py --rom /path/to/game.nds --output-dir /outside/checkout/graphics --sprite digimon/m201_agumon_main --background training/field_cm01_01
+python3 -m unittest discover -s tests -p test_rom_graphics.py -v
+```
+
+---
+
 # ROM 분석 상태 — 2026-10-27 업데이트
 
 ## 입력과 검증 사실

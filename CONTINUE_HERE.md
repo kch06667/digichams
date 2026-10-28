@@ -1,3 +1,13 @@
+# 2026-10-28 현재 분석 작업
+
+- `analysis/rom-graphics-20261028`: ROM 그래픽 복원 도구 + 합성 테스트 추가. 게임 소스는 현재 변경 없음.
+- 먼저 ROM_ANALYSIS_PROGRESS.md 최신 항목 확인. 216종/8,640애니메이션 비교 완료(7,849 픽셀 일치, 791 차이). 기존 전체 스프라이트 감사 대신 새 비교 보고서를 재사용.
+- 다음: 미지원 NBS/NSCR 변형, 팔레트/투명도 차이 조사. 유니몬 #5_1은 ROM #5와 일치하므로 기존 #4 대체 수정 후보.
+- 산출물은 `/workspace/scratch/digichams-private/graphics`에만 있음. 도구·테스트·요약만 커밋. 다른 환경에서는 제공 ROM과 명령으로 재현.
+- 빠른 테스트 `python3 -m unittest discover -s tests -p test_rom_graphics.py -v` (14개, Pillow 필요). 마지막 커밋은 `git log -1` 확인.
+
+---
+
 # 현재 재개 지점 — v0.23.0 기반 / 다른 환경에서 이어가기
 
 ## 최신 통합 체크포인트
