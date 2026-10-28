@@ -7,10 +7,10 @@
   const status=document.getElementById('status');
   const say=message=>{status.textContent=message;};
   const L=window.DigiPhaserLabLogic, B=window.DigiDomainBridge,
-        RT=window.DigiRealTimeCore, Art=window.DigiPrivateArtLoader;
+        RT=window.DCOriginalArenaCore, Art=window.DigiPrivateArtLoader;
   const buttons=['battle','train','reset','sound','cups','speed'];
   if(!window.Phaser||!L||!B||!RT||!Art){
-    say('엔진 로드 실패 · Phaser와 전투 모듈 연결을 확인해.');
+    say('원본 전투 계산 모듈을 불러오지 못했어. 새로고침하거나 네트워크를 확인해.');
     return;
   }
   let manifest=null, privatePack=null, soundEnabled=false,simSpeed=2,
@@ -100,7 +100,7 @@
       this.refreshActors();
       this.updateHud();
       say('준비 완료 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
-        ' 실시간 AI 연습전 · '+(this.loadedActions.size?
+        ' 기존 게임 전투 판정 · '+(this.loadedActions.size?
           (manifest.species+' 전용 모션 '+this.loadedActions.size+'종 · 다른 종은 임시 그래픽'):
           '저작권 없는 임시 도형 그래픽')+
         ' · 본게임 전투가 아님');
@@ -114,12 +114,26 @@
         },
         speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
         matchSnapshot:()=>RT.snapshot(this.sim),
+        // Deterministic browser QA: exercise all remaining ORIGINAL engine
+        // ticks immediately, then render the authentic match conclusion.
+        // This isolated exhibition never writes to a player save.
+        qaFinishCombat:()=>{
+          if(this.mode!=='battle')return this.sim.finished;
+          for(let i=0;i<4200&&!this.sim.finished;i++){
+            RT.step(this.sim,1/30);
+            const end=this.sim.events.find(e=>e.type==='finish');
+            if(end)this.consumeEvent(end);
+          }
+          this.refreshActors(this.time.now);
+          this.updateHud();
+          return this.sim.finished;
+        },
         encounterSnapshot:()=>({
           ally:RT.snapshot(this.sim.fighters.find(f=>f.side===0)),
           enemy:RT.snapshot(this.sim.fighters.find(f=>f.side===1)),
           fighters:RT.snapshot(this.sim.fighters),elapsed:this.sim.elapsed,
           winner:this.sim.winner,finished:this.sim.finished,
-          source:'realtime-ai-exhibition'
+          source:'original-html-arena-calculation-preview'
         }),
         cupPreview:()=>B.cupPreview(savePreview),
         importedSavePreview:()=>JSON.parse(JSON.stringify(savePreview)),
@@ -163,7 +177,7 @@
       const overlay=this.add.graphics().setDepth(18);
       overlay.fillStyle(0x102339,.92);overlay.fillRoundedRect(12,10,776,90,9);
       this.title=this.add.text(23,16,
-        '실시간 자동 전투 · 독립 AI (시연용)',{
+        '기존 게임의 실제 자동 전투 판정 · Phaser 화면',{
         color:'#f6eed0',fontSize:'18px',fontFamily:'sans-serif'
       }).setDepth(19);
       this.hud=this.add.text(23,44,'',{color:'#defff3',
@@ -171,7 +185,7 @@
       this.metrics=this.add.text(23,70,'',{color:'#c4dceb',
         fontFamily:'monospace',fontSize:'13px'}).setDepth(19);
       this.foot=this.add.text(400,429,
-        '도트 그래픽은 임시 · 원본 전투 로직 완전 이식 전 · 승패/HP는 저장되지 않음',
+        '기존 게임 전투 계산 재사용 · 그래픽은 별도 · 시연 결과는 저장되지 않음',
         {color:'#e0e6ed',fontSize:'13px'}).setOrigin(.5).setDepth(19);
     }
     addActor(f){
@@ -194,11 +208,17 @@
     }
     pose(f,v){
       const type=f.hp<=0?'ko':f.act;
-      if(type===v.pose)return;
-      v.pose=type;
-      const id=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
-        type==='attack'?7:type==='cast'?7:type==='evade'?3:
+      // Original HTML combat already chooses exact animation slot for
+      // each action, including shout -> attack4 within one special move.
+      // Never collapse those phases into one generic 'cast' pose.
+      const fallback=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
+        type==='attack'?7:type==='special'?10:type==='evade'?3:
         type==='guard'?5:type==='run'?3:type==='walk'?2:0;
+      const id=type==='victory'?30:type==='ko'?37:
+        Number.isInteger(f.pose)&&f.pose>=0&&f.pose<=39?f.pose:fallback;
+      const motionKey=type+':'+id;
+      if(motionKey===v.pose)return;
+      v.pose=motionKey;
       if(v.useArt&&this.loadedActions.has(id)){
         const cfg=manifest.actions[String(id)];
         v.sprite.setTexture(key(id),0).setScale(v.scale);
@@ -327,8 +347,8 @@
     }
     beginBattle(){
       this.mode='battle';
-      say('시연 중 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
-        ' 실시간 자동 전투 · 각 디지몬이 독립적으로 추적·회피·기술 사용');
+      say('원본 판정 시연 중 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
+        ' 자동 전투 · 원본 AI·피해·필살기 타이밍 적용 · 세이브 변경 없음');
     }
     battle(){
       this.scene.restart({mode:'battle',tactic:document.getElementById('tactic').value,

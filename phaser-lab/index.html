@@ -37,13 +37,14 @@ a{color:#a8d8ff}
 <script defer src="./logic.js"></script>
 <script defer src="./arena-techniques.js"></script>
 <script defer src="./private-art-loader.js"></script>
+<script defer src="../src/arena-original-core.js"></script>
 <script defer src="./realtime-core.js"></script>
 <script defer src="./game.js"></script>
 </head>
 <body>
 <main>
-<h1>실시간 자율 AI 전투 — Phaser 시제품</h1>
-<p>기존 HTML 원본의 추적·측면 이동·회피·공격·필살기 구조를 참고한 <strong>동시 진행형 자동 전투</strong>야. 아래 캐릭터는 공개 테스트용 임시 도형으로, 원본 디지몬과 완성 전투를 대체하지 않아. 실제 세이브는 변경되지 않아.</p>
+<h1>기존 게임의 실시간 자동 전투 — Phaser 렌더러</h1>
+<p>이전의 임시 AI가 아니라 <strong>기존 본게임의 전투 판단·타격·필살기·승패 계산 함수</strong>를 그대로 가져와 실행해. 그림은 별도 Phaser 화면이며, 출전·보상·세이브 저장은 아직 연결하지 않은 읽기 전용 연습전이야.</p>
 <div id="game" aria-label="전투 시험 화면"></div>
 <nav aria-label="실험 조작">
 <label class="tactic-label" for="tactic">전술
@@ -84,7 +85,7 @@ a{color:#a8d8ff}
 <div id="pwaStatus" role="status" aria-live="polite"></div>
 <button type="button" id="updateBtn" hidden>새 버전 적용</button>
 <div id="status" role="status" aria-live="polite">엔진 초기화 중…</div>
-<small>이 화면은 기존 웹게임의 정식 전투가 아닌 별도 개발용 실험실이야. 원본 전투 규칙 전체와 디지몬 모션은 이전 단계에서 아직 이식되지 않았어. 자체 제공한 GIF는 로컬 변환 도구로만 테스트하며 공개 배포에는 넣지 않아.</small>
+<small>기존 HTML 게임의 실제 전투 판정 함수를 가져왔어. 현재 Phaser는 전투 결과를 원본 세이브에 저장하지 않는 별도 시연 화면이야. 디지몬별 그래픽은 로컬 파일로만 불러오며 공개 배포본에는 포함하지 않아.</small>
 </main>
 </body>
 </html>

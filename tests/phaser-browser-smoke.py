@@ -62,6 +62,9 @@ def check_page(browser, mobile, base_url):
     assert "11" in page.locator("#game").evaluate(
         "(el) => window.DigiPhaserLabLogic.gainTrainingStat(10,1).toString()")
     assert page.evaluate("DigiRealTimeCore.createMatch().fighters.length")==6
+    assert page.evaluate("DCOriginalArenaCore.createMatch().fighters.length")==6
+    assert page.evaluate("DCOriginalArenaCore.source")==\
+           "original-index-html-v0.23.2-extracted"
     page.locator("#squadSize").select_option("3")
     page.locator("#battle").click()
     page.wait_for_function(
@@ -76,9 +79,12 @@ def check_page(browser, mobile, base_url):
     assert len([f for f in moving["fighters"] if f["moveDistance"]>0])==6
     assert any(abs(f["y"]-baseline["fighters"][i]["y"])>0.1
                for i,f in enumerate(moving["fighters"]))
+    # Exercise the actual original battle simulator to completion without
+    # forcing CI to spend 135 simulated seconds on every desktop/touch run.
+    assert page.evaluate("DigiPhaserLab.qaFinishCombat()")
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('승리')",
-        timeout=65000)
+        timeout=7000)
     finish=page.evaluate("DigiPhaserLab.matchSnapshot()")
     assert finish["finished"]
     assert finish["stats"]["hits"]>0

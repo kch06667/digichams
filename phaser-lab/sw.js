@@ -5,7 +5,7 @@ const PREFIX='digichams-safe-pwa-';
 const FILES=[
   './','./index.html','./game.js','./logic.js','./domain-bridge.js','./arena-techniques.js','./private-art-loader.js','./realtime-core.js',
   './farm.html','./farm.js','./farm-model.js',
-  './engine-core/battle-core.js','./engine-core/arena-navigation-core.js','./engine-core/care-core.js',
+  './engine-core/battle-core.js','./engine-core/arena-navigation-core.js','./engine-core/arena-original-core.js','./engine-core/care-core.js',
   './engine-core/championship-core.js','./vendor/phaser.min.js',
   './manifest.webmanifest','./icon.svg','./pwa.js'
 ];

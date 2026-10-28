@@ -246,3 +246,36 @@ and existing browser smoke tests check the shared movement kernel.
 A production parity effort must next extract attack/skill/dodge
 judgment and state transitions from `DCBattleArena` and confirm
 matching outcomes across both renderers.
+
+## Production-battle-function reuse — original engine now drives the scene
+
+The Phaser scene's engine selection was switched from the separately
+invented `DigiRealTimeCore` prototype to **`DCOriginalArenaCore`**.
+The shared `src/arena-original-core.js` mechanically contains the *exact
+ten original function bodies* (from `index.html` v0.23.2):
+`alive`, `chooseTarget`, `emit`, `hit`, `projectile`,
+`beginMelee`, `beginSkill`, `advanceSpecial`, `think`, and
+`update`. The source-function byte comparisons are checked in CI
+against the still-playable `index.html`, so future changes that
+silently fork their AI/impact/damage logic fail tests.
+
+The extraction executes the **same old combat decisions and formulas**
+under a controlled DOM-free dependency environment. Specifically,
+`syncBattleHP`, `settleMatch`, and UI helpers are no-ops so this
+Phaser-only **practice battle** never mutates or uploads real saves.
+Original variables, existing TP/tactic rules and species technique
+data are supplied to the extracted functions. A deterministic local
+seed is injected only into the original Math.random calls for repeatable
+regression tests; battle calculations themselves remain unchanged.
+Phaser projects original 600×405 simulation coordinates to its
+800×450 visual world. Impact/skill events are derived *from the
+original engine's state changes*, not independently re-determined.
+The original `index.html` gameplay remains the save authority.
+
+Limits: this is shared **battle calculation**, not yet the complete
+owned-battle integration. The original 6MB HTML still owns persistent
+HP, win/loss counters, experience, evolution history and championship
+settlement. Practice does not write any of those. Chromium tests
+check the new battle in PC/touch, and pure Node tests compare the ten
+extracted functions byte-for-byte to original source. Sprite mapping
+and ROM verification remain separate.

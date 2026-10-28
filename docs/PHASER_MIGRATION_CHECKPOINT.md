@@ -215,3 +215,35 @@ is still embedded in the old large HTML. This migration preserves
 the original HTML and current saves intact, and is an incremental
 path to full renderer-independent combat parity. Separate NDS ROM
 analysis remains ongoing with Codex.
+
+## 2026-10-28 — original-combat calculation functions reused
+
+Project request: "재사용" — prioritize true reuse over inventing a new AI.
+
+Branch `feature/original-arena-engine-reuse-20261028`.
+A new `src/arena-original-core.js` contains the **unchanged verbatim
+function bodies** from the playable index HTML combat simulator:
+`alive`, `chooseTarget`, `emit`, `hit`, `projectile`,
+`beginMelee`, `beginSkill`, `advanceSpecial`, `think`, and
+`update`. The script supplies equivalent original constants,
+fighter runtime fields, real project battle-core functions, existing
+technique registry and DOM-free rendering/persistence no-ops, with
+a deterministic isolated random generator for repeatable verification.
+
+`phaser-lab/game.js` now runs this actual extracted calculation module,
+not `phaser-lab/realtime-core.js` simulation. The old prototype file
+stays for separate regression comparison; it is not the active game
+simulation. Original combat positions are projected to Phaser dimensions
+and changes in actual HP/skill/simulation status become render events.
+
+Regression checks compare **all ten extracted function bodies with their
+exact original HTML text** on CI, test deterministic state evolution and
+ensure imported Digimon records are never mutated. The same PC/mobile
+Playwright smoke tests exercise the Phaser scene.
+
+**Not yet reused:** persistent battle settlement and actual controlled
+match save mutation, integrated species GIFs (owner-local only),
+evolution/championship progression event dispatch, ROM-exact values and
+a standalone production entry point. Do NOT claim complete NDS port
+or persistent gameplay before save roundtrip equivalence is proven.
+Existing `index.html` and `standalone.html` remain untouched.

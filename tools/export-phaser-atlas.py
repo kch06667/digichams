@@ -12,7 +12,7 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "phaser-lab" / "local-assets"
-DEFAULT_ACTIONS = (0, 2, 3, 5, 7, 14, 30, 32, 37)
+DEFAULT_ACTIONS = (0, 2, 3, 5, 7, 10, 14, 28, 30, 31, 32, 33, 37)
 
 
 def export(species, asset_root, output, actions=DEFAULT_ACTIONS):
