@@ -97,10 +97,13 @@
           if(cfg.frames>1){
             const animation='realtime-'+encodeURIComponent(source.source)+'-'+id;
             if(this.anims.exists(animation))this.anims.remove(animation);
+            // Frame durations in the manifest already include the whole GIF
+            // delay. Phaser ADDS frame.duration to 1000/frameRate.
+            const timing=L.gifFrameTiming(cfg.durationsMs);
             const frames=this.anims.generateFrameNumbers(texture,{
               start:0,end:cfg.frames-1
-            }).map((frame,i)=>({...frame,duration:clamp(cfg.durationsMs[i],30,30000)}));
-            this.anims.create({key:animation,frames,frameRate:12,
+            }).map((frame,i)=>({...frame,duration:timing.extraMs[i]}));
+            this.anims.create({key:animation,frames,frameRate:timing.frameRate,
               repeat:[0,2,3,14,32].includes(idx)?-1:0});
           }
         }
