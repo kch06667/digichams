@@ -24,9 +24,7 @@ function build({rootDir=root}={}){
      !source.includes('id="lbMode"')||
      !source.includes('id="lbTeamSize"')||
      !source.includes('function settleMatch(')||
-     !source.includes('root.DCEvolution=api;')||
-     !source.includes('root.DCChampionship=api;')||
-     !source.includes('function bracketFor(s)')||
+     !source.includes('<script id="championship-core-v023">')||
      !source.includes("window.DCBattleArena={launchTournament(")||
      source.split('</body>').length!==2||
      source.includes('src/phaser-arena-entry-choice.js'))
