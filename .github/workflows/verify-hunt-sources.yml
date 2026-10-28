@@ -1,0 +1,55 @@
+name: Hunting source synchronization and capture-save regression
+on:
+  pull_request:
+    paths:
+      - "src/hunt-core.js"
+      - "src/hunt-ui.js"
+      - "tools/sync-embedded-hunt.py"
+      - "index.html"
+      - "standalone.html"
+      - "tests/hunt-resume.cjs"
+      - "tests/hunt-resume-browser.py"
+      - "tests/hunt-browser.py"
+      - ".github/workflows/verify-hunt-sources.yml"
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Reject out-of-sync built-in hunting scripts
+        run: python3 tools/sync-embedded-hunt.py --check
+      - name: Pure hunting gesture, capture and save-state tests
+        run: |
+          node tests/hunt-core.cjs
+          node --test tests/hunt-resume.cjs
+      - name: Reject invalid JS in either source module
+        run: |
+          node --check src/hunt-core.js
+          node --check src/hunt-ui.js
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Playwright Chromium for desktop and touch
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Original mouse and touch lasso/pull/capture with actual HTML
+        run: python3 tests/hunt-browser.py
+      - name: Actual reload across hunting circle, rope, stun, catch, saved roster and abandon
+        run: python3 tests/hunt-resume-browser.py
