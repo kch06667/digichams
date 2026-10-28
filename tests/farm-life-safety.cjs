@@ -74,8 +74,8 @@ test('saved finite pending fraction preserved; huge/corrupt backlog is not repla
   farm.ensure(s);
   assert.equal(s.world.accumulator,.03);
   s.world.accumulator=1e14;
-  farm.ensure(s);
-  assert.equal(s.world.accumulator,0);
+  farm.advance(s,.01);
+  assert.equal(s.world.accumulator,.01,'abnormal stored backlog reset on next frame');
   assert.equal(s.day,1);
   for(const dt of [Infinity,-Infinity,NaN,-5,0]){
     const previous=s.world.seconds;
