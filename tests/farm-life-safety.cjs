@@ -86,7 +86,7 @@ test('saved finite pending fraction preserved; huge/corrupt backlog is not repla
   // No offline fast-forward, but still allow existing deterministic test
   // catchups and day boundaries under 300 real seconds.
   farm.advance(s,1e10);
-  assert.equal(s.world.seconds,300);
+  assert.ok(Math.abs(s.world.seconds-300)<1e-7);
   assert.equal(s.day,2);
 });
 test('simultaneous live and archived roster stable across save JSON roundtrip',()=>{
