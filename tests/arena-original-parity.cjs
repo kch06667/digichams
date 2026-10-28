@@ -21,7 +21,9 @@ function newFunction(name) {
   const at=extracted.indexOf(anchor);
   assert.ok(at>0,'Extracted function exists: '+name);
   const start=at+anchor.length;
-  const end=extracted.indexOf('\n\n',start);
+  const end=name==='update'?
+    extracted.indexOf('\n   // Render-only adapter.',start):
+    extracted.indexOf('\n\n',start);
   assert.ok(end>start);
   return extracted.slice(start,end).trimEnd();
 }
