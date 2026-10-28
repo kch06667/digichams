@@ -61,7 +61,6 @@ def open_page(browser,origin,mobile=False,missing=False):
     # Real Phaser animations must retain the GIF delays exported privately:
     # Phaser's per-frame duration is an ADDITIONAL delay.
     timings=page.evaluate("""async () => {
-      const game=Phaser.GAMES[0];
       const data=[];
       for(const folder of ['duel-agumon','duel-gabumon']){
         const manifest=await (await fetch(
@@ -69,10 +68,10 @@ def open_page(browser,origin,mobile=False,missing=False):
         for(const [id,cfg] of Object.entries(manifest.actions)){
           if(cfg.frames<2)continue;
           const key='realtime-'+encodeURIComponent('duel:'+folder)+'-'+id;
-          const anim=game.anims.get(key);
-          if(!anim)throw Error('Missing animation '+key);
+          const timing=DigiPhaserLab.animationFrameTiming('duel:'+folder,id);
+          if(!timing)throw Error('Missing animation '+key);
           data.push({key,expected:cfg.durationsMs,
-            actual:anim.frames.map(frame=>anim.msPerFrame+frame.duration)});
+            actual:timing.extraMs.map(ms=>timing.baseMs+ms)});
         }
       }
       return data;
