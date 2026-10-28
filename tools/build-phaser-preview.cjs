@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..'),source=path.join(root,'phaser-lab');
 const output=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'dist','phaser-preview');
 const allow=['index.html','game.js','logic.js','domain-bridge.js','arena-techniques.js','private-art-loader.js','realtime-core.js',
   'farm.html','farm.js','farm-model.js','manifest.webmanifest','icon.svg','pwa.js','sw.js'];
-const safeCore=['battle-core.js','care-core.js','championship-core.js'];
+const safeCore=['battle-core.js','arena-navigation-core.js','care-core.js','championship-core.js'];
 const cdn='https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js';
 const phaserDir=path.join(root,'node_modules','phaser');
 const phaserDist=path.join(phaserDir,'dist','phaser.min.js');
