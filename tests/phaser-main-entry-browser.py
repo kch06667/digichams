@@ -26,7 +26,9 @@ def open_page(browser,base,mobile):
             path=str(VENDOR),content_type="application/javascript"))
     page=context.new_page()
     page.goto(base+"/index.phaser.html?phaserBattle=1",wait_until="domcontentloaded")
-    page.locator("#dc-phaser-engine").wait_for(timeout=30000)
+    # The selector belongs to the ORIGINAL modal, hidden until launched.
+    page.locator("#dc-phaser-engine").wait_for(
+        state="attached",timeout=30000)
     page.wait_for_function("""() => {
       try{return Boolean(eval('state')?.team?.length)}
       catch(_){return false}
