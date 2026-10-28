@@ -177,7 +177,10 @@ test('optional farm roster entry is isolated to the generated dev HTML',()=>{
   assert.match(game,/prepareFarmHandoff\(\)/);
   assert.match(game,/B\.inspectExport\(event\.data\.payload\)/);
   assert.match(game,/event\.origin!==location\.origin/);
-  assert.doesNotMatch(game,/localStorage|sessionStorage|\.nds/,\n    'Phaser scene must not write the real game save');\n  assert.match(launch,/DCDevPhaserCommit\.persist/,\n    'only the original farm dev page may explicitly save a completed result');
+  assert.doesNotMatch(game,/localStorage|sessionStorage|\.nds/,
+    'Phaser scene must not write the real game save');
+  assert.match(launch,/DCDevPhaserCommit\.persist/,
+    'only the original farm dev page may explicitly save a completed result');
 });
 test('browser-side bridge script parses, displays chosen tactic and core linkage',()=>{
   for(const file of ['domain-bridge.js','game.js']){
