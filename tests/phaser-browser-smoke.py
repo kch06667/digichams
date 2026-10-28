@@ -77,6 +77,15 @@ def check_page(browser, mobile, base_url):
     assert page.evaluate("DigiPhaserLab.importedSavePreview().team[0].name")=="시험용 디지몬"
     page.locator("#cups").click()
     assert "대회 규칙" in page.locator("#status").inner_text()
+    assert page.locator("#rosterChoice option").count()==2
+    page.locator("#rosterChoice").select_option("0")
+    page.locator("#battle").click()
+    page.wait_for_function(
+      "DigiPhaserLab.encounterSnapshot().ally.name === '시험용 디지몬'",
+      timeout=6000)
+    assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.hp")==80
+    assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.atk")==25
+    assert page.evaluate("DigiPhaserLab.selectedRoster().name")=="시험용 디지몬"
     assert not errors, f"JS errors ({'mobile' if mobile else 'desktop'}): {errors}"
     print("OK", "touch" if mobile else "desktop",
           "training + auto battle + victory")
@@ -131,6 +140,30 @@ def check_farm(browser, mobile, base_url):
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('행 개방')",
         timeout=5000)
+    import json
+    sample={"format":"digicham-save","exportVersion":1,
+      "state":{"day":18,"wins":7,"team":[
+        {"name":"아구몬 테스트","hp":187,"maxHp":255,"atk":40,"def":25,
+         "spd":31,"hunger":64,"location":"farm"},
+        {"name":"가부몬 테스트","hp":88,"maxHp":125,"atk":20,"def":19,
+         "spd":29,"hunger":10,"location":"farm"}]}}
+    page.locator("#farmSaveFile").set_input_files({
+      "name":"farm-save.json","mimeType":"application/json",
+      "buffer":json.dumps(sample,ensure_ascii=False).encode("utf-8")})
+    page.wait_for_function(
+        "Boolean(window.DigiFarmLab.snapshot().viewOnly)",timeout=5000)
+    farm=page.evaluate("DigiFarmLab.snapshot()")
+    assert farm["cages"]["0:0"]["name"]=="아구몬 테스트"
+    assert farm["cages"]["0:0"]["hp"]==187
+    assert farm["cages"]["0:1"]["name"]=="가부몬 테스트"
+    assert page.locator("#buy").is_disabled()
+    assert page.locator("#feed").is_disabled()
+    page.evaluate("DigiFarmLab.select(0,1)")
+    assert page.evaluate("DigiFarmLab.snapshot().selected")=="0:1"
+    page.locator("#reset").click()
+    page.wait_for_function(
+      "window.DigiFarmLab.snapshot().viewOnly !== true",timeout=5000)
+    assert page.locator("#buy").is_enabled()
     assert not errors,f"Farm runtime JS errors: {errors}"
     print("OK farm","touch" if mobile else "desktop","cage/feed/expand")
     context.close()
