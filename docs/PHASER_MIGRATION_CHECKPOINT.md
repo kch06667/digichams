@@ -100,3 +100,20 @@ hex cage UI, game-domain adapter, safe web preview.
   should review whether these belong in any public repository and change
   visibility / history exposure as appropriate. Our Pages preview explicitly
   does not deploy these assets; that does not hide files already public in Git.
+
+## Asset-free PWA checkpoint
+
+- `phaser-lab/manifest.webmanifest`, `icon.svg`, `pwa.js` and `sw.js`
+  provide install/update behavior for the **safe Phaser demo only**.
+- Public Pages build uses an explicit allowlist, includes pinned Phaser 3.90
+  distribution with MIT license, and omits original art. Versioned service
+  worker caches only safe known paths and offers a reload button after an
+  update; no hidden automatic in-progress game reload.
+- Service worker never intercepts or caches uploaded JSON files or paths
+  outside the allowlist; no live save writes.
+- Tests must prove offline load of the bundle, training and farm on desktop;
+  Android device install still requires owner QA.
+- Repository visibility is a separate consideration: public source metadata
+  has already shown extracted-looking files in the main tree. Pages allowlist
+  does not protect public Git contents. Avoid assuming this fixes copyright
+  or private-development concerns.
