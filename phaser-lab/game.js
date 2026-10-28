@@ -154,6 +154,11 @@
         speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
         matchSnapshot:()=>RT.snapshot(this.sim),
         motionEvidence:()=>({...this.motionEvidence}),
+        // Read-only test probe; contains frame timing numbers, never art bytes.
+        animationFrameTiming:(source,id)=>{
+          const a=this.anims.get('realtime-'+encodeURIComponent(source)+'-'+id);
+          return a?{baseMs:a.msPerFrame,extraMs:a.frames.map(f=>f.duration)}:null;
+        },
         // Deterministic browser QA: exercise all remaining ORIGINAL engine
         // ticks immediately, then render the authentic match conclusion.
         // This isolated exhibition never writes to a player save.
