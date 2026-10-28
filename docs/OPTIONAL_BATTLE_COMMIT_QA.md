@@ -47,3 +47,7 @@ This test clicks the real game owned-arena launch/start controls on a fresh Chro
 This is a fast-forward of original game logic without frame drawing, not proof of 135-second physical device performance or animation fidelity. The `--qa` flag is **never** used for ordinary `node tools/build-owned-battle-optin.cjs` builds and the real `index.html` remains unchanged. Tests must fail if the QA helper leaks into the default build.
 
 After this gate, additional end-to-end cases remain: deterministic win *and* loss, tournament reward, evolution, storage failure during a completed arena, real Android long-session and memory/performance QA. Keep opt-in off by default.
+
+### KO state sync validation
+
+The original arena calls `syncBattleHP()` during fighting and can persist HP=0 for a knocked-out participant **before** its normal `settleMatch`. The detached validator now accepts zero pre-settlement HP **only when the same identity/slot/name/vitals/active pendingBattle match and the final fighter also has HP=0**. It continues refusing a zero-HP saved fighter whose final result claims positive HP. This specifically fixes a natural-arena loss caught by the first E2E run, without weakening duplicate settlement rejection or permitting arbitrary resurrection.
