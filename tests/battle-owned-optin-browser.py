@@ -29,16 +29,16 @@ def check(browser, host, mobile=False):
     assert page.evaluate("typeof DCBattleCommit?.persistCopy")=="function"
     assert not page.locator("#dc-owned-optin-enable").is_checked()
     page.locator("#dc-owned-optin summary").click()
-    synced=page.evaluate("""() => {
-      // Test-only storage writes in a brand-new, isolated browser context.
+    status=page.evaluate("""() => {
+      // The farm updates in animation frames. Make the QA-only prebattle
+      // checkpoint and enable-click a single synchronous browser task so
+      // no game tick can invalidate the exact-JSON snapshot in between.
       const current=eval('state');
-      if(!current || !Array.isArray(current.team))return false;
+      if(!current || !Array.isArray(current.team))return 'missing game state';
       localStorage.setItem('dc_recreation_save',JSON.stringify(current));
-      return true;
+      document.querySelector('#dc-owned-optin-enable').click();
+      return document.querySelector('#dc-owned-optin-status').textContent;
     }""")
-    assert synced
-    page.locator("#dc-owned-optin-enable").click()
-    status=page.locator("#dc-owned-optin-status").inner_text()
     assert page.locator("#dc-owned-optin-enable").is_checked(), status
     assert "다음 정상 종료" in status, status
     assert page.evaluate("""() => {
