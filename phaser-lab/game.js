@@ -13,10 +13,22 @@
     say('원본 전투 계산 모듈을 불러오지 못했어. 새로고침하거나 네트워크를 확인해.');
     return;
   }
-  let manifest=null, privatePack=null, soundEnabled=false,simSpeed=2,
-      savePreview=B.previewSample(), rosterChosen=null, trainingBonus=10;
+  let manifest=null, soundEnabled=false,simSpeed=2,
+      savePreview=B.previewSample(), rosterChosen=null, trainingBonus=10,
+      latestSpecies=null;
+  // Browser-memory-only packs. One pack per distinct species, never published.
+  const privatePacks=new Map(),MAX_PRIVATE_PACKS=6,MAX_PRIVATE_BYTES=48*1024*1024;
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-  const key=id=>'private-motion-'+id;
+  const key=(source,id)=>'private-motion-'+encodeURIComponent(source)+'-'+id;
+  const artSources=()=>{
+    const sources=manifest?[{species:manifest.species,source:'local',manifest,
+      lookup:filename=>'./local-assets/'+filename}]:[];
+    for(const pack of privatePacks.values())sources.push({
+      species:pack.species,source:'user:'+pack.species,
+      manifest:pack.manifest,lookup:pack.lookup
+    });
+    return sources;
+  };
   const format=n=>Math.max(0,Math.round(n));
   const available=()=>B.eligibleRoster(savePreview);
 
@@ -56,12 +68,11 @@
       this.requestedSize=config.teamSize||3;
     }
     preload(){
-      if(!manifest)return;
-      for(const [id,cfg] of Object.entries(manifest.actions)){
-        // A newly selected *private local* pack must replace old frames.
-        if(this.textures.exists(key(id)))this.textures.remove(key(id));
-        this.load.spritesheet(key(id),
-          privatePack?.lookup(cfg.file)||'./local-assets/'+cfg.file,{
+      for(const source of artSources())for(const [id,cfg] of Object.entries(source.manifest.actions)){
+        // Reimport of one species replaces only that species' frames.
+        const texture=key(source.source,id);
+        if(this.textures.exists(texture))this.textures.remove(texture);
+        this.load.spritesheet(texture,source.lookup(cfg.file),{
           frameWidth:cfg.frameWidth,frameHeight:cfg.frameHeight,
           endFrame:cfg.frames-1
         });
@@ -70,23 +81,26 @@
     create(){
       this.cameras.main.setBackgroundColor('#172d43');
       mockTextures(this);
-      this.loadedActions=new Set();
-      if(manifest){
-        for(const [id,cfg] of Object.entries(manifest.actions)){
-          const idx=Number(id);
-          if(!this.textures.exists(key(id)))continue;
-          this.loadedActions.add(idx);
+      this.loadedActions=new Map();
+      for(const source of artSources()){
+        const actions=new Set();
+        for(const [id,cfg] of Object.entries(source.manifest.actions)){
+          const idx=Number(id),texture=key(source.source,id);
+          if(!this.textures.exists(texture))continue;
+          actions.add(idx);
           if(cfg.frames>1){
-            if(this.anims.exists('realtime-'+id))this.anims.remove('realtime-'+id);
-            const frames=this.anims.generateFrameNumbers(key(id),{
+            const animation='realtime-'+encodeURIComponent(source.source)+'-'+id;
+            if(this.anims.exists(animation))this.anims.remove(animation);
+            const frames=this.anims.generateFrameNumbers(texture,{
               start:0,end:cfg.frames-1
             }).map((frame,i)=>({...frame,duration:clamp(cfg.durationsMs[i],30,30000)}));
-            this.anims.create({
-              key:'realtime-'+id,frames,frameRate:12,
-              repeat:[0,2,3,14,32].includes(idx)?-1:0
-            });
+            this.anims.create({key:animation,frames,frameRate:12,
+              repeat:[0,2,3,14,32].includes(idx)?-1:0});
           }
         }
+        if(actions.size)this.loadedActions.set(source.species,{
+          actions,manifest:source.manifest,source:source.source
+        });
       }
       this.drawStage();
       this.createMatch();
@@ -101,7 +115,7 @@
       this.updateHud();
       say('준비 완료 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
         ' 기존 게임 전투 판정 · '+(this.loadedActions.size?
-          (manifest.species+' 전용 모션 '+this.loadedActions.size+'종 · 다른 종은 임시 그래픽'):
+          ('개인 모션 '+this.loadedActions.size+'종 로드 · 미등록 종은 임시 그래픽'):
           '저작권 없는 임시 도형 그래픽')+
         ' · 본게임 전투가 아님');
       window.DigiPhaserLab={
@@ -139,8 +153,12 @@
         importedSavePreview:()=>JSON.parse(JSON.stringify(savePreview)),
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
-        privatePackStatus:()=>privatePack?{species:privatePack.species,
-          actions:Object.keys(privatePack.manifest.actions).length}:null,
+        privatePackStatus:()=>{
+          const latest=privatePacks.get(latestSpecies);
+          return latest?{species:latest.species,
+            actions:Object.keys(latest.manifest.actions).length,
+            speciesList:[...privatePacks.keys()]}:null;
+        },
         renderedArt:()=>this.sim.fighters.map(f=>{
           const v=this.visuals.get(f.id);
           return {id:f.id,name:f.name,privateArt:!!v?.useArt,
@@ -190,11 +208,12 @@
     }
     addActor(f){
       // A one-species atlas may NOT replace all other fighters with that art.
-      const useArt=this.loadedActions.size>0&&manifest?.species===f.name;
-      const atlas=useArt?(this.loadedActions.has(0)?0:[...this.loadedActions][0]):null;
-      const texture=useArt?key(atlas):'practice-'+f.side+'-'+f.slot+'-0';
+      const art=this.loadedActions.get(f.name);
+      const useArt=!!art;
+      const atlas=useArt?(art.actions.has(0)?0:[...art.actions][0]):null;
+      const texture=useArt?key(art.source,atlas):'practice-'+f.side+'-'+f.slot+'-0';
       const sprite=this.add.sprite(f.x,f.y-31,texture).setDepth(4);
-      const cfg=useArt?manifest.actions[String(atlas)]:null;
+      const cfg=useArt?art.manifest.actions[String(atlas)]:null;
       const scale=useArt?Math.min(64/cfg.frameWidth,69/cfg.frameHeight,2.4):.90;
       sprite.setScale(scale);
       if(useArt&&f.side===1)sprite.setTint(0xe8b8ad);
@@ -204,7 +223,7 @@
         padding:{x:3,y:1}
       }).setOrigin(.5).setDepth(9);
       this.visuals.set(f.id,{sprite,label,pose:null,scale,side:f.side,
-        slot:f.slot,frame:0,useArt});
+        slot:f.slot,frame:0,useArt,art});
     }
     pose(f,v){
       const type=f.hp<=0?'ko':f.act;
@@ -219,14 +238,14 @@
       const motionKey=type+':'+id;
       if(motionKey===v.pose)return;
       v.pose=motionKey;
-      if(v.useArt&&this.loadedActions.has(id)){
-        const cfg=manifest.actions[String(id)];
-        v.sprite.setTexture(key(id),0).setScale(v.scale);
-        if(cfg.frames>1)v.sprite.play('realtime-'+id);
+      if(v.useArt&&v.art.actions.has(id)){
+        const cfg=v.art.manifest.actions[String(id)];
+        v.sprite.setTexture(key(v.art.source,id),0).setScale(v.scale);
+        if(cfg.frames>1)v.sprite.play('realtime-'+encodeURIComponent(v.art.source)+'-'+id);
         else v.sprite.anims.stop();
-      }else if(v.useArt&&this.loadedActions.size){
+      }else if(v.useArt&&v.art.actions.size){
         v.sprite.anims.stop();
-        v.sprite.setTexture(key(this.loadedActions.has(0)?0:[...this.loadedActions][0]),0)
+        v.sprite.setTexture(key(v.art.source,v.art.actions.has(0)?0:[...v.art.actions][0]),0)
           .setScale(v.scale);
       }else{
         v.sprite.anims.stop();
@@ -427,16 +446,31 @@
         const pack=await Art.fromFiles(files,L.validateManifest);
         // Make the entire valid pack ready before discarding previous references.
         // Texture frames are removed/reloaded in Scene.preload on restart.
-        const old=privatePack;
-        privatePack=pack;
-        manifest=pack.manifest;
+        const old=privatePacks.get(pack.species);
+        const bytes=files.reduce((sum,f)=>sum+f.size,0);
+        const total=bytes+[...privatePacks.entries()].reduce(
+          (sum,[species,entry])=>sum+(species===pack.species?0:entry.totalBytes),0);
+        if(total>MAX_PRIVATE_BYTES){
+          pack.dispose();
+          throw Error('선택한 그래픽의 총 크기가 48MB 제한을 넘어. 기존 그래픽은 유지했어.');
+        }
+        pack.totalBytes=bytes;
+        if(old)privatePacks.delete(pack.species);
+        privatePacks.set(pack.species,pack);
+        latestSpecies=pack.species;
+        let evicted=null;
+        if(privatePacks.size>MAX_PRIVATE_PACKS){
+          evicted=privatePacks.values().next().value;
+          privatePacks.delete(evicted.species);
+        }
         const scene=window.DigiPhaserLab;
         if(scene)scene.reset();
-        // Revoking old URLs after replacement avoids retaining private binary art.
+        // Release only replaced/evicted packs; never discard another species.
         if(old)old.dispose();
+        if(evicted)evicted.dispose();
         say('개인 그래픽 적용 · '+pack.species+' · '+
           Object.keys(pack.manifest.actions).length+
-          '종 모션 · 선택한 파일은 외부로 전송되지 않아');
+          '개 모션 · 현재 '+privatePacks.size+'종 보유 (최대 6종) · 서버 전송 없음');
       }catch(err){
         say('로컬 그래픽 가져오기 실패: '+err.message);
       }
