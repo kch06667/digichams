@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const Settlement=require('../src/battle-settlement-core.js');
+const Commit=require('../src/battle-commit-core.js');
 const Cups=require('../src/championship-core.js');
 const Evo=require('../src/evolution-core.js');
 
@@ -76,24 +77,16 @@ function legacyRun(page,source,state,result){
   assert.equal(sandbox.settled,true);
   return {state:game,messages};
 }
-function persistentGameplay(state){
-  const copy=JSON.parse(JSON.stringify(state));
-  // Legacy settleMatch writes player-facing 'say' logs; the isolated settlement
-  // intentionally returns a receipt instead of changing UI logs. This is the
-  // one intentional difference and must be bridged before live integration.
-  delete copy.logs;
-  return copy;
-}
 function compare(page,source,state,result,label){
   const baseline=JSON.stringify(state);
   const old=legacyRun(page,source,state,result);
-  const modern=Settlement.settleCopy(state,{
+  const modern=Commit.stageCopy(state,{
     battleId:result.id,initial:result.initial,final:result.final,lookup:()=>null});
-  assert.deepEqual(persistentGameplay(modern.state),persistentGameplay(old.state),
-    page+' / '+label+': persisted gameplay fields differ from original HTML');
+  assert.deepEqual(modern.state,old.state,
+    page+' / '+label+': full persisted state and logs differ from original HTML');
   assert.equal(JSON.stringify(state),baseline,page+' / '+label+': input was mutated');
-  assert.deepEqual(modern.state.logs,state.logs,
-    page+' / '+label+': settlement copy should leave source UI logs alone');
+  assert.notDeepEqual(modern.state.logs,state.logs,
+    page+' / '+label+': original outcome log should be appended exactly once');
   assert.ok(old.messages.length>=1,'original game emits a result log');
   assert.equal(modern.receipt.won,result.final.winner===0);
   assert.equal(modern.state.pendingBattle,undefined);
