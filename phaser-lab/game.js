@@ -39,7 +39,7 @@
   const available=()=>B.eligibleRoster(savePreview);
   let farmHandoffRequested=false;
   // A single-use same-origin message channel. No URL-based roster or
-  // localStorage transfer; the independent Phaser scene remains read-only.
+  // persistent-storage transfer; the independent Phaser scene remains read-only.
   function prepareFarmHandoff(){
     const token=new URLSearchParams(location.search).get('farmHandoff');
     if(farmHandoffRequested || !/^[a-f0-9]{32}$/.test(token||'') ||
