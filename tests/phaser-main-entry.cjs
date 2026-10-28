@@ -65,8 +65,11 @@ test('original game entry intercept is opt-in and never alters regular index and
   assert.match(chooser,/select\.add\(new Option\('기존 전투 \(기본\)','legacy'\)\)/);
   assert.match(chooser,/select\.value!=='phaser'/);
   assert.match(chooser,/event\.stopImmediatePropagation\(\)/);
-  assert.match(chooser,/team\.value!=='1'/);
-  assert.match(chooser,/DCDevPhaserLaunch\.launch\(\)/);
+  assert.match(chooser,/\[1,2,3\]\.includes\(size\)/);
+  assert.match(chooser,/eligible\.length<size/);
+  assert.match(chooser,/DCDevPhaserLaunch\.launch\(\{teamSize:size,leadIndex,/);
+  assert.match(bridge,/teamSize===1\?DCDevPhaserCommit\.capture/);
+  assert.match(bridge,/dc-phaser-multi-finished-v1/);
   assert.match(bridge,/window\.DCDevPhaserLaunch=Object\.freeze/);
   assert.match(bridge,/arenaChoice/);
   assert.doesNotMatch(chooser,/(?:localStorage|sessionStorage)/);
