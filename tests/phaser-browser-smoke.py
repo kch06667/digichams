@@ -36,7 +36,21 @@ def check_page(browser, mobile, base_url):
     page.locator("#game canvas").wait_for(timeout=10000)
     assert "준비 완료" in page.locator("#status").inner_text()
     if (ROOT / "phaser-lab" / "local-assets" / "manifest.json").is_file():
-        assert "개인 제공 모션" in page.locator("#status").inner_text()
+        assert "전용 모션" in page.locator("#status").inner_text()
+        # Private images are selected FROM THIS browser's local disk.
+        # They must not be added to any published Pages build or sent online.
+        local = ROOT / "phaser-lab" / "local-assets"
+        sprites=[str(p) for p in sorted(local.glob("action_*.png"))]
+        files=[str(local / "manifest.json"), *sprites]
+        page.locator("#artFiles").set_input_files(files)
+        page.wait_for_function(
+          "Boolean(window.DigiPhaserLab?.privatePackStatus())",timeout=12000)
+        info=page.evaluate("DigiPhaserLab.privatePackStatus()")
+        assert info["species"]=="아구몬"
+        assignments=page.evaluate("DigiPhaserLab.renderedArt()")
+        assert any(x["name"]=="아구몬" and x["privateArt"] for x in assignments)
+        assert all((x["name"]=="아구몬") or not x["privateArt"]
+                   for x in assignments), assignments
     assert page.evaluate("DigiPhaserLabLogic.selectAction('victory')") == 30
     assert page.evaluate("DigiPhaserLabLogic.selectAction('training')") == 32
     if mobile:
