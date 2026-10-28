@@ -449,3 +449,31 @@ py -m http.server 8000
   **정식 게임의 기본 index.html이나 대회전은 변경하지 않는다.**
 - 검증: `node --test tests/phaser-multiteam-settlement.cjs`;
   `python3 tests/phaser-owned-multi-browser.py` (PC/모바일 터치, 저장 재접속).
+
+
+## 2026-10-29 — 기존 챔피언십 → Phaser 경기·승인형 저장 (개발용)
+
+`node tools/build-phaser-optin-page.cjs` → `py -m http.server 8000` 후
+`http://127.0.0.1:8000/index.phaser.html?phaserBattle=1`에서 연다.
+
+- **전투** 탭의 **🏆 대회 전투 화면**에서 `기존 전투 (기본)` 또는
+  `Phaser 대회 전투 (시험)` 선택. 원래 대회 참가/다음 경기 버튼을 그대로 누른다.
+- **지금 GitHub main의 HTML은 v0.23 대회 엔진(신인/지역/그랜드 모두 2라운드)**.
+  개인 로컬 분석본에 있는 최신 4/8팀 상세 대진표 엔진은 **GitHub 본게임에 아직 반영되지 않음**.
+  현재 GitHub 원본의 2라운드 일정·상금·상대 생성을 그대로 따르고,
+  선택형 게임이 구형 외부 `src/championship-core.js`와
+  `src/evolution-core.js`를 뒤늦게 재로드해 내장 규칙을 가리는 일은 없앤다.
+- 현재 원본의 대회 상대는 첫 종만 명시한다. 원본 전투의
+  `teamMembers(opponent, side=1, count)`와 **동일한 순서 계산**으로 나머지를
+  선정한다. 더 풍부한 대진표 `opponentTeam` 데이터가 있으면 그 목록을 사용한다.
+  상대의 HP·공격·방어·속도·TP는 원본 `SPECIES`와 `DCBattleCore`에서 전달한다.
+- 전투는 기존 실시간 AI이며, **종료 시 자동 저장하지 않는다**.
+  본게임 탭의 저장 승인 버튼을 눌러야 경기 ID/라운드/상대/전원
+  HP·TP·고유 개체 ID와 저장 상태를 검증하고 클론 정산→백업→저장한다.
+  신인 컵 준결승·결승 및 지역/그랜드 컵 진행, 포인트와 시설 Bit·우승 기록은
+  원래 내장 `DCChampionship.finishMatch`에서 처리한다.
+- 테스트: `node --test tests/phaser-championship-save.cjs`,
+  `python3 tests/phaser-championship-browser.py` (Chromium PC/터치).
+- **원본 `index.html`과 `standalone.html`은 변경하지 않음**.
+  개인 세이브 JSON을 백업하고 시험해야 하며 실제 휴대폰 기기의 성능과
+  최신 로컬 8팀 토너먼트는 별도 검증 과제다.

@@ -68,6 +68,81 @@
       status.textContent=note.textContent;
     }
   },true);
+  // Championship UI calls DCChampionship.beginMatch FIRST, which writes
+  // the expected awaiting matchId, then delegates to launchTournament().
+  // Intercept ONLY that already-validated original flow. Do not replace
+  // championship entry, bracket calculation or its legacy default.
+  const championship=document.getElementById('championshipPanel');
+  if(championship&&window.DCBattleArena?.launchTournament){
+    const choice=document.createElement('label');
+    choice.id='dc-phaser-cup-choice';
+    choice.style.cssText='display:inline-flex;align-items:center;gap:8px;' +
+      'font:600 13px sans-serif;padding:8px;color:#e4f9ee';
+    choice.append('🏆 대회 전투 화면 ');
+    const cupEngine=document.createElement('select');
+    cupEngine.id='dc-phaser-cup-engine';
+    cupEngine.style.cssText='padding:8px;min-height:44px;border-radius:8px;' +
+      'background:#18384c;color:white;border:1px solid #73b7ce';
+    cupEngine.add(new Option('기존 전투 (기본)','legacy'));
+    cupEngine.add(new Option('Phaser 대회 전투 (시험)','phaser'));
+    choice.appendChild(cupEngine);
+    const cupNote=document.createElement('p');
+    cupNote.id='dc-phaser-cup-note';
+    cupNote.style.cssText='font-size:12px;color:#bbefdc;margin:4px';
+    cupNote.textContent='대회 대진표와 상금은 기존 규칙 유지 · '+
+      'Phaser 저장은 종료 후 사용자 승인 시에만';
+    const bracket=document.getElementById('championshipBracket');
+    championship.insertBefore(choice,bracket);
+    championship.insertBefore(cupNote,bracket);
+    const oldTournament=window.DCBattleArena.launchTournament.bind(window.DCBattleArena);
+    window.DCBattleArena.launchTournament=function(match){
+      if(cupEngine.value!=='phaser')return oldTournament(match);
+      try{
+        const live=eval('state'),lead=eval('current()');
+        const leadIndex=live.team?.indexOf(lead);
+        if(live.pendingBattle||!Number.isSafeInteger(leadIndex)||leadIndex<0)
+          throw Error('대회 출전 상태가 올바르지 않아.');
+        const healthy=[lead,...live.team.filter(m=>m!==lead)].filter(
+          m=>m&&m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage');
+        if(!match||!Number.isSafeInteger(match.size)||
+           healthy[0]!==lead||healthy.length<match.size)
+          throw Error('대회 출전 인원이 부족해.');
+        // In the older checked-in v0.23 cup engine, only the first foe
+        // is defined; the ORIGINAL arena fills remaining slots using
+        // teamMembers(opponent, side=1, size). Reproduce that exact order.
+        const names=eval('SPECIES').map(spec=>spec.name);
+        let foes=match.opponentTeam;
+        if(!Array.isArray(foes)||foes.length!==match.size){
+          const found=names.indexOf(match.opponent);
+          if(found<0)throw Error('원래 대회 상대를 찾을 수 없어.');
+          foes=[match.opponent];
+          for(let n=1;foes.length<match.size&&n<names.length;n++){
+            const name=names[(found+n+2)%names.length];
+            if(!foes.includes(name))foes.push(name);
+          }
+        }
+        if(foes.length!==match.size)
+          throw Error('기존 대회 상대 팀 구성이 부족해.');
+        const preparedMatch={...match,opponentTeam:foes.slice(),
+          trainer:match.trainer||'상대 테이머'};
+        const ok=window.DCDevPhaserLaunch.launch({
+          teamSize:match.size,leadIndex,
+          tactic:live.battleTactic||document.getElementById('lbTactic')?.value||
+            'balanced',
+          tournament:preparedMatch
+        });
+        cupNote.textContent=ok?
+          '🏆 '+match.name+' · '+match.trainer+' 상대 · Phaser 전투 탭 실행 '+
+          '· 결과 승인 전까지 미정산':
+          '대회 전투창 연결 실패 · 출전 대기 상태 복원';
+        return ok; // original championship UI handles rejected launch
+      }catch(err){
+        cupNote.textContent='대회 Phaser 출전 거부: '+String(err?.message||err);
+        return false;
+      }
+    };
+  }
+
   // Read-only visible inspection for browser QA; no save or battle controls.
   window.DCPhaserArenaChoice=Object.freeze({
     selected:()=>select.value,enabled:()=>true

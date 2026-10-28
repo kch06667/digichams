@@ -37,7 +37,8 @@
   };
   const format=n=>Math.max(0,Math.round(n));
   const available=()=>B.eligibleRoster(savePreview);
-  let farmHandoffRequested=false, farmHandoffPeer=null;
+  let farmHandoffRequested=false, farmHandoffPeer=null,
+    tournamentOpponents=null;
   // A single-use same-origin message channel. No URL-based roster or
   // persistent-storage transfer; the independent Phaser scene remains read-only.
   function prepareFarmHandoff(){
@@ -60,13 +61,37 @@
            !Number.isSafeInteger(choice.leadIndex)||
            !['balanced','aggressive','defensive','focus','conserve'].includes(choice.tactic))
           throw Error('유효하지 않은 전투 구성');
+        if(choice.tournament){
+          const t=choice.tournament;
+          if(!['novice','regional','grand'].includes(t.cupId)||
+             typeof t.matchId!=='string'||!/^cup-[1-9][0-9]*-round-[0-2]$/.test(t.matchId)||
+             !Number.isSafeInteger(t.round)||t.round<0||t.round>2||
+             t.size!==choice.teamSize||typeof t.trainer!=='string'||
+             !Array.isArray(t.opponentTeam)||!Array.isArray(t.opponents)||
+             t.opponentTeam.length!==choice.teamSize||
+             t.opponents.length!==choice.teamSize||
+             !t.opponents.every((foe,i)=>foe&&foe.name===t.opponentTeam[i]&&
+                typeof foe.name==='string'&&foe.name.length>0&&
+                ['hp','maxHp','tp','maxTp','atk','def','spd'].every(key=>
+                  Number.isFinite(foe[key])&&foe[key]>=0)&&
+                foe.hp===foe.maxHp&&foe.hp>0&&foe.tp<=foe.maxTp))
+            throw Error('Invalid original tournament opponent lineup');
+          tournamentOpponents=t.opponents.map(foe=>({...foe}));
+        }else tournamentOpponents=null;
         const lead=roster.find(mon=>mon.index===choice.leadIndex);
         if(!lead||roster.length<choice.teamSize)
           throw Error('선봉이 출전 불가능하거나 출전 인원이 부족해.');
         savePreview=preview;
         rosterChosen={...lead};
         farmHandoffPeer={parent,token,teamSize:choice.teamSize,
-          saveAllowed:true};
+          tournament:choice.tournament?{
+            cupId:choice.tournament.cupId,
+            matchId:choice.tournament.matchId,
+            round:choice.tournament.round,
+            trainer:choice.tournament.trainer,
+            opponentTeam:choice.tournament.opponentTeam.slice(),
+            size:choice.teamSize
+          }:null,saveAllowed:true};
         const select=document.getElementById('rosterChoice');
         select.replaceChildren(new Option('기본 시연',''));
         roster.forEach(m=>select.add(new Option(
@@ -77,7 +102,8 @@
         document.getElementById('squadSize').disabled=true;
         document.getElementById('tactic').value=choice.tactic;
         document.getElementById('tactic').disabled=true;
-        say('사육장 명단 연결 완료 · 선봉 '+rosterChosen.name+
+        say((choice.tournament?'🏆 '+choice.tournament.trainer+' 대회전 · ':'')+
+          '사육장 명단 연결 완료 · 선봉 '+rosterChosen.name+
           ' · '+choice.teamSize+'대'+choice.teamSize+' 자동 전투 · '+
           (choice.teamSize===1?'완료 후 선택적 결과 저장 가능':
             '다인전 결과 미리보기 전용 · 보상/세이브 변경 없음'));
@@ -252,7 +278,13 @@
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
         handoffInfo:()=>farmHandoffPeer?{
           teamSize:farmHandoffPeer.teamSize,
-          saveAllowed:farmHandoffPeer.saveAllowed
+          saveAllowed:farmHandoffPeer.saveAllowed,
+          tournament:farmHandoffPeer.tournament?{
+            cupId:farmHandoffPeer.tournament.cupId,
+            matchId:farmHandoffPeer.tournament.matchId,
+            trainer:farmHandoffPeer.tournament.trainer,
+            opponentTeam:farmHandoffPeer.tournament.opponentTeam.slice()
+          }:null
         }:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
         privatePackStatus:()=>{
@@ -288,7 +320,7 @@
       this.sim=RT.createMatch({
         allies,
         teamSize:size,
-        opponents:RT.defaultTeam(1).slice(0,allies.length),
+        opponents:tournamentOpponents||RT.defaultTeam(1).slice(0,allies.length),
         tactic:this.requestedTactic,
         seed:20261028
       });
@@ -296,7 +328,8 @@
       this.reportContext=selected?{
         imported:JSON.parse(JSON.stringify(savePreview)),
         teamIndices:allies.map(mon=>mon.index),
-        initialFighters:RT.snapshot(this.sim.fighters.filter(f=>f.side===0))
+        initialFighters:RT.snapshot(this.sim.fighters.filter(f=>f.side===0)),
+        initialOpponents:RT.snapshot(this.sim.fighters.filter(f=>f.side===1))
       }:null;
     }
     drawStage(){
@@ -545,6 +578,8 @@
                 type:'dc-phaser-finished-v1',token:peer.token,
                 packet:{preview:this.lastBattleReport,
                   initial:RT.snapshot(c.initialFighters),
+                  opponentsInitial:RT.snapshot(c.initialOpponents),
+                  ...(peer.tournament?{tournament:peer.tournament}:{}),
                   final:{finished:this.sim.finished,
                     winner:this.sim.winner,elapsed:this.sim.elapsed,
                     fighters:RT.snapshot(this.sim.fighters)}}
