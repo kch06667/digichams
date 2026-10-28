@@ -67,3 +67,35 @@
 - 160b852 + a2ccb25를 충돌 없이 병합(93ec2a9). 게임 소스는 검증된 작업 브랜치와 동일.
 - 이동/경로 17/17, ROM parser 6/6, sprite-audit fixture 1/1, 기존 핵심 Node 10개 스위트 모두 통과.
 - 브라우저 테스트는 소스 동일성을 확인하여 이번 병합에서 반복하지 않음; 위 작업별 실제 실행 결과 참조.
+
+## 2026-10-28 ROM 그래픽 분석
+- `python3 -m unittest discover -s tests -p test_rom_graphics.py -v`: 14/14 통과 (ROM 없는 합성 입력).
+- 실제 ROM --audit --compare-web: 216종 모두 렌더링/비교, 8,640개 중 7,849 프레임 픽셀 일치, 791 차이. 전체 구조검사 13개 지원 밖 예외는 실패로 기록.
+- 기존 게임 코드 변경 없음: 게임/브라우저 회귀는 이 단계에서 재실행하지 않음. 이미지 의미/실기 동작/60Hz 실제 엔진은 미검증.
+
+## 2026-10-28 그래픽/공간 추가 검증
+- `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`: 31/31.
+- 실제 ROM 전체 구조 검사 5,955개 성공, 0 tick 원문과 미리보기 제외 검증. 1,258 bank/24,602셀 렌더링, badge 61개 색 심도 불일치 보류. 배경194성공/4공유참조보류.
+- NXR96/OPM75/ATR120/COL40/ESC30 전부 파싱 성공. COL 수학적 모델39파일일치/1예외 기록. 게임 테스트는 게임 파일 무변경으로 반복하지 않음.
+
+## 2026-10-28 최종 BSA 검증
+- 합성 `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`: 33/33 통과. 새 BSA 2/3프레임 lookup, 플립 비트, 잘린 파일/범위 오류 검사 포함.
+- BSA 실제19파일 파싱/NCGR 참조 범위 통과, 전체 그래픽 구조5,974개 실패0. 대표2종 렌더링/시각 확인. 원작 실행 중 합성/재생속도 미검증.
+
+## 2026-10-28 유니몬 모션 연결
+- `node tests/sprite-catalog.cjs`: 9/9. 실제 index resolver로216종/40슬롯 파일 존재 확인, 유니몬5는5_1 경로, standalone5는 파일 바이트 동일/4와 다름.
+- `python3 -m unittest discover -s tests -p test_sprite_audit.py -v`:1/1. `python3 tools/audit-sprites.py --output /tmp/digichams-sprite-audit-fixed.json`:8,640개 오류0, 단일프레임3,677개.
+- Chromium 실제 HTTP 페이지 index/standalone ×390/1365의4조합에서 spriteUrl(유니몬,5) 로딩/파일바이트/이전4와차이/페이지오류0 확인. 임시 검사 스크립트 /tmp/check-unimon-browser.py; 캡처 test-output/unimon-rom-fix.
+- 최초 브라우저 검사 스크립트는 도감에 없는 #4/#5 버튼을 가정해 timeout. 실제 도감은6종 버튼만 제공하므로 공유 resolver를 직접 사용해 수정·재검사. 도감 #5 버튼 기능을 추가한 것은 아님.
+- 이전 커밋과 비교하여 index URL 예외1곳 및 standalone 유니몬 슬롯5 외의 게임 소스/프레임은 동일. 전체 게임 회귀/실제 전투의 피격 장면·실기 Android는 이번 변경에서 추가 실행하지 않음.
+
+## 2026-10-28 NBS 엔트리 수정
+- 합성 test_rom*.py 35/35 통과. 새 회귀: 1,024번 타일 보존/H·V 조합 및 범위 초과 참조를 오류로 처리.
+- --verify-nbs: 100파일(89 nbs14/11 nitro16) 참조 오류0, NSCR대조768칸 불일치0/H반전21개. V반전은독립실증없음.
+- --audit-backgrounds:194성공/공유자산4보류. 이전보고서대비49변경/145동일; 기존PNG와57일치/67차이. 대표2이미지 시각 확인.
+- 게임 소스 무변경으로 게임/브라우저회귀 및216종 GIF 검사는 반복하지 않았음.
+
+## 2026-10-28 main66b6011 통합 검증
+- `tools/sync-embedded-farm.py --check`: IN SYNC. 최신main HTML과 비교하여 index 유니몬경로1곳/standalone 슬롯5만 변경.
+- Node13개 스위트(build-dev/phaser/domain/arena parity/settlement/private-art/farm/navigation/avoidance/offmap 등):79/79. ROM35/35, atlas2/2, farm graphics integrated2/2, sprite catalog9/9.
+- 전투 정산은 기존처럼 사본만 생성, 본게임 연결/저장 동작 추가 없음.

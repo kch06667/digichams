@@ -1,3 +1,14 @@
+# 통합 작업 체크포인트 — 2026-10-28
+
+- 최신 main `66b6011`(사육장 v0.23.2/성능/좌표복구, Phaser 원본 AI 재사용, 읽기 전용 결과 미리보기, 사본 전투 정산 코어)에 ROM 분석 브랜치 `ce56624`를 통합.
+- 작업 브랜치 `integrate/rom-phaser-checkpoint-20261028`. 최신 main의 게임/Phaser 코드는 보존하고 유니몬 #5 연결과 ROM 도구/테스트/기록을 합침. main에 직접 push하지 않는다.
+- 전투 사본 정산 코어는 여전히 본게임 미연결. Phaser 시연의 세이브 읽기 전용 경계는 유지한다.
+- 다음 구현: Phaser atlas 변환기의 13종 구인덱스 제한을 실제 216종 카탈로그와 연결하고, 검증된 유니몬 #5_1 예외를 반영. 출력은 로컬 전용으로 유지.
+- 통합 검증: farm 소스 동기화, Node79/79, ROM35/35, atlas2/2, farm graphics2/2, sprite catalog9/9 통과.
+- 아래는 각각의 작업 이력이다. “미적용/미병합” 등 과거 기록보다 최신 통합 체크포인트와 실제 git 상태가 우선한다.
+
+---
+
 # 최신 전투 정산 이어받기 — 2026-10-28 (중요: 안전한 사본 정산, 본게임 미연결)
 
 - 작업 브랜치: `feature/atomic-battle-settlement-20261028`. GitHub 최신 main 기준. `src/battle-settlement-core.js` 신규 모듈과 `tests/battle-settlement-core.cjs` 추가.
@@ -70,6 +81,62 @@
 - 개발용 페이지 생성: `node tools/build-dev-page.cjs` → `python3 -m http.server 8000 --bind 127.0.0.1` → `/index.dev.html`. 산출물은 Git 무시. 검사: `node --test tests/build-dev-page.cjs`.
 - 인라인/분리 코드 완전 통합과 이미지 런타임 최적화는 **별도 후속 단계**. 현재 `index.html` 및 `standalone.html`의 실제 사용자 실행 경로/기능은 변경하지 않았다.
 - 상세와 테스트의 한계는 `docs/DEVELOPMENT_WORKFLOW.md` 확인. 최신 main에서 실행 및 모바일 실기 테스트는 후속 검증 필요.
+
+---
+
+# 최신 완료 — 큰 배경 타일 해석 수정 (2026-10-28)
+
+- 유니몬 수정 `9bf5d4d` 뒤 작업. `tools/rom_graphics.py`의 NBS (2,1) 엔트리를 일반 NSCR과 분리: 타일 번호의 1,024 초과 부분을 보존, 반전 비트를 상위로 이동.
+- NBS100파일/참조범위 통과(확장89/일반11), 독립 NSCR 대조768칸 및H-flip21개 일치. V-flip bit15는 독립 검증 없이 INFERRED로 명시.
+- 배경194개 재복원: 49개 변경, 145개 동일. 기존 PNG 비교57일치/67차이. 대표 field_bm07_01과 cageBG416은 지형이 연속적으로 복원됨. 원본/새 이미지는 저장소에 추가하지 않음.
+- 검사 `python3 -m unittest discover -s tests -p 'test_rom*.py' -q`:35/35. ROM 입력으로 --verify-nbs 및 --audit-backgrounds 재현. 전체 스프라이트 재분석은 하지 않았음.
+- 결과는 /workspace/scratch/digichams-private/graphics-nbs14. 이전 graphics/background-audit.json은 수정 전 기록으로 보존, 최신 배경 결과와 혼동 금지.
+- 공유 cageBG416_000..003 NSCR4개는 연결 미확정. ARM9/overlay의 정확한 파일명 및 연속 ID 패턴 검색에서 근거를 얻지 못함. 파일명 유사성만으로 강제 연결하지 않는다.
+- 다음: NDS 로더에서 공유 배경/확장 NBS 해석 추적, V-flip 검증 또는 기존 배경 교정 적용 방법 결정. 이번 변경은 분석 도구이며 게임의 PNG/세이브는 무변경.
+
+---
+
+# 최신 완료 — 유니몬 #5 연결 수정 (2026-10-28)
+
+- ROM 애니메이션 #5와 일치한 기존 `m357_unimon_main_5_1.gif`를 실제 게임에 연결. index.html의 #4 대체 제거, standalone.html의 유니몬 슬롯5 내장 데이터 동기화.
+- 다른 게임 코드/내장 프레임/세이브 데이터는 변경하지 않았음을 이전 커밋과 구조 비교로 확인.
+- `node tests/sprite-catalog.cjs`: 9/9. 감사 도구 합성 테스트1/1. 전체 스프라이트 감사8,640개/오류0. 두 HTML×390/1365 브라우저 4조합에서 실제 spriteUrl(유니몬,5) 이미지 바이트/로딩 확인, 페이지 오류0.
+- 비교 캡처는 무시 경로 test-output/unimon-rom-fix에만 있음. #4/#5 이미지 비교이며 원작 실제 피격 장면과의 동작 대조는 아님.
+- 브랜치는 analysis/rom-graphics-20261028, 분석 커밋 f9f285f 뒤 적용 체크포인트. 최종 SHA는 git log -1 확인. main 병합은 별도.
+- 다음: 팔레트 차이를 원작 실행/로더 코드로 검증하거나, 공유 배경4개 참조를 확인. 완료한 유니몬 수정/전체 GIF 분석은 반복하지 않는다.
+
+이하 과거 기록의 “유니몬 미적용”은 아래 시점 상태다.
+
+---
+
+# 현재 재개 지점 — 2026-10-28 ROM 그래픽 분석
+
+- 브랜치 `analysis/rom-graphics-20261028`. 기존 main `aa6db16`에서 시작. `c974632`(디지몬 복원/GIF 대조), `d758de5`(배경/씬/공간 격자), 이후 BSA 애니메이션 체크포인트는 `git log -1` 확인.
+- 먼저 ROM_ANALYSIS_PROGRESS.md 최상단 → ROM_ANALYSIS/GRAPHICS_FORMATS.md → docs/audits/rom-graphics-v023.json 읽기. 전체 프로젝트/스프라이트 재조사 불필요.
+- 검증: 216종 8,640개 GIF 중 7,849 픽셀 시퀀스 일치, 791 차이. 그래픽 구조5,974파일, sprite-bank1,258개/24,602셀 렌더링, 배경194개, BSA19구조검증. NXR96/OPM75/ATR120/COL40/ESC30 별도 파싱. 합성테스트33/33.
+- 저장소 밖 `/workspace/scratch/digichams-private/graphics`에만 이미지와 상세 JSON. 다른 환경은 로컬 ROM 입력으로 도구를 재실행. 저장소에는 분석 도구·합성테스트·메타데이터 요약만 있음.
+- 게임 소스/세이브/기존 자산은 이번 분석에서 수정하지 않음. 다음 추천: 유니몬 #5_1은 ROM #5와 일치하므로 현재 #4 대체 연결을 작은 코드 수정으로 교체하고 두 HTML/내장 자산 일치 검사. 아직 자동 적용 안 됨.
+- 분석 후속: 팔레트 모션 791개 차이(런타임 팔레트 변경 미확인), badge61 4/8bpp 모순, 공유 배경4 참조, COL cm29 24칸 반례. 진화/능력치 숫자 테이블은 미복원.
+- 검사 `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`; 필요 패키지 Pillow. 게임 테스트는 소스 무변경으로 이번 단계에 반복하지 않았음.
+
+---
+
+# 2026-10-28 추가 체크포인트
+
+- 그래픽/배경/공간 데이터 분석 도구 작성. 최신 수치와 보류 항목은 ROM_ANALYSIS_PROGRESS.md 최상단 및 docs/audits/rom-graphics-v023.json.
+- `analysis/rom-graphics-20261028`, 현재까지 게임 소스 수정 없음. 31개 합성 테스트 통과.
+- 216종 비교 재수행 불필요: 저장소 밖 graphics/web-sprite-comparison.json 재사용. 배경/씬 원문 보고서도 같은 private 경로.
+- 다음 BSA 배경 애니메이션 19파일 후보 검증 또는 유니몬 #5_1 적용. 새 추출 자산은 Git에 추가하지 않음.
+
+---
+
+# 2026-10-28 현재 분석 작업
+
+- `analysis/rom-graphics-20261028`: ROM 그래픽 복원 도구 + 합성 테스트 추가. 게임 소스는 현재 변경 없음.
+- 먼저 ROM_ANALYSIS_PROGRESS.md 최신 항목 확인. 216종/8,640애니메이션 비교 완료(7,849 픽셀 일치, 791 차이). 기존 전체 스프라이트 감사 대신 새 비교 보고서를 재사용.
+- 다음: 미지원 NBS/NSCR 변형, 팔레트/투명도 차이 조사. 유니몬 #5_1은 ROM #5와 일치하므로 기존 #4 대체 수정 후보.
+- 산출물은 `/workspace/scratch/digichams-private/graphics`에만 있음. 도구·테스트·요약만 커밋. 다른 환경에서는 제공 ROM과 명령으로 재현.
+- 빠른 테스트 `python3 -m unittest discover -s tests -p test_rom_graphics.py -v` (14개, Pillow 필요). 마지막 커밋은 `git log -1` 확인.
 
 ---
 

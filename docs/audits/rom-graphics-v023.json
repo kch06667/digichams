@@ -1,0 +1,115 @@
+{
+  "rom_sha256": "2092998ee80d6646c7115ef8f008f955e72e1860c718dc8d7cbc3b8cea9f2234",
+  "structure_files": {
+    ".nanr": 1319,
+    ".ncbr": 840,
+    ".ncer": 1319,
+    ".nclr": 1527,
+    ".ncgr": 752,
+    ".nscr": 98,
+    ".nbs": 100,
+    ".bsa": 19
+  },
+  "structure_failures": [],
+  "web": {
+    "species": 216,
+    "pixel_sequence_match": 7849,
+    "different": 791,
+    "missing_expected_path": 1,
+    "different_by_index": {
+      "26": 216,
+      "27": 186,
+      "36": 216,
+      "39": 172,
+      "9": 1
+    },
+    "different_alpha_shapes": {
+      "True": 275,
+      "False": 516
+    },
+    "timing_mismatches_60hz_floor": 0,
+    "comparison_limits": "Visible pixels after margin trim and BGR555 quantization; not anchor-position/action-meaning validation."
+  },
+  "sprite_banks": {
+    "rendered": 1258,
+    "cells": 24602,
+    "unsupported_count": 61,
+    "unsupported_pattern": "database/item_badge001..061: NCER says 8bpp, NCBR has 4bpp-sized payload; no automatic override"
+  },
+  "backgrounds": {
+    "rendered": 194,
+    "existing_matches": 57,
+    "existing_differences": 67,
+    "failures": [
+      {
+        "path": "training/cageBG416_000.nscr",
+        "error": "File missing or ambiguous: training/cageBG416_000.ncgr"
+      },
+      {
+        "path": "training/cageBG416_001.nscr",
+        "error": "File missing or ambiguous: training/cageBG416_001.ncgr"
+      },
+      {
+        "path": "training/cageBG416_002.nscr",
+        "error": "File missing or ambiguous: training/cageBG416_002.ncgr"
+      },
+      {
+        "path": "training/cageBG416_003.nscr",
+        "error": "File missing or ambiguous: training/cageBG416_003.ncgr"
+      }
+    ],
+    "note": "Static maps only; layers, palette animation, camera and runtime compositing are not reconstructed."
+  },
+  "spatial": {
+    "parsed": {
+      "nxr": 96,
+      "opm": 75,
+      "atr": 120,
+      "esc": 30,
+      "col": 40
+    },
+    "failures": [],
+    "nxr_records": 1366,
+    "opm_records": 1537,
+    "opm_candidate_reference_check": "75 unique case-insensitive resource matches; all 1537 low-13-bit indices in range; semantics INFERRED",
+    "col_8_neighbor_distance_exact_files": 39,
+    "col_total_files": 40,
+    "col_counterexample": "training/field_cm29_01.col: 24/20100 total grid cells differ across dataset"
+  },
+  "note": "Metadata/aggregate results only. No extracted pixels or game mechanics tables. Runtime palette overrides remain unverified.",
+  "background_animation": {
+    "files": 19,
+    "two_frame_files": 17,
+    "three_frame_files": 2,
+    "all_lookup_references_in_range": true,
+    "rendered_representatives": [
+      "field/field_bm03_01_anim",
+      "training/field_cm09_01_anim"
+    ],
+    "timing_and_runtime_layering": "INFERRED"
+  },
+  "applied_asset_corrections": [
+    {
+      "stem": "m357_unimon_main",
+      "index": 5,
+      "asset": "assets/sprites/champion/m357_unimon_main_5_1.gif",
+      "verification": "ROM animation #5 visible pixel sequence and timing conversion match; action meaning not separately verified",
+      "application": "index.html filename and standalone.html embedded slot5; existing asset reused",
+      "date": "2026-10-28"
+    }
+  ],
+  "nbs_encoding_correction": {
+    "profiles": {
+      "nbs14": 89,
+      "nitro16": 11
+    },
+    "reference_failures": 0,
+    "independent_screen_entries": 768,
+    "h_flip_entries": 21,
+    "cross_check_mismatches": 0,
+    "changed_backgrounds": 49,
+    "unchanged_backgrounds": 145,
+    "vertical_flip_confidence": "INFERRED; independent cross-check contains no V flips",
+    "note": "Prior low10 interpretation of profile(2,1) was incorrect. Existing game images were not replaced."
+  }
+}

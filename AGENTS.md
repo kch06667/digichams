@@ -54,8 +54,10 @@
 - 실행: 저장소 루트에서 `python3 -m http.server 8000 --bind 127.0.0.1`. index.html 사용. 새 프로세스는 새 세션에서 재시작 필요.
 - 테스트가 생성한 기존 results.json을 현재 실행 결과와 혼동하지 않는다. 실제 실행 내역은 TEST_REPORT.md 기록.
 - ROM_VERIFIED/GUIDE_VERIFIED/INFERRED/PLACEHOLDER는 의미·출처 검증에 따라 구분. 파일 존재만으로 모션 의미를 확정하지 않는다.
-- 스프라이트 감사: `python3 tools/audit-sprites.py --output /tmp/sprite-audit.json` (Pillow). 현재 알려진 누락 1개로 exit 1; docs/audits/sprites-v023.json 재사용. 도구 테스트: `python3 -m unittest discover -s tests -p test_sprite_audit.py -v`.
+- 스프라이트 감사: `python3 tools/audit-sprites.py --output /tmp/sprite-audit.json` (Pillow). 유니몬 #5는 검증된 기존 #5_1 파일로 해석. 현재 8,640개/오류 0(exit 0); docs/audits/sprites-v023.json 재사용. 도구 테스트: `python3 -m unittest discover -s tests -p test_sprite_audit.py -v`.
 - 시설/경로 변경 후 `node --test tests/farm-navigation.cjs`, `python3 tests/farm-routing-browser.py` 실행. 경로는 열린 외곽→중앙→목표 시설이며 station 예약과 남은 행동 타이머의 저장/복원 유지. test-output/farm-routing에 로컬 캡처 생성.
 - 이동 회피 변경 후 `node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs` 실행. 최소 발 간격은 10 좌표단위(확장 UX), 실제 스프라이트 외곽 크기와 구분. 명시적 행동을 회피를 위해 취소하지 않는다.
 - 세이브 가져오기 수정 시 `python3 tests/save-import-browser.py` 실행. 입력 사본을 먼저 검증/초기화하고, 실패 시 live state와 저장/백업을 유지해야 한다.
 - ROM 입력/도구는 ROM_ANALYSIS_PROGRESS.md 참조. `tools/rom-database.py`는 해시가 일치하는 제공 한국판을 읽기 전용 분석하고 체크아웃 밖으로만 출력. 출력 텍스트/원본/바이너리를 git add 하지 않는다. text_index는 아직 종 ID가 아니다.
+
+- ROM 그래픽: `tools/rom_graphics.py --rom ... --output-dir <저장소 밖> --audit --compare-web`; 검사 `python3 -m unittest discover -s tests -p test_rom_graphics.py -v`. Pillow 필요. 그래픽 인덱스/파일명으로 모션 의미나 종 ID를 임의 확정하지 않는다.
