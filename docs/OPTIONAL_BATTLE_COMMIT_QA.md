@@ -1,0 +1,36 @@
+# Optional owned battle settlement — experimental generated build (2026-10-29)
+
+This is an **opt-in playable experiment**, not a production change to index.html, standalone.html, GitHub Pages, or the default game. It uses the original HTML game and adds a separate per-session switch that is OFF at every fresh page load. ROM assets, extracted sprites, and save files are never committed by the build.
+
+## Build locally
+
+    node tools/build-owned-battle-optin.cjs dist/battle-optin
+    # For standalone additionally (large output; local only):
+    node tools/build-owned-battle-optin.cjs dist/battle-optin --all
+
+Run a local HTTP server at the repository root (for example python -m http.server 8000), then open /dist/battle-optin/index.html in a desktop browser. The original /index.html remains the default game. Do not publish generated files automatically. The generated index includes its embedded assets from the existing game; do not redistribute without addressing source rights.
+
+## Enabling safely
+
+1. Export a playable-game save file using the existing game controls first. Keep that export off the device.
+2. Finish or close any active combat before opting in. Explicitly save the game from the game's UI. The new helper **requires** that the exact in-memory JSON already exists in localStorage.
+3. Open the bottom-right "실험적 전투 정산 (기본 꺼짐)" panel. Check "새 전투 저장 사용". The helper checks the current checkpoint, verifies a first-use backup that is retained for the entire experimental session, then verifies a per-fight backup. If backup creation fails, opt-in stays OFF.
+4. Use the original owned-battle arena. Only normally finished owned fights take the new path. Aborted fights, sandboxes, and the regular HTML build continue using the original settlement.
+5. Use "보관된 백업 다운로드" to export the most recent backup. If there is a write/verification error, the experiment will not retry or perform a fallback settlement; reload to assess which result actually persisted. Keep the user export and back-up copy before any manual recovery.
+
+Backups use localStorage keys dc_recreation_save_backup_owned_optin_v1 and dc_recreation_save_backup_owned_optin_first_v1; the first one is written only if absent, and neither is silently overwritten by the replay rejection path.
+
+## What is verified
+
+- The generated HTML preserves original checked-in HTML (same file contents untouched).
+- CI builds the opt-in game and uses Chromium desktop and mobile-touch emulation to confirm OFF-by-default, explicit enable, backups, downloadable JSON, disable and reload resets.
+- Unit tests cover 1v1 and duplicate-species 2v2 match data, missing old TP values, save failure, denied backups, and stale checkpoint protection.
+- The original full-state and species-evolution settlement parity checks continue separately.
+
+## What is NOT yet verified
+
+- An end-to-end **real owned battle with the experimental toggle enabled**, using natural arena simulation through completion in a physical Android device. This requires manual QA before upgrading the main page.
+- Transactionally restoring a save from different tabs/power failure, true Android app crashes, browser eviction, unsynced autosave behavior in every game mode.
+- The NDS's original AI and animation completeness. This is a limited web port prototype; one PR is not the final game.
+
+If the opt-in fails, use the unchecked state (or launch /index.html) until recovery has been assessed. Do not force an unverified rollback that can erase a newer save.
