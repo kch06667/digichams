@@ -9,8 +9,6 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const modules=[
-  'src/evolution-core.js',
-  'src/championship-core.js',
   'src/battle-settlement-core.js',
   'src/battle-commit-core.js',
   'src/dev-phaser-commit.js',
@@ -26,6 +24,9 @@ function build({rootDir=root}={}){
      !source.includes('id="lbMode"')||
      !source.includes('id="lbTeamSize"')||
      !source.includes('function settleMatch(')||
+     !source.includes('root.DCEvolution=api;')||
+     !source.includes('root.DCChampionship=api;')||
+     !source.includes('function bracketFor(s)')||
      !source.includes("window.DCBattleArena={launchTournament(")||
      source.split('</body>').length!==2||
      source.includes('src/phaser-arena-entry-choice.js'))
