@@ -72,7 +72,7 @@ def fight(ctx,farm,errors,expected_round):
       const s=eval('state'),m=DCChampionship.nextMatch(s);
       if(!m)throw Error('Original tournament has no next match');
       if(Array.isArray(m.opponentTeam))return m;
-      const names=eval('allNames'),found=names.indexOf(m.opponent);
+      const names=eval('SPECIES').map(spec=>spec.name),found=names.indexOf(m.opponent);
       if(found<0)throw Error('Original opponent species missing');
       const team=[m.opponent];
       for(let i=1;team.length<m.size&&i<names.length;i++){
