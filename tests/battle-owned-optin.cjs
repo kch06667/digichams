@@ -102,11 +102,28 @@ test('opt-in page generator leaves both original HTML files unchanged',()=>{
      const name=inputs[i];
      const html=fs.readFileSync(path.join(tmp,name),'utf8');
      assert.match(html,/OPTIONAL_BATTLE_SAVE_V1/);
+     assert.doesNotMatch(html,/__dcOwnedBattleQa/,'normal player build must never ship QA driver');
      assert.match(html,/dcOwnedSaveEnabled=false/);
      assert.match(html,/dcTryOwnedCommit\(!!won\);return;/);
      assert.match(html,/function settleMatch\(won,aborted=false\)/);
      assert.ok(Buffer.byteLength(html,'utf8')>original[i]);
      assert.equal(fs.statSync(path.join(root,name)).size,original[i]);
    }
+ }finally{fs.rmSync(tmp,{recursive:true,force:true});}
+});
+
+test('accelerated combat clock exists only when explicitly building with --qa',()=>{
+ const root=path.join(__dirname,'..');
+ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'digicham-ai-qa-'));
+ try{
+   const output=path.join(tmp,'qa');
+   cp.execFileSync(process.execPath,[
+     path.join(root,'tools/build-owned-battle-optin.cjs'),output,'--qa'
+   ],{timeout:60000});
+   const html=fs.readFileSync(path.join(output,'index.html'),'utf8');
+   assert.match(html,/window\.__dcOwnedBattleQa=/);
+   assert.match(html,/update\(\.048\)/);
+   assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8'),
+     /window\.__dcOwnedBattleQa=/);
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 });
