@@ -115,7 +115,7 @@ jobs:
       - name: Six species from indexed private GIFs — local catalog + atlases only
         run: |
           python3 -m pip install 'Pillow>=10,<13'
-          python3 tools/export-phaser-roster.py --species 아구몬 --species 파타몬 --species 팔몬 --species 가부몬 --species 텐타몬 --species 피요몬
+          python3 tools/export-phaser-roster.py --species 아구몬 --species 파타몬 --species 파르몬 --species 가부몬 --species 텐타몬 --species 피요몬
           test -f phaser-lab/local-assets/catalog.json
       - name: Original autonomous 3v3 with six real species GIF atlases (desktop/touch)
         run: python3 tests/phaser-216-browser.py
