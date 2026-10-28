@@ -163,6 +163,26 @@ class GraphicsTests(unittest.TestCase):
         for first, last in [(1, 0), (2, 0), (2, 1)]:
             raw = b'NBSR' + struct.pack('<IIIIH', first, 1, 1, last, 17)
             self.assertEqual(g.tilemap(raw, 'nbs')['entries'], (17,))
+            self.assertEqual(g.tilemap(raw, 'nbs')['entry_encoding'], 'nbs14' if (first, last) == (2, 1) else 'nitro16')
+
+    def test_nbs14_large_tile_indices_and_both_flips(self):
+        # Tile 1024 must not wrap to tile 0 or be interpreted as an H-flip.
+        raw = b'NBSR' + struct.pack('<IIIIHHHH', 2, 4, 1, 1, 1024, 0x4400, 0x8400, 0xc400)
+        screen = g.tilemap(raw, 'nbs')
+        ch = {'payload': bytes([2]) * 64 + bytes(1023 * 64) + bytes([1]) + bytes(63),
+              'bpp': 8, 'linear': False}
+        pal = {'colors': [(0, 0, 0), (255, 0, 0), (0, 255, 0)]}
+        im = g.render_background(ch, pal, screen, transparent=True)
+        points = [(0, 0), (15, 0), (16, 7), (31, 7)]
+        for point in points:
+            self.assertEqual(im.getpixel(point), (255, 0, 0, 255))
+        self.assertEqual(sum(a != 0 for a in im.getchannel('A').tobytes()), 4)
+
+    def test_nbs14_rejects_missing_tile_instead_of_wrapping(self):
+        screen = g.tilemap(b'NBSR' + struct.pack('<IIIIH', 2, 1, 1, 1, 2048), 'nbs')
+        ch = {'payload': bytes(64), 'bpp': 8, 'linear': False}
+        with self.assertRaises(ValueError):
+            g.render_background(ch, {'colors': [(0, 0, 0)]}, screen)
 
     def test_nonstandard_constant_screen_is_order_independent(self):
         raw = nitro(b'RCSN', b'NRCS', struct.pack('<HHHHI', 512, 128, 1, 0, 2048) + bytes(2048))

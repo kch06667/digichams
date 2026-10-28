@@ -1,3 +1,18 @@
+## 2026-10-28 후속: NBS 확장 타일 인코딩 수정
+
+- 구조 파싱 성공을 실제 그림 의미 검증으로 과대 해석하지 않는다. 최초 도구의 NBS (2,1) 렌더링은 일반 Nitro10bit index/bit10·11 flip을 적용해 큰 맵의 타일 일부를 잘못 골랐다.
+- (2,1) 89개에 `entry_encoding=nbs14`: low14 tile, bit14 H, bit15 V를 분리. variant0의5개와 flags+tile 변형6개는 nitro16 유지. 모두8bpp인 확장형만 지원.
+- **검증 근거:** 100파일의 참조 범위 검사 통과. 38개가1,024타일 초과 NCGR를 사용. `ui/opening_txt.nbs` → 같은 이름 NSCR의768칸/수평반전21칸이 정확 일치. 새 --verify-nbs에 해시·파일ID·오프셋과 대조를 재현.
+- **미확정:** bit15 V-flip 해석은 INFERRED(해당 대조에는 V-flip0개). 원작 실행·로더는 미추적. 데이터에 없는 높은 타일 번호 범위는 검증하지 않음.
+- 198개 정적 배경 중194개 렌더링. 수정 전 대비49개 NBS 그림 변경/145개 동일. 기존 PNG와57일치/67차이. 수치 감소는 예전 PNG와 도구가 같은 잘못된 해석을 공유했을 수 있음을 보여주며 PNG 전체 오류 확정은 아님.
+- 대표 `field/field_bm07_01`과 `training/cageBG416` 그림을 시각 확인. 저장소 밖 graphics-nbs14에만 보관. 게임 이미지/소스/세이브 자동 교체 없음.
+- 공유NSCR4개는 여전히 보류. FAT IDs5658..5661, 후보NCGR5656/NCLR5657. ARM9 및22 overlay에서 정확한 cageBG416 문자열/해당 연속u16·u32 ID 패턴은 발견되지 않음. 참조가 없다고 단정할 수 없고 다른 인코딩/로더 분석 필요.
+- 합성 회귀35/35. 관련 도구만 변경해 전체 스프라이트/브라우저 검사를 반복하지 않음.
+
+```sh
+python3 tools/rom_graphics.py --rom /path/game.nds --output-dir /outside/graphics-nbs14 --verify-nbs --audit-backgrounds
+```
+
 ## 게임 적용 체크포인트 — 2026-10-28 유니몬
 
 - 기존 저장소 자산 `assets/sprites/champion/m357_unimon_main_5_1.gif`와 ROM #5의 픽셀/순서/시간 변환 일치 결과를 실제 게임에 반영.

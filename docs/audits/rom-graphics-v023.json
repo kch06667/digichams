@@ -38,8 +38,8 @@
   },
   "backgrounds": {
     "rendered": 194,
-    "existing_matches": 66,
-    "existing_differences": 58,
+    "existing_matches": 57,
+    "existing_differences": 67,
     "failures": [
       {
         "path": "training/cageBG416_000.nscr",
@@ -97,5 +97,19 @@
       "application": "index.html filename and standalone.html embedded slot5; existing asset reused",
       "date": "2026-10-28"
     }
-  ]
+  ],
+  "nbs_encoding_correction": {
+    "profiles": {
+      "nbs14": 89,
+      "nitro16": 11
+    },
+    "reference_failures": 0,
+    "independent_screen_entries": 768,
+    "h_flip_entries": 21,
+    "cross_check_mismatches": 0,
+    "changed_backgrounds": 49,
+    "unchanged_backgrounds": 145,
+    "vertical_flip_confidence": "INFERRED; independent cross-check contains no V flips",
+    "note": "Prior low10 interpretation of profile(2,1) was incorrect. Existing game images were not replaced."
+  }
 }

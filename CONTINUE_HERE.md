@@ -1,3 +1,15 @@
+# 최신 완료 — 큰 배경 타일 해석 수정 (2026-10-28)
+
+- 유니몬 수정 `9bf5d4d` 뒤 작업. `tools/rom_graphics.py`의 NBS (2,1) 엔트리를 일반 NSCR과 분리: 타일 번호의 1,024 초과 부분을 보존, 반전 비트를 상위로 이동.
+- NBS100파일/참조범위 통과(확장89/일반11), 독립 NSCR 대조768칸 및H-flip21개 일치. V-flip bit15는 독립 검증 없이 INFERRED로 명시.
+- 배경194개 재복원: 49개 변경, 145개 동일. 기존 PNG 비교57일치/67차이. 대표 field_bm07_01과 cageBG416은 지형이 연속적으로 복원됨. 원본/새 이미지는 저장소에 추가하지 않음.
+- 검사 `python3 -m unittest discover -s tests -p 'test_rom*.py' -q`:35/35. ROM 입력으로 --verify-nbs 및 --audit-backgrounds 재현. 전체 스프라이트 재분석은 하지 않았음.
+- 결과는 /workspace/scratch/digichams-private/graphics-nbs14. 이전 graphics/background-audit.json은 수정 전 기록으로 보존, 최신 배경 결과와 혼동 금지.
+- 공유 cageBG416_000..003 NSCR4개는 연결 미확정. ARM9/overlay의 정확한 파일명 및 연속 ID 패턴 검색에서 근거를 얻지 못함. 파일명 유사성만으로 강제 연결하지 않는다.
+- 다음: NDS 로더에서 공유 배경/확장 NBS 해석 추적, V-flip 검증 또는 기존 배경 교정 적용 방법 결정. 이번 변경은 분석 도구이며 게임의 PNG/세이브는 무변경.
+
+---
+
 # 최신 완료 — 유니몬 #5 연결 수정 (2026-10-28)
 
 - ROM 애니메이션 #5와 일치한 기존 `m357_unimon_main_5_1.gif`를 실제 게임에 연결. index.html의 #4 대체 제거, standalone.html의 유니몬 슬롯5 내장 데이터 동기화.

@@ -94,13 +94,19 @@ entry의 low10은 타일, bit10/11은 H/V flip, high4는 4bpp palette bank.
 `cageBG_B.nscr`는 512×128의 비표준 크기지만 1,024 entries가 모두 0이라 순서와 무관하게 동일하다. 비상수 비표준 크기는 거부한다.
 
 NBS: `NBSR,u32 format_word,width_tiles,height_tiles,variant_word`.
-`(format_word,variant_word)`이 (2,0)/(2,1)/(1,0)이면 u16 entries; (1,1)이면 `flags:u16,tile:u16` entries.
+`(format_word,variant_word)`이 (2,0)/(1,0)이면 일반 Nitro u16 entries(5파일); (2,1)은 확장 u16 entries(89파일)이며 (1,1)은 `flags:u16,tile:u16` entries(6파일)다.
+**2026-10-28 수정:** (2,1)에도 low10 tile/bit10 flip을 적용했던 최초 렌더러는 잘못되었다. 이 프로파일은 low14 tile/bit14 H-flip/bit15 V-flip으로 구분한다. `entry_encoding`이 `nitro16` 또는 `nbs14`로 기록된다.
+89개 파일 전부 확장 타일 참조가 NCGR 범위 안에 들어가며, 38개는 1,024개보다 많은 타일을 가진다. `ui/opening_txt`의 NBS와 NSCR을 변환 대조하면 768칸/수평반전21개가 모두 일치한다.
+bit15의 V-flip 해석은 관례와 그림에 기반한 **INFERRED**이며 해당 교차 대조에는 V-flip이 없다. 원작 로더 코드를 추적하지 않았고 실제 자료에서 쓰이지 않은 높은 타일 번호 범위도 검증하지 않았다.
+재현 명령: `python3 tools/rom_graphics.py --rom /local/game.nds --output-dir /local/private/graphics --verify-nbs`.
+합성 회귀는 1,024번 타일이 0번으로 감기거나 반전 비트로 오해되는 문제, H/V 조합, 범위 밖 타일 참조를 검사한다.
+수정 후 정적 배경 194개 중 49개 NBS 출력이 변경되고 145개는 픽셀 해시가 같다. 기존 PNG와 대조는 57일치/67차이로 갱신되었다(동일 파일의 NBS/NSCR 중복 대조 포함). 과거 일치 자체가 포맷의 정확성을 보증하지 않는다.
 후자의 flags=4는 NSCR 0x400과 일치하는 H flip이다. 다른 flag 의미는 추측하지 않는다.
 A/C/D/E 네 배경은 NBS 영역 전체가 대응 NSCR 영역과 일치한다. B의 NBS는 실내 이미지지만 NSCR는 빈 배치이므로 두 파일을 동등하게 취급하지 않는다.
 
 198개 중 194개 렌더링. 공유 캐릭터 후보만 있는 `cageBG416_000..003.nscr` 네 개는 연결 미검증으로 보류.
 동일 stem의 NSCR/NBS가 모두 있으면 기본 CLI는 NSCR를 선택한다. `.nbs`나 `.nscr`까지 지정하면 명시적으로 선택할 수 있다.
-기존 PNG 124건 비교의 58차이는 검토 대상이며 자동 교체 대상 목록으로 간주하지 않는다.
+기존 PNG 124건 비교의 67차이는 검토 대상이며 자동 교체 대상 목록으로 간주하지 않는다.
 
 ## 움직이는 배경 BSA
 

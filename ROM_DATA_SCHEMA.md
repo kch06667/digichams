@@ -23,3 +23,6 @@ COL distance_models는 추출 값으로 재계산한 가설/반례이며 원작 
 
 ## BSA 배경 애니메이션
 BSAR + u32(2,1,frame_count,1) + u32 duration_values[frame_count] + u32 width,height + u16 map_indices[width*height] + u32 lookup_rows + u16 lookup[lookup_rows][frame_count]. map_indices는 tile ID가 아니라 lookup 행 번호. lookup 값은 tile ID/플립 비트를 포함. 모든 19파일에서 크기/참조 범위 일치. 미리보기의60Hz/투명index0/레이어순서는 원작 실행 검증과 구분한다.
+
+## 배경 엔트리 인코딩 구분 (2026-10-28 교정)
+`tilemap.entry_encoding`: nitro16(NSCR, NBS variant0 및 정규화된4바이트형) 또는 nbs14(NBS profile2,1). 원문entries는 보존. nbs14 low14=tile, bit14=H, bit15=V(마지막은INFERRED). 8bpp만지원. `entry_semantics`와 검증보고서에 미확정의미 명시. 과거 모든NBS에low10 tile을 적용했던 결과는 최신렌더링으로대체.

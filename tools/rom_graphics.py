@@ -156,6 +156,7 @@ def animations(data):
 
 
 def tilemap(data, kind):
+    encoding = 'nitro16'
     if kind == 'nscr':
         h = header(data, b'RCSN', b'NRCS')
         w, ht, color_mode, screen_format, size = unpack(data, 24, 'HHHHI')
@@ -171,9 +172,13 @@ def tilemap(data, kind):
         if format_word not in (1, 2) or variant_word not in (0, 1):
             raise ValueError('Unsupported NBS profile')
         wide = (format_word, variant_word) == (1, 1)
+        if (format_word, variant_word) == (2, 1):
+            encoding = 'nbs14'
         start, size, layout = 20, width * height * (4 if wide else 2), 'rows'
         h = {'format_word': format_word, 'variant_word': variant_word,
              'entry_size': 4 if wide else 2}
+        if encoding == 'nbs14':
+            h['entry_semantics'] = 'Extended tile IDs and H-flip cross-checked; bit15 V-flip is inferred, not independently verified.'
         if len(data) != start + size:
             raise ValueError('NBS dimensions do not match payload')
         if wide:
@@ -188,7 +193,7 @@ def tilemap(data, kind):
             if not (0 < width <= 512 and 0 < height <= 512):
                 raise ValueError('Invalid tilemap size')
             return dict(h, width_tiles=width, height_tiles=height, layout=layout,
-                        data_offset=start, entries=tuple(entries))
+                        data_offset=start, entry_encoding=encoding, entries=tuple(entries))
     else:
         raise ValueError('Unknown tile map kind')
     if not (0 < width <= 512 and 0 < height <= 512) or size != width * height * 2:
@@ -200,7 +205,7 @@ def tilemap(data, kind):
         # cageBG_B NSCR is an all-zero 512x128 map: order cannot affect pixels.
         layout = 'constant'
     return dict(h, width_tiles=width, height_tiles=height, layout=layout, data_offset=start,
-                entries=entries)
+                entry_encoding=encoding, entries=entries)
 
 
 def background_animation(data):
@@ -281,16 +286,22 @@ def render_background(chars, pal, screen, transparent=False):
     if chars['linear']:
         raise ValueError('Background requires tiled characters')
     w, h = screen['width_tiles'], screen['height_tiles']
+    encoding = screen.get('entry_encoding', 'nitro16')
+    if encoding not in ('nitro16', 'nbs14'):
+        raise ValueError('Unsupported tile entry encoding')
+    if encoding == 'nbs14' and chars['bpp'] != 8:
+        raise ValueError('4bpp extended NBS palette semantics unverified')
+    tile_mask, flip_x, flip_y = (0x3fff, 0x4000, 0x8000) if encoding == 'nbs14' else (0x3ff, 0x400, 0x800)
     im = Image.new('RGBA', (w * 8, h * 8))
     px = im.load()
     for y in range(h):
         for x in range(w):
             i = y * w + x if screen['layout'] in ('rows', 'constant') else ((y // 32) * (w // 32) + x // 32) * 1024 + (y % 32) * 32 + x % 32
             entry = screen['entries'][i]
-            raw = span(chars['payload'], (entry & 1023) * 8 * chars['bpp'], 8 * chars['bpp'])
+            raw = span(chars['payload'], (entry & tile_mask) * 8 * chars['bpp'], 8 * chars['bpp'])
             for ty in range(8):
                 for tx in range(8):
-                    sx, sy = 7 - tx if entry & 1024 else tx, 7 - ty if entry & 2048 else ty
+                    sx, sy = 7 - tx if entry & flip_x else tx, 7 - ty if entry & flip_y else ty
                     index = indexed_pixel(raw, sy * 8 + sx, chars['bpp'])
                     color = index + ((entry >> 12) * 16 if chars['bpp'] == 4 else 0)
                     if color >= len(pal['colors']):
@@ -405,7 +416,8 @@ def audit(rom, output, compare_web=False):
                 row.update(cells=len(parsed['cells']), mapping=parsed['mapping'],
                            vram_transfer=any(c['transfer'] is not None for c in parsed['cells']))
             elif ext in ('.nbs', '.nscr'):
-                row.update(width_tiles=parsed['width_tiles'], height_tiles=parsed['height_tiles'])
+                row.update(width_tiles=parsed['width_tiles'], height_tiles=parsed['height_tiles'],
+                           entry_encoding=parsed['entry_encoding'])
             elif ext == '.bsa':
                 ch = characters(rom.read(path[:-4] + '.ncgr'))
                 tile_count = len(ch['payload']) // (ch['bpp'] * 8)
@@ -492,7 +504,10 @@ def audit_backgrounds(rom, output):
             screen = tilemap(rom.read(path), kind)
             im = render_background(ch, pal, screen)
             row = {'path': path, 'sources': [rom.evidence(stem + e) for e in ('.ncgr', '.nclr', '.' + kind)],
-                   'size': im.size, 'layout': screen['layout'], 'pixel_signature': pixel_signature(im)}
+                   'size': im.size, 'layout': screen['layout'], 'entry_encoding': screen['entry_encoding'],
+                   'pixel_signature': pixel_signature(im)}
+            if 'entry_semantics' in screen:
+                row['entry_semantics'] = screen['entry_semantics']
             existing = ROOT / 'assets/rom_images' / (stem.replace('/', '_') + '.png')
             if existing.exists():
                 with Image.open(existing) as old:
@@ -516,6 +531,52 @@ def audit_backgrounds(rom, output):
               'backgrounds': rows}
     (output / 'background-audit.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     print(json.dumps({k: v for k, v in report.items() if k not in ('backgrounds', 'failures')}), flush=True)
+
+
+def verify_nbs_encodings(rom, output):
+    """Reproduce the bounds checks and independent NBS/NSCR correspondence."""
+    counts, failures, rows = Counter(), [], []
+    for path in sorted(p for p in rom.paths if p.endswith('.nbs')):
+        try:
+            screen = tilemap(rom.read(path), 'nbs')
+            ch = characters(rom.read(path[:-4] + '.ncgr'))
+            count = len(ch['payload']) // (ch['bpp'] * 8)
+            extended = screen['entry_encoding'] == 'nbs14'
+            if extended and ch['bpp'] != 8:
+                raise ValueError('Extended NBS color depth unverified')
+            mask = 0x3fff if extended else 0x3ff
+            maximum = max(v & mask for v in screen['entries'])
+            if maximum >= count:
+                raise ValueError('Tile reference exceeds character payload')
+            rows.append({'source': rom.evidence(path), 'entry_encoding': screen['entry_encoding'],
+                         'character_tiles': count, 'maximum_tile_reference': maximum})
+            counts[screen['entry_encoding']] += 1
+        except ValueError as error:
+            failures.append({'path': path, 'error': str(error)})
+    stem = 'ui/opening_txt'
+    nbs, nscr = tilemap(rom.read(stem + '.nbs'), 'nbs'), tilemap(rom.read(stem + '.nscr'), 'nscr')
+    w, h, sw = nbs['width_tiles'], nbs['height_tiles'], nscr['width_tiles']
+    if (w, h, sw, nscr['height_tiles']) != (32, 24, 32, 32):
+        raise ValueError('Cross-check dimensions changed')
+    mismatches = []
+    for y in range(h):
+        for x in range(w):
+            raw = nbs['entries'][y * w + x]
+            if (raw & 0x3fff) >= 1024:
+                raise ValueError('Cross-check tile does not fit Nitro screen')
+            converted = (raw & 0x3fff) | ((raw & 0xc000) >> 4)
+            if converted != nscr['entries'][y * sw + x]:
+                mismatches.append({'x': x, 'y': y})
+    report = {'rom_sha256': rom.nds.sha256, 'profiles': dict(counts), 'failures': failures,
+              'interpretation_limit': 'Cross-check contains 21 H-flips and no V-flips. Bit15 V-flip remains inferred; runtime loader not traced.',
+              'independent_screen_check': {'sources': [rom.evidence(stem + e) for e in ('.nbs', '.nscr')],
+                  'compared_entries': w * h, 'flip_entries': sum(bool(v & 0xc000) for v in nbs['entries']),
+                  'mismatches': mismatches}, 'files': rows}
+    (output / 'nbs-encoding-verification.json').write_text(json.dumps(report, indent=2) + '\n')
+    print(json.dumps({'profiles': dict(counts), 'reference_failures': len(failures),
+                      'cross_checked_entries': w * h, 'cross_check_mismatches': len(mismatches)}))
+    if failures or mismatches:
+        raise ValueError('NBS encoding verification failed; inspect report')
 
 
 def audit_sprite_banks(rom, output):
@@ -551,6 +612,7 @@ def main():
     parser.add_argument('--compare-web', action='store_true')
     parser.add_argument('--audit-backgrounds', action='store_true')
     parser.add_argument('--audit-sprites', action='store_true')
+    parser.add_argument('--verify-nbs', action='store_true')
     parser.add_argument('--animated-background', action='append', default=[])
     args = parser.parse_args()
     output = destination(args.output_dir)
@@ -561,6 +623,8 @@ def main():
         audit_backgrounds(rom, output)
     if args.audit_sprites:
         audit_sprite_banks(rom, output)
+    if args.verify_nbs:
+        verify_nbs_encodings(rom, output)
     for stem in args.sprite:
         print(json.dumps(export_sprite(rom, stem, output)))
     for stem in args.animated_background:
