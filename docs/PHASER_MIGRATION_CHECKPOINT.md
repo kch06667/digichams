@@ -117,3 +117,28 @@ hex cage UI, game-domain adapter, safe web preview.
   has already shown extracted-looking files in the main tree. Pages allowlist
   does not protect public Git contents. Avoid assuming this fixes copyright
   or private-development concerns.
+
+## 2026-10-28 read-only roster vertical slice
+
+Track: `feature/phaser-roster-battle-farm-readonly-20261028`.
+
+- Both independent Phaser scenes accept user-exported JSON saves and display
+  *copied, validated* actual Digimon records without modifying localStorage
+  or the in-game save.
+- The battle lab permits choosing one eligible active Digimon; its copied
+  name/HP/attack/defense/speed/TP are passed into the lab's `newEncounter()`.
+  Existing TP and targeting functions still decide special versus normal.
+  This is **not** the legacy arena's full AI/damage rules and does **not**
+  apply the demonstration battle outcome to the original save.
+- The farm lab projects up to 30 active monsters into small hex cages,
+  shows real HP/name/hunger, and disables all mutation controls in
+  read-only mode. It excludes storage/lost monsters and does not claim the
+  slot allocation reflects NDS cages.
+- Save previews are transient browser-only data. No cross-page persistence
+  or server upload. To inspect both scenes, select the JSON file separately.
+- Added unit tests for invalid roster eligibility and no mutation, 30-slot
+  clipping, and Chromium desktop/mobile import and selection.
+- Still needed: isolate the **full actual** legacy arena logic (some inline
+  in the original HTML), separate world state mutation from renderer,
+  implement game-event replay in Phaser without changing win/loss outcomes,
+  and build real save-backed integration after those rules stabilize.
