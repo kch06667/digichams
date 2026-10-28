@@ -23,10 +23,28 @@
       hp:100,max:100,energy:100,skillCD:0,cd:0};
     return {...base,...B.fighterVitals({...base,maxTp:75,tp:75})};
   }
-  function newEncounter(tacticId='balanced'){
+  function rosterFighter(mon){
+    if(!mon||typeof mon!=='object'||typeof mon.name!=='string'||
+       !mon.name||mon.name.length>120||
+       !Number.isFinite(mon.hp)||!Number.isFinite(mon.maxHp)||
+       mon.maxHp<=0||mon.hp<=0||mon.egg||mon.lost||
+       mon.location==='storage')
+      throw Error('출전할 수 없는 디지몬');
+    const base=fighter(mon.name,'ally',Number.isFinite(mon.spd)?mon.spd:35);
+    const max=clamp(Math.round(mon.maxHp),1,999999);
+    const hp=clamp(Math.round(mon.hp),1,max);
+    const stat=(n,otherwise)=>Number.isFinite(n)?clamp(Math.round(n),0,999999):otherwise;
+    const atk=stat(mon.atk,35),def=stat(mon.def,20),spd=stat(mon.spd,35);
+    const maxTp=Number.isFinite(mon.maxTp)&&mon.maxTp>0?mon.maxTp:undefined;
+    const tp=Number.isFinite(mon.tp)?mon.tp:undefined;
+    return {...base,name:mon.name,max,hp,atk,def,spd,
+      ...B.fighterVitals({maxTp,tp,spd})};
+  }
+  function newEncounter(tacticId='balanced',mon=null){
     if(!B.TACTICS[tacticId])throw Error('Unknown tactic');
-    return {turn:0,tactic:tacticId,ally:fighter('테이머','ally'),
-      enemy:fighter('상대','enemy'),winner:null,log:[]};
+    return {turn:0,tactic:tacticId,ally:mon?rosterFighter(mon):fighter('테이머','ally'),
+      enemy:fighter('상대','enemy'),winner:null,log:[],
+      source:mon?'roster-preview':'demo-only'};
   }
   // Every event is planned by existing target(), canUseSkill() and skillCost().
   function plan(state){
@@ -95,7 +113,9 @@
          m.maxHp<=0)throw Error('디지몬 기록이 올바르지 않아.');
       return {name:m.name,hp:clamp(m.hp,0,m.maxHp),maxHp:m.maxHp,
         atk:safeNumber(m.atk),def:safeNumber(m.def),spd:safeNumber(m.spd),
-        tp:safeNumber(m.tp),maxTp:safeNumber(m.maxTp),
+        tp:Number.isFinite(m.tp)?safeNumber(m.tp):null,
+        maxTp:Number.isFinite(m.maxTp)&&m.maxTp>0?safeNumber(m.maxTp):null,
+        hunger:safeNumber(m.hunger),fatigue:safeNumber(m.fatigue),
         egg:!!m.egg,lost:!!m.lost,
         location:m.location==='storage'?'storage':'farm'};
     });
@@ -109,6 +129,10 @@
       championship:{active:null,crowns,history:[],sequence:0,rank:0,lastResult:null},
       source:'read-only-save-preview'};
   }
-  return Object.freeze({tactics,newEncounter,plan,apply,train,cupPreview,
-    previewSample,inspectExport});
+  function eligibleRoster(input){
+    return input.team.map((m,index)=>({index,...m})).filter(m=>
+      m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage');
+  }
+  return Object.freeze({tactics,newEncounter,rosterFighter,eligibleRoster,
+    plan,apply,train,cupPreview,previewSample,inspectExport});
 });
