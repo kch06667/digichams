@@ -34,3 +34,16 @@ Backups use localStorage keys dc_recreation_save_backup_owned_optin_v1 and dc_re
 - The NDS's original AI and animation completeness. This is a limited web port prototype; one PR is not the final game.
 
 If the opt-in fails, use the unchecked state (or launch /index.html) until recovery has been assessed. Do not force an unverified rollback that can erase a newer save.
+
+## 2026-10-29: real original arena completion smoke (CI)
+
+Run the diagnostic-only generated build (never ship this generated HTML as the normal user build):
+
+    node tools/build-owned-battle-optin.cjs dist/battle-optin --qa
+    python3 tests/battle-owned-completion-browser.py
+
+This test clicks the real game owned-arena launch/start controls on a fresh Chromium origin, explicitly opts into new settlement, and invokes the original arena AI's real `update(0.048)` loop through a **separate, QA-only clock driver**. It does **not** set a winner or damage an opponent by test code. The real arena decides via KO or 135-second timeout, calls the real `settleMatch` opt-in branch and validates the persisted finished result: pendingBattle removed, one winner/loser result, evolved battle count, logs, retained backup and no duplicate rewards after reload. Both desktop and touch-sized Chromium contexts run.
+
+This is a fast-forward of original game logic without frame drawing, not proof of 135-second physical device performance or animation fidelity. The `--qa` flag is **never** used for ordinary `node tools/build-owned-battle-optin.cjs` builds and the real `index.html` remains unchanged. Tests must fail if the QA helper leaks into the default build.
+
+After this gate, additional end-to-end cases remain: deterministic win *and* loss, tournament reward, evolution, storage failure during a completed arena, real Android long-session and memory/performance QA. Keep opt-in off by default.
