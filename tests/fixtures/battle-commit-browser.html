@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>Battle save QA only</title></head>
+<body><p>Isolated automated storage regression fixture; never loads game saves.</p>
+<script src="../../src/evolution-core.js"></script>
+<script src="../../src/championship-core.js"></script>
+<script src="../../src/battle-settlement-core.js"></script>
+<script src="../../src/battle-commit-core.js"></script>
+<script>
+'use strict';
+window.qaBattle = function(){
+  const mon={instanceId:'qa-1',name:'아구몬',stage:'성장기',hp:100,maxHp:120,
+    tp:55,maxTp:70,atk:30,def:16,spd:20,level:1,exp:0,friendship:20,
+    hunger:10,fatigue:10,evo:{battles:0,wins:0}};
+  const state={saveVersion:4,day:3,wins:0,losses:0,points:4,
+    facilityCredits:0,logs:['[DAY 3] QA'],team:[mon],
+    pendingBattle:{id:'qa-battle',participants:['qa-1']}};
+  const initial=[{id:'ally',side:0,slot:0,instanceId:'qa-1',name:'아구몬',
+    hp:100,max:120,tp:55,maxTp:70}];
+  const final={finished:true,winner:0,elapsed:20,fighters:[
+    {...initial[0],hp:80.2,tp:40.6},
+    {id:'foe',side:1,slot:0,name:'상대',hp:0,max:100,tp:0,maxTp:60}
+  ]};
+  return {state,args:{battleId:'qa-battle',initial,final,lookup:()=>null}};
+};
+</script></body></html>
