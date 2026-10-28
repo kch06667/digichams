@@ -92,7 +92,7 @@ function walk(s,a,target,dt){
  a.routeKey=null;return true;
 }
 function facilityKey(a){return a.goal&&SLOTS[a.goal.kind]?(a.goal.zone||'core')+':'+((a.goal.zone||'core')==='core'?a.goal.kind:'shared'):null;}
-function activeActors(s){return s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>actor(s,m.instanceId));}
+function activeActors(s){return s.team.filter(m=>!m.egg&&!m.lost&&m.location!=='storage').map(m=>actor(s,m.instanceId));}
 function stationPoint(a){const g=a.goal;return {x:g.x+(a.station===1?(g.zone==='core'&&g.x>50?-32:32):0),y:g.y};}
 function reserveStation(s,a){
  const key=facilityKey(a);if(!key)return true;
@@ -126,7 +126,7 @@ function migrateStations(s){
  }
 }
 const CARE=root.DCCare||(typeof require==='function'?require('./care-core.js'):null);
-const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:0,provenance:'temporary_balance'};
+const CFG={moveSpeed:16,hatchSeconds:12,restCycle:2,restHeal:8,trainHP:4,foodSeconds:1.5,foodRot:120,daySeconds:240,hungerRate:.06,hungerSeek:15,provenance:'temporary_balance'};
 // Validate actor coordinates once per live actor object (and again for restored JSON objects).
 // This is runtime-only metadata, never added to a saved game.
 const validatedActorCoordinates=new WeakSet();
@@ -141,7 +141,7 @@ function ensure(s){
  if(!Number.isFinite(s.farm.nextFood)||s.farm.nextFood<1)s.farm.nextFood=1;
  s.farm.nextFood??=1;s.farm.completed??=0;
  // Saved meals may contain stale claims after older saves or roster changes.
- const activeIds=new Set(s.team.filter(m=>!m.egg&&m.location!=='storage').map(m=>m.instanceId));
+ const activeIds=new Set(s.team.filter(m=>!m.egg&&!m.lost&&m.location!=='storage').map(m=>m.instanceId));
  for(const f of s.farm.foods)if(f.claim&&(!activeIds.has(f.claim)||s.farm.actors[f.claim]?.foodId!==f.id||s.farm.actors[f.claim]?.goal?.kind!=='eat'))delete f.claim;
  s.world.seconds=Math.max(0,Number(s.world.seconds)||0);
  if(![1,2,4].includes(s.world.speed))s.world.speed=1;
@@ -149,6 +149,9 @@ function ensure(s){
   if(!m.instanceId)throw Error('Missing instanceId');
   s.farm.actors[m.instanceId]||={x:50,y:62,mode:'idle',pose:0,remaining:0,idleTime:0,autoRest:true};
   const a=s.farm.actors[m.instanceId];
+  // Lost Digimon must not occupy stations or retain a food reservation.
+  // Keep the historical actor entry and original identity for saved records.
+  if(m.lost){if(a.goal||a.mode!=='idle')clear(s,a);continue;}
   if(validatedActorCoordinates.has(a))continue;
   validatedActorCoordinates.add(a);
   if(walkable(s,a.x,a.y))continue;
@@ -189,7 +192,7 @@ function destination(s,kind,options={}){
  if((kind==='attack'||kind==='defense'||kind==='speed')&&s.facilities?.training)return {...PLOTS.training,kind};
  return {...SLOTS[kind],zone:'core',kind};
 }
-function command(s,id,kind,options={}){ensure(s);const m=s.team.find(m=>m.instanceId===id);if(!m||m.egg||m.location==='storage'||s.pendingBattle)return false;if(kind!=='stop'&&!SLOTS[kind])return false;const stat={attack:'atk',defense:'def',speed:'spd'}[kind];
+function command(s,id,kind,options={}){ensure(s);const m=s.team.find(m=>m.instanceId===id);if(!m||m.egg||m.lost||m.location==='storage'||s.pendingBattle)return false;if(kind!=='stop'&&!SLOTS[kind])return false;const stat={attack:'atk',defense:'def',speed:'spd'}[kind];
  const cages=root.DCCages||(typeof require==='function'?require('./cage-training-core.js'):null);
  if(kind==='cage'&&!cages?.owned(s,options.cage))return false;
  const proposed=stat&&options?.target!==undefined?Number(options.target):null;
@@ -219,7 +222,9 @@ function placeFood(s,x=50,y=65){
 // Prioritize the hungriest first, then choose their closest free food item.
 // Explicit training/rest orders are not interrupted by automatic foraging.
 function assignFood(s){
- const candidates=s.team.filter(m=>!m.egg&&m.location!=='storage'&&m.hunger>=CFG.hungerSeek&&
+ const candidates=s.team.filter(m=>!m.egg&&!m.lost&&m.location!=='storage'&&
+   Number.isFinite(m.hunger)&&m.hunger>=CFG.hungerSeek&&
+   !(m.fatigue>=65||m.hp<m.maxHp*.4)&&
   ((actor(s,m.instanceId)?.mode==='idle')||(actor(s,m.instanceId)?.goal?.kind==='wander')));
  candidates.sort((a,b)=>b.hunger-a.hunger||a.instanceId.localeCompare(b.instanceId));
  for(const m of candidates){
@@ -235,18 +240,21 @@ function trainDuration(m,periods,facilities){const base=Math.max(.1,periods?.[m.
 function step(s,dt,hooks={}){
  ensure(s);if(s.world.paused||s.pendingBattle)return;
  const previousDay=Math.floor(s.world.seconds/CFG.daySeconds);s.world.seconds+=dt;const nextDay=Math.floor(s.world.seconds/CFG.daySeconds);
- if(nextDay>previousDay){const n=nextDay-previousDay;s.day+=n;s.food+=2*n;s.ropes=Math.min(9,s.ropes+n);if(hooks.evolution?.advanceDays)hooks.evolution.advanceDays(s,n,hooks.lookup);CARE?.advanceDays(s,n);log(s,'하루가 지나 먹이와 로프가 보충됐어.');}
+ if(nextDay>previousDay){const n=nextDay-previousDay;s.day+=n;s.food+=2*n;s.ropes=Math.min(9,s.ropes+n);if(hooks.evolution?.advanceDays)hooks.evolution.advanceDays(s,n,hooks.lookup);
+   // The care subsystem is also used directly by other screens; limit farm
+   // daily illness progression to currently living, active team members.
+   if(CARE?.advanceDays)CARE.advanceDays({...s,team:s.team.filter(m=>!m.lost)},n);log(s,'하루가 지나 먹이와 로프가 보충됐어.');}
  for(const f of s.farm.foods)f.age+=dt;
  // Spoiled food is removed rather than eaten in this first slice; disease rules pending.
  s.farm.foods=s.farm.foods.filter(f=>f.age<CFG.foodRot);
  // Reserve food once per step across the whole roster, independent of roster order.
  // Do this after hunger advancement so every eligible Digimon can compete fairly.
- for(const m of s.team)if(m.location!=='storage'&&!m.egg)
+ for(const m of s.team)if(m.location!=='storage'&&!m.egg&&!m.lost)
   m.hunger=Math.min(100,(Number(m.hunger)||0)+dt*CFG.hungerRate);
  assignFood(s);
  migrateStations(s);
  for(const m of s.team){
-  const id=m.instanceId,a=actor(s,id);a.id=id;if(m.location==='storage')continue;
+  const id=m.instanceId,a=actor(s,id);a.id=id;if(m.location==='storage'||m.lost)continue;
   if(m.egg){m.hatchRemaining=(m.hatchRemaining??CFG.hatchSeconds)-dt;a.pose=0;if(m.hatchRemaining<=0){if(hooks.evolution?.hatch)hooks.evolution.hatch(s,m,hooks.lookup);else {delete m.egg;delete m.hatchRemaining;}log(s,'디지타마 부화 완료.');}continue;}
   // Hunger rises even while training, but stored Digimon remain frozen.
   if(a.mode==='idle'){
@@ -319,6 +327,21 @@ function step(s,dt,hooks={}){
   }
  }
 }
-function advance(s,realSeconds,hooks={}){ensure(s);if(s.world.paused||s.pendingBattle)return;s.world.accumulator+=Math.max(0,realSeconds)*s.world.speed;while(s.world.accumulator>=.05-1e-9){s.world.accumulator-=.05;if(s.world.accumulator<0)s.world.accumulator=0;step(s,.05,hooks);}}
+function advance(s,realSeconds,hooks={}){
+  ensure(s);
+  if(s.world.paused||s.pendingBattle||!Number.isFinite(realSeconds)||realSeconds<=0)return;
+  // No offline fast-forward: bound malformed/imported delta values so an
+  // unexpected resume cannot lock up the browser's main thread indefinitely.
+  const safeSeconds=Math.min(realSeconds,300);
+  // Normal advance may hold many pending 50ms steps, so never erase the
+  // accumulator from step()->ensure(). Only validate it on ENTRY to advance.
+  if(s.world.accumulator>=.05)s.world.accumulator=0;
+  s.world.accumulator+=safeSeconds*s.world.speed;
+  while(s.world.accumulator>=.05-1e-9){
+   s.world.accumulator-=.05;
+   if(s.world.accumulator<0)s.world.accumulator=0;
+   step(s,.05,hooks);
+  }
+ }
 const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
