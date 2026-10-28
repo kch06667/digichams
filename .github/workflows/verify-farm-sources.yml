@@ -17,6 +17,7 @@ on:
       - "tests/test_farm_graphics_import.py"
       - "tests/farm-offmap-recovery.cjs"
       - "tests/farm-life-safety.cjs"
+      - "tests/farm-life-browser.py"
       - ".github/workflows/verify-farm-sources.yml"
 permissions:
   contents: read
@@ -45,3 +46,18 @@ jobs:
         run: python3 -m unittest discover -s tests -p test_farm_graphics_import.py -v
       - name: Verified WebP and embedded visual consistency
         run: python3 -m unittest discover -s tests -p test_farm_graphics_integrated.py -v
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install isolated Chromium browser
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Real farm care and food in original full game (PC and touch)
+        run: python3 tests/farm-life-browser.py
