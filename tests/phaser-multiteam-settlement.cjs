@@ -63,9 +63,18 @@ for(const size of [2,3])for(const winner of [0,1]){
       assert.equal(mon.evo.wins,winner===0?1:0);
       assert.equal(mon.exp,winner===0?10:0);
     }
+    // The legacy evolution core initializes missing evo bookkeeping on
+    // every actor, even those NOT participating. Gameplay stats for bench
+    // members must remain unchanged and their battle counts stay at zero.
     for(let i=0;i<a.state.team.length;i++){
-      if(!a.launch.lineupIndices.includes(i))
-        assert.deepEqual(result.state.team[i],a.state.team[i]);
+      if(!a.launch.lineupIndices.includes(i)){
+        const before=a.state.team[i],after=result.state.team[i];
+        for(const key of ['instanceId','name','hp','tp','maxHp','atk',
+          'def','spd','level','exp','friendship'])
+          assert.deepEqual(after[key],before[key],key);
+        assert.equal(after.evo.battles,before.evo.battles);
+        assert.equal(after.evo.wins,before.evo.wins);
+      }
     }
   });
 }
