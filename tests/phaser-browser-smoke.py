@@ -68,6 +68,11 @@ def check_page(browser, mobile, base_url):
               timeout=12000)
             status = page.evaluate("DigiPhaserLab.privatePackStatus()")
             assert status["speciesList"] == ["아구몬", "가부몬"], status
+            # Phaser scene.restart() is asynchronous; wait for textures
+            # to be loaded before checking assignments.
+            page.wait_for_function(
+              "() => window.DigiPhaserLab?.renderedArt()?.some(x => x.name === '가부몬' && x.privateArt)",
+              timeout=12000)
             assignments = page.evaluate("DigiPhaserLab.renderedArt()")
             for name in ("아구몬", "가부몬"):
                 assert any(x["name"] == name and x["privateArt"]
