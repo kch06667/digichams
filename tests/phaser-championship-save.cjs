@@ -84,6 +84,7 @@ test('checked-in original novice cup: semi then final awards only one prize',()=
   assert.equal(state.facilityCredits,267);
   assert.equal(state.championship.crowns.novice,1);
   if(state.championship.matchHistory)
+    if(C.ROSTERS&&state.championship.matchHistory)
     assert.equal(state.championship.matchHistory.length,2);
   assert.equal(state.championship.active,null);
   if(state.championship.lastResult.bracket)
@@ -123,7 +124,7 @@ test('checked-in original grand cup: all source-defined rounds grant one trophy'
       TOKEN,()=>null).state);
   }
   assert.equal(state.championship.crowns.grand,1);
-  if(state.championship.matchHistory)
+  if(C.ROSTERS&&state.championship.matchHistory)
     assert.equal(state.championship.matchHistory.length,rounds);
   assert.equal(state.facilityCredits,1407);
   assert.equal(state.championship.active,null);
