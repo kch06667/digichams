@@ -1,6 +1,8 @@
 /* Optional dev-only read-only bridge: farm -> Phaser exhibition.
  * Loaded ONLY by generated index.dev.html, and activated with ?phaserBridge=1.
- * No full save, persistent storage, or individual identifiers leave this tab.
+ * No full save or individual instance identifiers leave this tab.
+ * Settlement requires a second explicit user click, verified backup and
+ * exact live-vs-persisted save comparison; never auto-apply on battle finish.
  */
 (() => {
   'use strict';
@@ -18,7 +20,39 @@
   notice.setAttribute('role','status');
   notice.style.cssText = 'position:fixed;right:12px;bottom:66px;z-index:9999;' +
     'max-width:85vw;padding:5px;background:#102f3f;color:#fff;font:13px sans-serif';
-  notice.textContent = '개발용 연습전 · 결과와 보상은 저장되지 않음';
+  notice.textContent = '연습전 기본값: 저장 안 함 · 종료 후 별도 승인 가능';
+  const apply=document.createElement('button');
+  apply.type='button';
+  apply.id='dc-phaser-farm-apply';
+  apply.hidden=true;
+  apply.textContent='전투 결과 저장 (개발용 · 백업 필수)';
+  apply.style.cssText='position:fixed;right:12px;bottom:120px;z-index:10000;' +
+    'padding:10px;border:2px solid #f5d68b;background:#62481f;' +
+    'color:white;font:600 13px sans-serif;border-radius:9px';
+  let pending=null;
+  // The two tabs never share the full save. Retain only the launch
+  // fingerprint and one validated result packet in the ORIGINAL farm tab.
+  apply.addEventListener('click',()=>{
+    if(!pending)return;
+    apply.disabled=true;
+    try {
+      const live=eval('state');
+      const lookup=eval('speciesLookup');
+      const settled=DCDevPhaserCommit.persist(live,pending.launch,
+        pending.packet,pending.token,lookup,localStorage);
+      pending=null;
+      apply.hidden=true;
+      notice.textContent='백업 및 전투 정산 저장 완료 · 사육장 새로고침';
+      // Existing game state is a lexical binding. Reload to adopt exactly
+      // the verified persisted clone; never partially patch live objects.
+      location.reload();
+      return settled;
+    }catch(err){
+      pending=null;apply.hidden=true;
+      notice.textContent='저장 거부: '+err.message+
+        ' · 자동 덮어쓰기 없음. 저장 상태와 백업을 확인해 줘.';
+    }
+  });
 
   function snapshot(live) {
     if (!live || typeof live !== 'object' || live.pendingBattle ||
@@ -44,11 +78,14 @@
   }
 
   button.addEventListener('click', () => {
-    let payload;
+    let payload,launch;
+    pending=null;apply.hidden=true;apply.disabled=false;
     try {
       // The existing playable game defines global lexical `state`.
       // Read it on user click, not at page load (avoids stale roster).
-      payload = snapshot(eval('state'));
+      const live=eval('state');
+      payload = snapshot(live);
+      launch=DCDevPhaserCommit.capture(live);
       if (!globalThis.crypto?.getRandomValues) throw Error('안전한 브라우저 환경이 필요해.');
     } catch (error) {
       notice.textContent = '연습전 연결 불가: ' + error.message;
@@ -74,13 +111,36 @@
       popup.postMessage({type:'dc-phaser-roster-v1',token,payload},origin);
       notice.textContent = '읽기 전용 명단 전달 완료 · 새 탭에서 1대1 시작';
     };
+    const onFinished=event=>{
+      if(event.source!==popup||event.origin!==origin||
+          event.data?.type!=='dc-phaser-finished-v1'||
+          event.data.token!==token)return;
+      window.removeEventListener('message',onFinished);
+      if(!done)return;
+      const packet=event.data.packet;
+      try{
+        // Pure staging performs all participant/HP/TP/identity checks
+        // WITHOUT writing or mutating the player's current state.
+        const live=eval('state');
+        DCDevPhaserCommit.stage(live,launch,packet,token,
+          eval('speciesLookup'));
+        pending={packet,token,launch};
+        apply.hidden=false;
+        notice.textContent='완료된 1대1 결과 확인 · 적용은 선택사항이야.';
+      }catch(err){
+        notice.textContent='결과 저장 불가: '+err.message+
+          ' · 원본 세이브 변경 없음';
+      }
+    };
     window.addEventListener('message',onReady);
+    window.addEventListener('message',onFinished);
     setTimeout(() => {
       if (!done) {
         window.removeEventListener('message',onReady);
+        window.removeEventListener('message',onFinished);
         notice.textContent = '연결 시간이 초과됐어. 팝업 탭을 확인해 줘.';
       }
     },15000);
   });
-  document.body.append(button,notice);
+  document.body.append(button,notice,apply);
 })();
