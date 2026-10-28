@@ -30,7 +30,7 @@
           sheet.frameHeight < 1 || sheet.frameHeight > 512 ||
           sheet.frames < 1 || sheet.frames > 300 ||
           !Array.isArray(sheet.durationsMs) || sheet.durationsMs.length !== sheet.frames ||
-          sheet.durationsMs.some(v => !Number.isFinite(v) || v < 20 || v > 30000)) return false;
+          sheet.durationsMs.some(v => !Number.isFinite(v) || v < 10 || v > 30000)) return false;
     }
     return true;
   }
