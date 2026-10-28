@@ -16,12 +16,12 @@
   const clone=value=>JSON.parse(JSON.stringify(value));
   const finite=(n,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
   const validId=id=>typeof id==='string'&&id.length>0&&id.length<=128;
-  function grantExperience(mon,amount=10){
+  function grantExperience(mon,amount=0){
     // Deliberately matches the current index.html legacy progression formula.
     if(!Number.isFinite(mon.level)||mon.level<1)mon.level=1;
     mon.level=Math.floor(mon.level);
     if(!Number.isFinite(mon.exp)||mon.exp<0)mon.exp=0;
-    mon.exp+=Math.max(0,amount);
+    mon.exp+=Number.isFinite(amount)?Math.max(0,amount):0;
     const n=Math.max(0,Math.floor((-(2*mon.level-1)+
       Math.sqrt((2*mon.level-1)**2+8*mon.exp/25))/2));
     if(n){
