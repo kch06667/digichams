@@ -37,6 +37,18 @@ test('sparse species atlas chooses nearest original motion instead of idle',()=>
   assert.equal(L.motionAction(f('attack',8),new Set()),null);
   assert.equal(L.motionAction(f('attack',8),null),null);
 });
+test('Phaser GIF frame timings equal exported source delays, not source + 83ms',()=>{
+  const source=[20,40,100,250,30000];
+  const before=[...source];
+  const result=L.gifFrameTiming(source);
+  assert.equal(result.frameRate,50);
+  assert.deepEqual(result.extraMs,[0,20,80,230,29980]);
+  assert.deepEqual(result.extraMs.map(ms=>ms+1000/result.frameRate),source);
+  assert.deepEqual(source,before,'source manifest must remain unchanged');
+  assert.throws(()=>L.gifFrameTiming([19]),/Invalid GIF/);
+  assert.throws(()=>L.gifFrameTiming([Infinity]),/Invalid GIF/);
+  assert.throws(()=>L.gifFrameTiming([]),/Invalid GIF/);
+});
 test('original special pose 33→10 drives visual cues, not fake hits',()=>{
   const f={act:'special',pose:33,hp:100,knockVX:0};
   assert.equal(L.specialPhase(f),'charge');
@@ -91,6 +103,9 @@ test('JS parser accepts browser-side game and test lab stays isolated', () => {
   assert.match(src,/Phaser\.Game/);
   assert.match(src,/RT\.createMatch/);
   assert.match(src,/RT\.step/);
+  assert.match(src,/L.gifFrameTiming\(cfg.durationsMs\)/);
+  assert.match(src,/duration:timing.extraMs\[i\]/);
+  assert.match(src,/frameRate:timing.frameRate/);
   assert.match(src,/L\.motionAction\(/,
     'Phaser must use the rendering-only original action/fallback resolver');
   assert.equal(L.motionAction({act:'victory',hp:50},new Set([0,30])),30);
