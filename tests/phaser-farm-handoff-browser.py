@@ -39,8 +39,12 @@ def check(browser,host,mobile=False):
       const s=eval('state');
       s.pendingBattle=null;
       s.day=10;
+      // Preserve the existing game's required stable instanceId, farm actor,
+      // and other validated world fields when replacing its visible stats.
+      const base=JSON.parse(JSON.stringify(s.team[0]));
+      if(!base?.instanceId)throw Error('No existing farm actor to use for QA');
       s.team.splice(0,s.team.length,{
-        name:'아구몬',hp:123,maxHp:140,atk:47,def:24,spd:59,
+        ...base,name:'아구몬',hp:123,maxHp:140,atk:47,def:24,spd:59,
         tp:40,maxTp:90,egg:false,lost:false,location:'farm'
       });
     }""")
