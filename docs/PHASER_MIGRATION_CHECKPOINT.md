@@ -142,3 +142,28 @@ Track: `feature/phaser-roster-battle-farm-readonly-20261028`.
   in the original HTML), separate world state mutation from renderer,
   implement game-event replay in Phaser without changing win/loss outcomes,
   and build real save-backed integration after those rules stabilize.
+
+## 2026-10-28 correction — Phaser turn demo was NOT our desired combat
+
+Owner observed two unrelated placeholder figures trading one hit each,
+revealing the earlier Phaser prototype used `turn % 2`. That was a design
+mistake, not a required Phaser limitation.
+
+Correct baseline already exists in old `index.html` under the main
+`DCBattleArena` implementation: multi-fighter real-time AI `think(f,dt)`,
+`advanceSpecial`, `beginMelee`, 2D chase/strafe/disengage/dodge, dynamic
+targeting, knockback, cast/projectiles, KO, victory pose and owned-match
+settlement. Codex ROM analysis is separate; do NOT conflate original-game
+JS simulation with ROM-verified NDS mechanics.
+
+New branch `fix/phaser-autonomous-realtime-battle-20261028` implements a
+**temporary but concurrent** fixed-step 2D simulation in
+`phaser-lab/realtime-core.js` and plugs it into `phaser-lab/game.js`.
+Default mode 3v3; 1v1/2v2 optional, no user attack controls. The rendering
+still uses noncopyrighted placeholders publicly or private local converted
+GIF atlas. Training and user JSON save previews remain read-only.
+
+This is NOT final simulation parity with original `DCBattleArena`; next
+task is extracting original production AI/simulation logic and replay
+events through Phaser. Keep save settlement entirely disabled in the
+independent prototype until regression equivalence tests verify outcomes.
