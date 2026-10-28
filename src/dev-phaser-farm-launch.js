@@ -31,7 +31,7 @@
   apply.style.cssText='position:fixed;right:12px;bottom:120px;z-index:10000;' +
     'padding:10px;border:2px solid #f5d68b;background:#62481f;' +
     'color:white;font:600 13px sans-serif;border-radius:9px';
-  let pending=null;
+  let pending=null,activeSession=null;
   // The two tabs never share the full save. Retain only the launch
   // fingerprint and one validated result packet in the ORIGINAL farm tab.
   apply.addEventListener('click',()=>{
@@ -81,7 +81,15 @@
 
   function launch(options={}){
     let payload,launchRecord,teamSize,leadIndex,tactic;
-    pending=null;apply.hidden=true;apply.disabled=false;
+    // A second match must not replace a completed, unapproved settlement.
+    // Nor may a parallel popup race the same underlying save snapshot.
+    if(pending){notice.textContent='이전 전투 결과를 먼저 저장하거나 페이지를 새로고침해 줘.';
+      return false;}
+    if(activeSession&&!activeSession.popup.closed){
+      notice.textContent='이미 열린 Phaser 전투 탭이 있어.';return false;
+    }
+    activeSession=null;
+    apply.hidden=true;apply.disabled=false;
     try {
       // The existing playable game defines global lexical `state`.
       // Read it on user click, not at page load (avoids stale roster).
@@ -116,6 +124,7 @@
       notice.textContent = '팝업이 차단됐어. 이 사이트의 새 탭 열기를 허용해 줘.';
       return false;
     }
+    activeSession={token,popup};
     let done = false;
     const onReady = event => {
       if (done || event.source !== popup || event.origin !== origin ||
@@ -133,7 +142,8 @@
           event.data?.type!=='dc-phaser-finished-v1'||
           event.data.token!==token)return;
       window.removeEventListener('message',onFinished);
-      if(!done)return;
+      if(!done||activeSession?.token!==token)return;
+      activeSession=null;
       const packet=event.data.packet;
       try{
         // Pure staging performs all participant/HP/TP/identity checks
@@ -156,6 +166,7 @@
       if (!done) {
         window.removeEventListener('message',onReady);
         window.removeEventListener('message',onFinished);
+        if(activeSession?.token===token)activeSession=null;
         notice.textContent = '연결 시간이 초과됐어. 팝업 탭을 확인해 줘.';
       }
     },15000);
