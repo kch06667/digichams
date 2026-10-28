@@ -76,8 +76,11 @@ def check(browser,host,mobile):
     assert after["elapsed"]>0
     assert after["stats"]["movement"]>0 if "movement" in after["stats"] else after["stats"]["distance"]>0
     assert after["stats"]["hits"]>0,after["stats"]
-    assert "새 전투 정산과 저장 완료" in page.locator(
-      "#dc-owned-optin-status").inner_text()
+    # The settings panel is intentionally behind the active battle modal.
+    # DOM innerText can be empty for a hidden element; textContent reads its
+    # actual status regardless of visibility, without changing gameplay.
+    commit_status=page.locator("#dc-owned-optin-status").text_content()
+    assert "새 전투 정산과 저장 완료" in commit_status,commit_status
     final=json.loads(after["saved"])
     assert "pendingBattle" not in final
     assert final["wins"]+final["losses"]==before_saved["wins"]+before_saved["losses"]+1
