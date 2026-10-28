@@ -167,6 +167,18 @@ test('finished original 2v2 battle produces immutable read-only result for same-
   assert.equal(JSON.stringify(imported),sourceBefore);
 });
 
+test('optional farm roster entry is isolated to the generated dev HTML',()=>{
+  const launch=fs.readFileSync(path.join(__dirname,'../src/dev-phaser-farm-launch.js'),'utf8');
+  const game=fs.readFileSync(path.join(__dirname,'../phaser-lab/game.js'),'utf8');
+  assert.doesNotThrow(()=>new vm.Script(launch));
+  assert.match(launch,/phaserBridge/);
+  assert.match(launch,/crypto.getRandomValues/);
+  assert.match(launch,/dc-phaser-ready-v1/);
+  assert.match(game,/prepareFarmHandoff\(\)/);
+  assert.match(game,/B\.inspectExport\(event\.data\.payload\)/);
+  assert.match(game,/event\.origin!==location\.origin/);
+  assert.doesNotMatch(launch,/localStorage|sessionStorage|\.nds/);
+});
 test('browser-side bridge script parses, displays chosen tactic and core linkage',()=>{
   for(const file of ['domain-bridge.js','game.js']){
     const src=fs.readFileSync(path.join(__dirname,'..','phaser-lab',file),'utf8');
