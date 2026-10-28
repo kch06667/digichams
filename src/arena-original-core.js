@@ -49,7 +49,7 @@
    const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
    const tacticSelect={value:tactic};
    const SP={idle:0,walk:2,run:3,hit:5,attack1:7,attack4:10,
-     shout:4,guard:5,ko:37,happy:28,cheer:30};
+     shout:33,guard:31,ko:37,happy:28,cheer:30};
    const knockTuning={melee:[145,195],special:[260,325],friction:9.0};
    const TUNING={meleeCD:[1.55,2.35],meleeMotion:.59,skillCost:100,moveRate:.90};
    const skillInfo=f=>TECH.forSpecies(f.name);
