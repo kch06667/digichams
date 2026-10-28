@@ -39,6 +39,22 @@ class TestAtlas(unittest.TestCase):
             self.assertTrue((out / "manifest.json").exists())
             self.assertEqual(json.loads((out / "manifest.json").read_text(encoding="utf-8"))["species"], "테스트")
 
+    def test_10ms_original_gif_duration_is_not_doubled(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            base=Path(scratch)
+            assets=base/"assets"
+            path=assets/"sprites"/"rookie"
+            path.mkdir(parents=True)
+            (assets/"sprite-index.json").write_text(
+                json.dumps({"game_species":{"short":{
+                    "folder":"rookie","stem":"short"}}}),encoding="utf-8")
+            one=Image.new("RGB",(9,9),(200,30,20))
+            two=Image.new("RGB",(9,9),(30,200,20))
+            one.save(path/"short_10.gif",save_all=True,append_images=[two],
+                     duration=[10,40],loop=0,optimize=False)
+            result=mod.export("short",assets,base/"out",[10])
+            self.assertEqual(result["actions"]["10"]["durationsMs"],[10,40])
+
     def test_index_path_traversal_rejected(self):
         with tempfile.TemporaryDirectory() as scratch:
             assets = Path(scratch) / "assets"
