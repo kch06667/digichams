@@ -240,11 +240,7 @@
       // Original HTML combat already chooses exact animation slot for
       // each action, including shout -> attack4 within one special move.
       // Never collapse those phases into one generic 'cast' pose.
-      const fallback=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
-        type==='attack'?7:type==='special'?10:type==='evade'?3:
-        type==='guard'?5:type==='run'?3:type==='walk'?2:0;
-      const id=type==='victory'?30:type==='ko'?37:
-        Number.isInteger(f.pose)&&f.pose>=0&&f.pose<=39?f.pose:fallback;
+      const id=L.motionAction(f,v.useArt?v.art.actions:null);
       const motionKey=type+':'+id;
       if(motionKey===v.pose)return;
       v.pose=motionKey;
@@ -253,10 +249,6 @@
         v.sprite.setTexture(key(v.art.source,id),0).setScale(v.scale);
         if(cfg.frames>1)v.sprite.play('realtime-'+encodeURIComponent(v.art.source)+'-'+id);
         else v.sprite.anims.stop();
-      }else if(v.useArt&&v.art.actions.size){
-        v.sprite.anims.stop();
-        v.sprite.setTexture(key(v.art.source,v.art.actions.has(0)?0:[...v.art.actions][0]),0)
-          .setScale(v.scale);
       }else{
         v.sprite.anims.stop();
         v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-0')
@@ -270,7 +262,15 @@
         this.pose(f,v);
         const bob=(f.act==='walk'||f.act==='evade')?
           Math.sin(time*.012+f.slot)*1.7:Math.sin(time*.003+f.slot)*.4;
-        v.sprite.x=f.x;v.sprite.y=f.y-34+bob;
+        const faintFallback=f.hp<=0&&
+          (!v.useArt||!v.art.actions.has(37));
+        v.sprite.x=f.x;
+        v.sprite.y=f.y-(faintFallback?14:34)+bob;
+        // When the sprite pack lacks the KO animation, show an actual
+        // collapsed fighter instead of a standing idle sprite. Keep
+        // original KO artwork upright: its own frames supply the motion.
+        v.sprite.setAngle(faintFallback?(f.side===0?-78:78):
+          (!v.useArt&&f.act==='hurt'?(f.side===0?-12:12):0));
         // Original GIFs were left-facing. Flip when travelling right.
         v.sprite.setFlipX((f.visualDir??f.dir)>0);
         v.sprite.setAlpha(f.hp<=0?.5:f.flash>0?.65:1);
