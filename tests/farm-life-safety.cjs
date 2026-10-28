@@ -98,11 +98,13 @@ test('simultaneous live and archived roster stable across save JSON roundtrip',(
   ]);
   farm.ensure(s);
   farm.placeFood(s);
-  const before=s.team.slice(1).map(x=>JSON.stringify(x));
-  farm.advance(s,12);
+  const before=s.team.slice(1,3).map(x=>JSON.stringify(x));
+  farm.advance(s,5);
   const saved=JSON.parse(JSON.stringify(s));
   farm.ensure(saved);
-  assert.deepEqual(saved.team.slice(1).map(x=>JSON.stringify(x)),before);
+  assert.deepEqual(saved.team.slice(1,3).map(x=>JSON.stringify(x)),before);
+  assert.equal(saved.team[3].egg,true,'egg is still progressing to hatching');
+  assert.ok(saved.team[3].hatchRemaining<12);
   assert.equal(saved.team[0].instanceId,'one');
   assert.equal(saved.team[0].location,'farm');
   assert.equal(saved.farm.foods.length,0);
