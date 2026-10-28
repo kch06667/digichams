@@ -17,3 +17,5 @@ __pycache__/
 /index.dev.html
 /.dev-generated/
 /dist/
+# Local licensed/privately converted sprite sheets must never enter GitHub.
+/phaser-lab/local-assets/

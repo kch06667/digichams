@@ -8,12 +8,12 @@
   const say=message=>{status.textContent=message;};
   const L=window.DigiPhaserLabLogic, B=window.DigiDomainBridge,
         RT=window.DCOriginalArenaCore, Art=window.DigiPrivateArtLoader;
-  const buttons=['battle','train','reset','sound','cups','speed'];
+  const buttons=['battle','duel','train','reset','sound','cups','speed'];
   if(!window.Phaser||!L||!B||!RT||!Art){
     say('원본 전투 계산 모듈을 불러오지 못했어. 새로고침하거나 네트워크를 확인해.');
     return;
   }
-  let manifest=null, soundEnabled=false,simSpeed=2,
+  let manifest=null, localDuelPacks=[],soundEnabled=false,simSpeed=2,
       savePreview=B.previewSample(), rosterChosen=null, trainingBonus=10,
       latestSpecies=null;
   // Browser-memory-only packs. One pack per distinct species, never published.
@@ -23,6 +23,12 @@
   const artSources=()=>{
     const sources=manifest?[{species:manifest.species,source:'local',manifest,
       lookup:filename=>'./local-assets/'+filename}]:[];
+    // These two species are read only from privately converted local files.
+    // No assets are copied into the safe public preview build.
+    for(const pack of localDuelPacks)sources.push({
+      species:pack.species,source:'duel:'+pack.folder,manifest:pack.manifest,
+      lookup:filename=>'./local-assets/'+pack.folder+'/'+filename
+    });
     for(const pack of privatePacks.values())sources.push({
       species:pack.species,source:'user:'+pack.species,
       manifest:pack.manifest,lookup:pack.lookup
@@ -122,7 +128,20 @@
           '저작권 없는 임시 도형 그래픽')+
         ' · 본게임 전투가 아님');
       window.DigiPhaserLab={
-        battle:()=>this.battle(),train:()=>this.train(),
+        battle:()=>this.battle(),
+        duel:()=>{
+          // Explicit fixed 1v1 starter showcase; never imports or mutates a save.
+          rosterChosen=null;
+          document.getElementById('rosterChoice').value='';
+          document.getElementById('squadSize').value='1';
+          this.scene.restart({mode:'battle',teamSize:1,
+            tactic:document.getElementById('tactic').value});
+        },
+        duelStatus:()=>({ready:localDuelPacks.length===2,
+          names:localDuelPacks.map(pack=>pack.species),
+          rendered:this.sim.fighters.filter(f=>this.visuals.get(f.id)?.useArt)
+            .map(f=>f.name)}),
+        train:()=>this.train(),
         reset:()=>this.scene.restart({mode:'idle',
           tactic:this.requestedTactic,teamSize:this.requestedSize}),
         sound:enabled=>{
@@ -503,6 +522,21 @@
         if(L.validateManifest(maybe))manifest=maybe;
       }
     }catch(_){/* Locally converted GIFs are optional. */}
+    // All-or-nothing: never substitute Agumon art for Gabumon, and never
+    // advertise a real-art duel unless both species manifests are valid.
+    try{
+      const specs=[['아구몬','duel-agumon'],['가부몬','duel-gabumon']];
+      const packs=await Promise.all(specs.map(async([species,folder])=>{
+        const response=await fetch('./local-assets/'+folder+'/manifest.json',
+          {cache:'no-store'});
+        if(!response.ok)return null;
+        const candidate=await response.json();
+        if(candidate.species!==species||!L.validateManifest(candidate))
+          throw Error('Invalid local duel sprites for '+species);
+        return {species,folder,manifest:candidate};
+      }));
+      if(packs.every(Boolean))localDuelPacks=packs;
+    }catch(_){/* Bad/missing personal art must never prevent game launch. */}
     new Phaser.Game({
       type:Phaser.AUTO,width:800,height:450,parent:'game',
       scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
@@ -511,6 +545,8 @@
     });
     document.getElementById('battle').addEventListener('click',
       ()=>window.DigiPhaserLab?.battle());
+    document.getElementById('duel').addEventListener('click',
+      ()=>window.DigiPhaserLab?.duel());
     document.getElementById('train').addEventListener('click',
       ()=>window.DigiPhaserLab?.train());
     document.getElementById('reset').addEventListener('click',
