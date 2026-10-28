@@ -449,3 +449,35 @@ py -m http.server 8000
   **정식 게임의 기본 index.html이나 대회전은 변경하지 않는다.**
 - 검증: `node --test tests/phaser-multiteam-settlement.cjs`;
   `python3 tests/phaser-owned-multi-browser.py` (PC/모바일 터치, 저장 재접속).
+
+
+## 2026-10-29 — 정식 본게임 대회 UI → Phaser (선택형 통합판)
+
+`node tools/build-phaser-optin-page.cjs`로 `index.phaser.html` 생성 후
+`http://127.0.0.1:8000/index.phaser.html?phaserBattle=1`에서 접속한다.
+
+- 대회 탭에 **🏆 대회 전투 화면**을 추가한다.
+  **기존 전투 (기본)** / **Phaser 대회 전투 (시험)** 중 고를 수 있다.
+  원래 **🏆 대회 참가 → ⚔ 다음 경기 출전** 버튼과 대진표를 그대로 쓴다.
+- 기존 게임의 **최신 HTML 내장 대회/진화 엔진**을 그대로 재사용하도록,
+  선택형 페이지에서 이를 덮어쓰던 구버전 `src/championship-core.js` 및
+  `src/evolution-core.js` 중복 로드를 제거했다.
+  이 코드는 별도 샌드박스에 남아 있을 수 있지만 현재 대회 저장 규칙이 아니다.
+- 시작 전 이미 확정된 `matchId`, 라운드, 대회 종류, 상대 테이머,
+  상대 명단을 본게임 대진표와 다시 비교한다. Phaser 전투는 **실제 상대 팀
+  이름과 현재 게임 종족 데이터 HP/공격/방어/속도/TP**를 사용한다.
+  상대 팀은 임의의 기본 아구몬/가부몬 팀으로 대체하지 않는다.
+- 전투 완료 후 자동 저장하지 않는다. 본게임 탭에서 명시적 결과 저장 시
+  **정확한 원본 경기 ID / 대진표 상태 / 상대 이름과 기본 능력치 /
+  출전한 각 내 디지몬의 개체 ID·HP·TP**를 검증한다.
+  정상인 경우 기존 `DCBattleSettlement`과 **최신 내장 `DCChampionship.finishMatch`**
+  로 준결승→결승, 8강/4강/결승, 1회 우승 상금·포인트·트로피를 정산한다.
+  첫/직전 백업 확인 뒤 세이브를 한 번만 저장한다.
+- **원본 `index.html`, `standalone.html` 그대로**, 공개 배포 변경 없음.
+  실제 사용 시 개인 JSON 백업 권장. 상대 밸런스는 원작 ROM 검증 결과가 아니라
+  기존 웹 확장판 설정이다.
+- 자동 검증: `node --test tests/phaser-championship-save.cjs`로
+  현재 HTML에 포함된 4팀/8팀 대진표 엔진을 이용한 2/3라운드 승패·상금·
+  대진 조작 방지 검증;
+  `python3 tests/phaser-championship-browser.py`로
+  PC/터치 실제 대회 버튼→대회 상대→자동 전투→저장·재시작 검증.
