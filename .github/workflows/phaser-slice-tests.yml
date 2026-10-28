@@ -3,8 +3,12 @@ on:
   pull_request:
     paths:
       - 'phaser-lab/**'
+      - 'src/battle-core.js'
+      - 'src/care-core.js'
+      - 'src/championship-core.js'
       - 'tools/export-phaser-atlas.py'
       - 'tests/phaser-lab.cjs'
+      - 'tests/phaser-domain-bridge.cjs'
       - 'tests/phaser-farm.cjs'
       - 'tests/phaser-preview.cjs'
       - 'tests/phaser-browser-smoke.py'
@@ -26,7 +30,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install 'Pillow>=10,<13'
       - run: node --check phaser-lab/game.js
-      - run: node --test tests/phaser-lab.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
+      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_atlas.py' -v
   browser:
     runs-on: ubuntu-latest
