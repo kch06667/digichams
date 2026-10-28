@@ -344,3 +344,25 @@ python3 -m http.server 8000 --bind 127.0.0.1
 - 기존 본게임 자체의 전투 진입 경로 교체와 원자적 세이브 정산은 향후 별도 단계다.
 - 검증: `node --test tests/build-dev-page.cjs tests/phaser-domain-bridge.cjs`,
   `python3 tests/phaser-farm-handoff-browser.py` (Playwright/Chromium, PC/터치).
+
+
+## 2026-10-29 — 개발용 실제 Phaser 1대1 결과 저장 (선택 사항)
+
+기존 `index.dev.html?phaserBridge=1` 사육장에서 연습전 탭을 열고,
+1대1 원본 HTML AI 전투가 정상 종료되면 원래 사육장 탭에
+**전투 결과 저장 (개발용 · 백업 필수)** 버튼이 나타난다.
+기본적으로 **자동 저장하지 않으며**, 사용자가 직접 클릭할 때만 적용을 시도한다.
+
+- 전투 탭에는 원본 세이브 전체와 개체 ID를 보내지 않는다. 전투가 끝난 뒤
+  검증된 HP·TP·승패와 원본 시뮬레이션 결과만 동일 출처의 원래 탭에 전달한다.
+- 원래 탭은 출전 개체 ID, 출전 당시 HP·TP·능력치, 전투 종료 결과, 현재
+  사육장 상태가 모두 일치하는지 확인한다. 출전 개체가 바뀌었거나 기존 저장 상태와
+  현재 메모리가 다르면 거부한다.
+- 기존 `src/battle-commit-core.js`의 클론 정산을 그대로 사용한다.
+  검증된 상태를 저장하기 전 첫 번째/최신 백업을 별도 키에 남기고 읽어 검증한다.
+  세이브에는 한 번만 쓰며, 정상 확인 뒤 새로고침해 저장된 상태를 채택한다.
+  중복 적용이나 다른 탭의 새로운 세이브를 덮어쓰지 않는다.
+- **여전히 실험용 기능이다.** 대회 경기나 정식 본게임의 전투 버튼에는
+  연결하지 않았다. 실제 사용 전 JSON 백업을 권장한다.
+- 검증: `node --test tests/phaser-owned-settlement.cjs` 및
+  `python3 tests/phaser-farm-handoff-browser.py` (Chromium PC/터치).

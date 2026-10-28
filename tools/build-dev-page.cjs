@@ -53,8 +53,15 @@ function build({root = path.resolve(__dirname, '..'), input = 'index.html'} = {}
   const diagnosticScript = '<script defer src="src/dev-performance-overlay.js"></script>';
   // Read-only Phaser roster handoff: source exists only in generated dev entry.
   // It is itself inert unless the user visits ?phaserBridge=1.
-  const farmHandoffScript = '<script defer src="src/dev-phaser-farm-launch.js"></script>';
-  const devScripts = diagnosticScript + '\n' + farmHandoffScript;
+  const settlementScripts = [
+    'src/evolution-core.js',
+    'src/championship-core.js',
+    'src/battle-settlement-core.js',
+    'src/battle-commit-core.js',
+    'src/dev-phaser-commit.js',
+    'src/dev-phaser-farm-launch.js'
+  ].map(src => '<script defer src="' + src + '"></script>').join('\n');
+  const devScripts = diagnosticScript + '\n' + settlementScripts;
   const developerPage = generated.includes('</body>')
     ? generated.replace('</body>', devScripts + '\n</body>')
     : generated + '\n' + devScripts;
