@@ -185,3 +185,43 @@ renderer-independent production module (target behavior, cooldowns, attack
 outcomes, state transitions, championship settlement), replace
 `realtime-core.js` prototype rules with the production module in Phaser,
 add equivalence tests before writing any player save.
+
+## 2026-10-28 — species identity + local sprite pack, no public image upload
+
+The Phaser battle lab now imports **existing game technique metadata**
+from `arena-techniques.js`: the same named skills and costs currently defined
+in the older `index.html` arena for Agumon, Gabumon, Patamon, WarGreymon,
+MetalGarurumon and other registered species. For example Agumon uses
+`화염 공격`, Gabumon uses `블루 블래스터` and WarGreymon has
+a 36 TP cost. **These are extension-era game data, not verified ROM
+technique IDs or NDS battle balance.** The energy gate, guarded TP cost,
+windup, cooldown and knockback are closer to the existing HTML arena.
+
+Default sparring team members now have actual Digimon names and their own
+techniques. The freely distributed art is still **procedurally generated,
+non-original placeholder art**; naming real monsters does not magically
+supply their licensed graphics.
+
+### Put your existing sprites on YOUR device without publishing them
+
+1. Convert one species' already-owned local GIFs to sprite sheets with
+   `python3 tools/export-phaser-atlas.py --species 아구몬` on a PC.
+2. Open the safe web lab. Under **내 PC·휴대폰의 변환된 디지몬 모션 파일
+   적용**, select **manifest.json and every action_*.png** together from
+   `phaser-lab/local-assets`.
+3. When that species appears in battle, the lab draws only that species
+   using the selected sprite sheets. Other species retain placeholders.
+
+The chosen images are read **only inside the current browser tab** using
+short-lived `blob:` URLs. They are not sent to GitHub Pages, put in
+`localStorage`, committed to Git, or cached by the service worker.
+Selection must be repeated on tab reload; this is intentional. Package
+limits: 45 files, 32MiB total, 8MiB per file. Only valid local
+manifest+PNG file combinations are accepted. To create multi-species
+graphics, a later version needs explicit per-species atlas manifests.
+Do not select or publish NDS ROM files.
+
+**Implementation boundary:** This remains a Phaser development lab,
+not the original game's complete simulation. Main gameplay and save
+settlement remain in the original playable `index.html`; do not treat
+the lab's temporary combat statistics as permanent results.

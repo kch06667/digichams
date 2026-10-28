@@ -7,14 +7,14 @@
   const status=document.getElementById('status');
   const say=message=>{status.textContent=message;};
   const L=window.DigiPhaserLabLogic, B=window.DigiDomainBridge,
-        RT=window.DigiRealTimeCore;
+        RT=window.DigiRealTimeCore, Art=window.DigiPrivateArtLoader;
   const buttons=['battle','train','reset','sound','cups','speed'];
-  if(!window.Phaser||!L||!B||!RT){
+  if(!window.Phaser||!L||!B||!RT||!Art){
     say('엔진 로드 실패 · Phaser와 전투 모듈 연결을 확인해.');
     return;
   }
-  let manifest=null,soundEnabled=false,simSpeed=2,savePreview=B.previewSample(),
-      rosterChosen=null, trainingBonus=10;
+  let manifest=null, privatePack=null, soundEnabled=false,simSpeed=2,
+      savePreview=B.previewSample(), rosterChosen=null, trainingBonus=10;
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const key=id=>'private-motion-'+id;
   const format=n=>Math.max(0,Math.round(n));
@@ -58,7 +58,10 @@
     preload(){
       if(!manifest)return;
       for(const [id,cfg] of Object.entries(manifest.actions)){
-        this.load.spritesheet(key(id),'./local-assets/'+cfg.file,{
+        // A newly selected *private local* pack must replace old frames.
+        if(this.textures.exists(key(id)))this.textures.remove(key(id));
+        this.load.spritesheet(key(id),
+          privatePack?.lookup(cfg.file)||'./local-assets/'+cfg.file,{
           frameWidth:cfg.frameWidth,frameHeight:cfg.frameHeight,
           endFrame:cfg.frames-1
         });
@@ -73,7 +76,8 @@
           const idx=Number(id);
           if(!this.textures.exists(key(id)))continue;
           this.loadedActions.add(idx);
-          if(cfg.frames>1&&!this.anims.exists('realtime-'+id)){
+          if(cfg.frames>1){
+            if(this.anims.exists('realtime-'+id))this.anims.remove('realtime-'+id);
             const frames=this.anims.generateFrameNumbers(key(id),{
               start:0,end:cfg.frames-1
             }).map((frame,i)=>({...frame,duration:clamp(cfg.durationsMs[i],30,30000)}));
@@ -97,7 +101,8 @@
       this.updateHud();
       say('준비 완료 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
         ' 실시간 AI 연습전 · '+(this.loadedActions.size?
-          '개인 제공 모션 '+this.loadedActions.size+'종':'저작권 없는 임시 도형 그래픽')+
+          (manifest.species+' 전용 모션 '+this.loadedActions.size+'종 · 다른 종은 임시 그래픽'):
+          '저작권 없는 임시 도형 그래픽')+
         ' · 본게임 전투가 아님');
       window.DigiPhaserLab={
         battle:()=>this.battle(),train:()=>this.train(),
@@ -119,7 +124,14 @@
         cupPreview:()=>B.cupPreview(savePreview),
         importedSavePreview:()=>JSON.parse(JSON.stringify(savePreview)),
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
-        trainingPreview:day=>B.train(day,trainingBonus,1)
+        trainingPreview:day=>B.train(day,trainingBonus,1),
+        privatePackStatus:()=>privatePack?{species:privatePack.species,
+          actions:Object.keys(privatePack.manifest.actions).length}:null,
+        renderedArt:()=>this.sim.fighters.map(f=>{
+          const v=this.visuals.get(f.id);
+          return {id:f.id,name:f.name,privateArt:!!v?.useArt,
+            textureKey:v?.sprite.texture.key||null};
+        })
       };
       for(const id of buttons)document.getElementById(id).disabled=false;
       if(this.requestedMode==='battle')this.beginBattle();
@@ -163,7 +175,8 @@
         {color:'#e0e6ed',fontSize:'13px'}).setOrigin(.5).setDepth(19);
     }
     addActor(f){
-      const useArt=this.loadedActions.size>0;
+      // A one-species atlas may NOT replace all other fighters with that art.
+      const useArt=this.loadedActions.size>0&&manifest?.species===f.name;
       const atlas=useArt?(this.loadedActions.has(0)?0:[...this.loadedActions][0]):null;
       const texture=useArt?key(atlas):'practice-'+f.side+'-'+f.slot+'-0';
       const sprite=this.add.sprite(f.x,f.y-31,texture).setDepth(4);
@@ -176,7 +189,8 @@
         fontFamily:'sans-serif',backgroundColor:'#142b3980',
         padding:{x:3,y:1}
       }).setOrigin(.5).setDepth(9);
-      this.visuals.set(f.id,{sprite,label,pose:null,scale,side:f.side,slot:f.slot,frame:0});
+      this.visuals.set(f.id,{sprite,label,pose:null,scale,side:f.side,
+        slot:f.slot,frame:0,useArt});
     }
     pose(f,v){
       const type=f.hp<=0?'ko':f.act;
@@ -185,12 +199,12 @@
       const id=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
         type==='attack'?7:type==='cast'?7:type==='evade'?3:
         type==='guard'?5:type==='walk'?2:0;
-      if(this.loadedActions.has(id)){
+      if(v.useArt&&this.loadedActions.has(id)){
         const cfg=manifest.actions[String(id)];
         v.sprite.setTexture(key(id),0).setScale(v.scale);
         if(cfg.frames>1)v.sprite.play('realtime-'+id);
         else v.sprite.anims.stop();
-      }else if(this.loadedActions.size){
+      }else if(v.useArt&&this.loadedActions.size){
         v.sprite.anims.stop();
         v.sprite.setTexture(key(this.loadedActions.has(0)?0:[...this.loadedActions][0]),0)
           .setScale(v.scale);
@@ -211,10 +225,10 @@
         // Original GIFs were left-facing. Flip when travelling right.
         v.sprite.setFlipX(f.dir>0);
         v.sprite.setAlpha(f.hp<=0?.5:f.flash>0?.65:1);
-        if(!this.loadedActions.size&&f.hp>0&&
+        if(!v.useArt&&f.hp>0&&
            (f.act==='walk'||f.act==='evade')&&Math.floor(time/160)%2===1){
           v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-1');
-        }else if(!this.loadedActions.size){
+        }else if(!v.useArt){
           v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-0');
         }
         v.label.x=f.x;v.label.y=f.y+8;
@@ -242,9 +256,10 @@
         }
       }
       for(const shot of this.sim.projectiles){
-        this.projectileGraphics.fillStyle(0xfff3b5,.4);
+        const tint=Phaser.Display.Color.HexStringToColor(shot.color||'#ffb451').color;
+        this.projectileGraphics.fillStyle(tint,.35);
         this.projectileGraphics.fillCircle(shot.x,shot.y,13);
-        this.projectileGraphics.fillStyle(0xffd768,1);
+        this.projectileGraphics.fillStyle(tint,1);
         this.projectileGraphics.fillCircle(shot.x,shot.y,6);
       }
     }
@@ -289,7 +304,7 @@
       if(e.type==='skill'){
         const f=this.sim.fighters.find(a=>a.id===e.attackerId);
         const notice=this.add.text(400,120,
-          (f?.name||'디지몬')+' · 필살기!',{
+          (f?.name||'디지몬')+' · '+(e.technique||'필살기')+'!',{
           color:'#fff3ce',fontFamily:'sans-serif',fontSize:'26px',
           backgroundColor:'#122b42bb',padding:{x:12,y:7}
         }).setOrigin(.5).setDepth(30);
@@ -384,6 +399,27 @@
       e.currentTarget.setAttribute('aria-pressed',String(soundEnabled));
       e.currentTarget.textContent=soundEnabled?'타격음 끄기':'타격음 켜기';
       window.DigiPhaserLab?.sound(soundEnabled);
+    });
+    document.getElementById('artFiles').addEventListener('change',async e=>{
+      const files=Array.from(e.currentTarget.files||[]);
+      if(!files.length)return;
+      try{
+        const pack=await Art.fromFiles(files,L.validateManifest);
+        // Make the entire valid pack ready before discarding previous references.
+        // Texture frames are removed/reloaded in Scene.preload on restart.
+        const old=privatePack;
+        privatePack=pack;
+        manifest=pack.manifest;
+        const scene=window.DigiPhaserLab;
+        if(scene)scene.reset();
+        // Revoking old URLs after replacement avoids retaining private binary art.
+        if(old)old.dispose();
+        say('개인 그래픽 적용 · '+pack.species+' · '+
+          Object.keys(pack.manifest.actions).length+
+          '종 모션 · 선택한 파일은 외부로 전송되지 않아');
+      }catch(err){
+        say('로컬 그래픽 가져오기 실패: '+err.message);
+      }
     });
     document.getElementById('saveFile').addEventListener('change',async e=>{
       const file=e.currentTarget.files?.[0];if(!file)return;

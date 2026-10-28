@@ -167,3 +167,32 @@ This is NOT final simulation parity with original `DCBattleArena`; next
 task is extracting original production AI/simulation logic and replay
 events through Phaser. Keep save settlement entirely disabled in the
 independent prototype until regression equivalence tests verify outcomes.
+
+## 2026-10-28 — first real sprite identity/technique bridge
+
+Feature branch: `feature/phaser-combat-parity-20261028`.
+
+- New `phaser-lab/arena-techniques.js` contains a documented transcription
+  of the `TECHNIQUES` table from the existing production `index.html`
+  arena. The Phaser demo uses actual matching names, elements/colors,
+  melee/ranged forms, TP costs and explicit unverified-data provenance.
+- Fixed a graphical identity bug: one local Agumon atlas was displayed for
+  EVERY battler. Now local private sprites are rendered **only if the
+  actor's Digimon species name matches the atlas species**. Other combatants
+  retain distinct generated placeholders.
+- Added `phaser-lab/private-art-loader.js` and a browser file chooser for
+  locally generated `manifest.json` + `action_*.png` files. The loader
+  validates species, animation lengths and filenames, caps file sizes,
+  uses temporary object URLs, revokes them on replacement and does NOT
+  upload files to GitHub, Pages or cloud storage.
+- The autonomous Phaser prototype's attack windup, guarded damage factor,
+  energy/TP gate, signature cooldown, projectile palette and knockback
+  are tuned toward values already present in the original game's
+  v0.23.2 arena. **Not exact simulation parity yet.**
+- CI adds private-art validation, species cost guards and Chromium
+  mouse/touch import checks using ephemeral local Agumon sheets.
+- Public safe Pages build still allowlists only JS/HTML/license/manifest/
+  original placeholder icon, not Digimon artwork.
+- NEXT: formally extract original production `DCBattleArena` to a shared
+  DOM-free simulation, compare deterministic trace outcomes, then replace
+  the lab's provisional combat logic with the actual game simulation.
