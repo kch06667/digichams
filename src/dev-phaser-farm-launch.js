@@ -178,7 +178,8 @@
           eval('speciesLookup'));
         pending={packet,token,launch:launchRecord};
         apply.hidden=false;
-        notice.textContent=(launchRecord.tournament?'🏆 대회 경기 ':'')+
+        notice.textContent='완료된 '+
+          (launchRecord.tournament?'🏆 대회 경기 ':'')+
           teamSize+'대'+teamSize+' 결과 검증 완료 · 저장 승인 가능';
       }catch(err){
         notice.textContent='결과 저장 불가: '+err.message+
