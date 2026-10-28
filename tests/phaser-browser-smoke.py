@@ -116,6 +116,17 @@ def check_page(browser, mobile, base_url):
     finish=page.evaluate("DigiPhaserLab.matchSnapshot()")
     assert finish["finished"]
     assert finish["stats"]["hits"]>0
+    # Verify sparse private sprite packs use relevant fallback motions, not
+    # an idle/attack pose during KO. Also inspect actual rendered actor angles
+    # after natural original-AI combat rather than mocking a Phaser sprite.
+    assert page.evaluate("""() => DigiPhaserLabLogic.motionAction(
+      {hp:0,act:'attack',pose:7},new Set([0,5]))""") == 5
+    rendered=page.evaluate("DigiPhaserLab.renderedArt()")
+    for record in rendered:
+        fighter=next(f for f in finish["fighters"] if f["id"]==record["id"])
+        if fighter["hp"]<=0 and not record["hasKoArt"]:
+            assert abs(record["angle"])>=70,record
+            assert record["action"].startswith("ko:"),record
     # Existing rules are loaded into the real browser, and read-only JSON
     # inspection must not touch browser localStorage or the active scene.
     assert page.evaluate("typeof DigiDomainBridge.plan")=="function"
