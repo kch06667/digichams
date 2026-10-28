@@ -10,6 +10,9 @@ on:
       - 'src/arena-original-core.js'
       - 'src/battle-settlement-core.js'
       - 'src/battle-commit-core.js'
+      - 'src/battle-owned-optin.js'
+      - 'src/battle-owned-optin-ui.js'
+      - 'tools/build-owned-battle-optin.cjs'
       - 'src/evolution-core.js'
       - 'index.html'
       - 'src/care-core.js'
@@ -28,6 +31,8 @@ on:
       - 'tests/battle-evolution-settlement-parity.cjs'
       - 'tests/battle-commit-safety.cjs'
       - 'tests/battle-legacy-storage.cjs'
+      - 'tests/battle-owned-optin.cjs'
+      - 'tests/battle-owned-optin-browser.py'
       - 'tests/fixtures/battle-commit-browser.html'
       - 'tests/battle-experience-parity.cjs'
       - 'tests/phaser-private-art.cjs'
@@ -57,7 +62,9 @@ jobs:
       - run: node --check src/arena-original-core.js
       - run: node --check src/battle-settlement-core.js
       - run: node --check src/battle-commit-core.js
-      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs tests/battle-legacy-storage.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
+      - run: node --check src/battle-owned-optin.js
+      - run: node --check tools/build-owned-battle-optin.cjs
+      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs tests/battle-legacy-storage.cjs tests/battle-owned-optin.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_atlas.py' -v
   browser:
     runs-on: ubuntu-latest
@@ -92,3 +99,7 @@ jobs:
         run: python3 tests/phaser-browser-smoke.py
       - name: Desktop/touch isolated browser save denial and reload regression
         run: python3 tests/battle-browser-storage-smoke.py
+      - name: Build optional live-game HTML with default-off battle settlement
+        run: node tools/build-owned-battle-optin.cjs dist/battle-optin
+      - name: Optional battle save UI smoke (desktop/touch)
+        run: python3 tests/battle-owned-optin-browser.py
