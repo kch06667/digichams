@@ -70,7 +70,7 @@
       const mon=teamById.get(instanceId);
       if(!mon||mon.name!==before.name||mon.egg||mon.lost||
          mon.location==='storage'||!finite(mon.hp,mon.maxHp)||
-         mon.hp<=0||!finite(before.max,999999)||before.max!==mon.maxHp||
+         (mon.hp<=0&&after.hp>0)||!finite(before.max,999999)||before.max!==mon.maxHp||
          !finite(before.hp,before.max)||before.hp!==mon.hp||
          after.max!==before.max||!finite(after.hp,after.max)||
          !finite(before.maxTp,999999)||before.maxTp<=0||
