@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'phaser-lab/**'
+      - 'tests/phaser-preview.cjs'
+      - 'tools/build-phaser-preview.cjs'
       - 'src/battle-core.js'
       - 'src/care-core.js'
       - 'src/championship-core.js'
@@ -56,5 +58,10 @@ jobs:
           test -f phaser-lab/local-assets/action_30.png
           test -f phaser-lab/local-assets/action_32.png
           test -f phaser-lab/local-assets/manifest.json
-      - name: Desktop/touch browser smoke
+      - name: Generate safe offline preview bundle
+        run: |
+          node tools/build-phaser-preview.cjs dist/phaser-preview
+          test -s dist/phaser-preview/vendor/phaser.min.js
+          test -s dist/phaser-preview/vendor/PHASER_LICENSE.txt
+      - name: Desktop/touch browser smoke, safe preview offline
         run: python3 tests/phaser-browser-smoke.py
