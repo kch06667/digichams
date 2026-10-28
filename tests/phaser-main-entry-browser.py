@@ -96,7 +96,8 @@ def check(browser,base,mobile=False):
       localStorage.setItem('dc_recreation_save',JSON.stringify(eval('state')));
       document.querySelector('#dc-phaser-farm-apply').click();
     }""")
-    farm.locator("#dc-phaser-engine").wait_for(timeout=20000)
+    farm.locator("#dc-phaser-engine").wait_for(
+        state="attached",timeout=20000)
     saved=farm.evaluate("""() =>
       JSON.parse(localStorage.getItem('dc_recreation_save'))""")
     assert saved["wins"]+saved["losses"]==original["wins"]+original["losses"]+1,saved
