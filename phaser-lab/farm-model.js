@@ -17,8 +17,32 @@
       '1:0':{hunger:45,food:0,name:'디지몬 B'}
     }
   });
+  function fromRoster(preview) {
+    if(!preview||!Array.isArray(preview.team)||!Number.isSafeInteger(preview.day))
+      throw Error('먼저 유효한 세이브를 확인해야 해.');
+    const active=preview.team.filter(m=>m&&m.location!=='storage'&&!m.lost);
+    const count=Math.min(active.length, COLUMNS*MAX_ROWS);
+    const cages=Object.create(null);
+    for(let i=0;i<count;i++){
+      const mon=active[i];
+      if(typeof mon.name!=='string'||!mon.name||!Number.isFinite(mon.hp)||
+         !Number.isFinite(mon.maxHp)||mon.maxHp<=0)throw Error('디지몬 기록 오류');
+      cages[code(Math.floor(i/COLUMNS),i%COLUMNS)]={
+        name:mon.name,food:0,hunger:clamp(mon.hunger||0,0,100),
+        hp:clamp(mon.hp,0,mon.maxHp),maxHp:mon.maxHp,egg:!!mon.egg
+      };
+    }
+    return {
+      rows:Math.min(MAX_ROWS,Math.max(2,Math.ceil(count/COLUMNS))),
+      credits:Number.isFinite(preview.facilityCredits)?preview.facilityCredits:0,
+      selected:'0:0',training:0,cages,viewOnly:true,
+      sourceDay:preview.day,hiddenCount:Math.max(0,active.length-count)
+    };
+  }
   function transition(state, action){
     if(!state||!action||typeof action.type!=='string')throw Error('Invalid farm transition');
+    if(state.viewOnly&&action.type!=='select')
+      return {state,message:'세이브 미리보기에서는 육성 데이터를 변경하지 않아. 초기화하면 시연 모드야.',changed:false};
     const s={...state,cages:{...state.cages}};
     const [row,col]=String(s.selected).split(':').map(Number);
     const targetKey=action.type==='bite'&&typeof action.at==='string'?action.at:s.selected;
@@ -63,5 +87,5 @@
     }
   }
   return Object.freeze({COLUMNS,MAX_ROWS,CAGE_COST,ROW_COST,FOOD_COST,
-    FOOD_BITES,initial,transition,code,inside});
+    FOOD_BITES,initial,fromRoster,transition,code,inside});
 });
