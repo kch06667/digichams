@@ -3,6 +3,8 @@ import contextlib
 import functools
 import http.server
 import os
+import json
+import tempfile
 from pathlib import Path
 import threading
 
@@ -51,6 +53,27 @@ def check_page(browser, mobile, base_url):
         assert any(x["name"]=="아구몬" and x["privateArt"] for x in assignments)
         assert all((x["name"]=="아구몬") or not x["privateArt"]
                    for x in assignments), assignments
+        # Reimporting another species must retain the first species'
+        # textures. This uses temporary TEST-ONLY relabelled sheets;
+        # it makes no claim that the image is actual Gabumon artwork.
+        with tempfile.TemporaryDirectory() as directory:
+            second = json.loads((local / "manifest.json").read_text(encoding="utf-8"))
+            second["species"] = "가부몬"
+            other_manifest = Path(directory) / "manifest.json"
+            other_manifest.write_text(
+                json.dumps(second, ensure_ascii=False), encoding="utf-8")
+            page.locator("#artFiles").set_input_files([str(other_manifest), *sprites])
+            page.wait_for_function(
+              "() => window.DigiPhaserLab?.privatePackStatus()?.speciesList?.includes('가부몬')",
+              timeout=12000)
+            status = page.evaluate("DigiPhaserLab.privatePackStatus()")
+            assert status["speciesList"] == ["아구몬", "가부몬"], status
+            assignments = page.evaluate("DigiPhaserLab.renderedArt()")
+            for name in ("아구몬", "가부몬"):
+                assert any(x["name"] == name and x["privateArt"]
+                           for x in assignments), assignments
+            assert all(x["name"] in ("아구몬", "가부몬") or not x["privateArt"]
+                       for x in assignments), assignments
     assert page.evaluate("DigiPhaserLabLogic.selectAction('victory')") == 30
     assert page.evaluate("DigiPhaserLabLogic.selectAction('training')") == 32
     if mobile:
