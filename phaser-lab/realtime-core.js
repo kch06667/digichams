@@ -258,8 +258,8 @@
     p.x+=(tx-p.x)/d*step;p.y+=(ty-p.y)/d*step;
   }
   function step(s,dt=1/30){
-    if(s.finished){s.events=[];return s}
     if(!Number.isFinite(dt)||dt<0||dt>.051)throw Error('Simulation requires fixed <=51ms steps');
+    if(s.finished){s.events=[];return s}
     s.events=[];
     s.elapsed+=dt;s.frame++;
     // Every fighter evaluates its OWN AI on every fixed tick; no alternating turns.
