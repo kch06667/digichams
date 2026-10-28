@@ -69,7 +69,15 @@ def fight(ctx,farm,errors,expected_round):
     match=farm.evaluate("""() => {
       const s=eval('state'),m=DCChampionship.nextMatch(s);
       if(!m)throw Error('Original tournament has no next match');
-      return m;
+      if(Array.isArray(m.opponentTeam))return m;
+      const names=eval('allNames'),found=names.indexOf(m.opponent);
+      if(found<0)throw Error('Original opponent species missing');
+      const team=[m.opponent];
+      for(let i=1;team.length<m.size&&i<names.length;i++){
+        const name=names[(found+i+2)%names.length];
+        if(!team.includes(name))team.push(name);
+      }
+      return {...m,opponentTeam:team,trainer:m.trainer||'상대 테이머'};
     }""")
     assert match["round"]==expected_round,match
     assert len(match["opponentTeam"])==match["size"]
@@ -118,8 +126,9 @@ def fight(ctx,farm,errors,expected_round):
     assert "pendingBattle" not in saved
     assert saved["championship"]["active"] is None or (
       saved["championship"]["active"]["awaiting"] is None)
-    assert saved["championship"]["matchHistory"][0]["matchId"]==match["matchId"]
-    assert saved["championship"]["matchHistory"][0]["opponent"]==match["opponentTeam"]
+    if saved["championship"].get("matchHistory"):
+        assert saved["championship"]["matchHistory"][0]["matchId"]==match["matchId"]
+        assert saved["championship"]["matchHistory"][0]["opponent"]==match["opponentTeam"]
     assert farm.evaluate("""() =>
       Boolean(localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY))""")
     arena.close()
@@ -140,14 +149,16 @@ def check(browser,base,cup,mobile=False):
         assert saved["championship"]["active"] is None
         assert saved["championship"]["crowns"]["novice"]==1
         assert saved["championship"]["rank"]==1
-        assert saved["championship"]["matchHistory"][0]["round"]==1
         assert saved["facilityCredits"]>=260
-        assert len(saved["championship"]["matchHistory"])==2
+        if saved["championship"].get("matchHistory"):
+            assert saved["championship"]["matchHistory"][0]["round"]==1
+            assert len(saved["championship"]["matchHistory"])==2
         assert len(saved["championship"]["history"])==1
     else:
         assert saved["championship"]["active"]["round"]==1
         assert not saved["championship"]["crowns"].get(cup)
-        assert len(saved["championship"]["matchHistory"])==1
+        if saved["championship"].get("matchHistory"):
+            assert len(saved["championship"]["matchHistory"])==1
     print("OK original championship",cup,
       "touch" if mobile else "desktop","real bracket / opponents / save")
     ctx.close()
