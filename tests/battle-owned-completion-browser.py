@@ -43,7 +43,11 @@ def check(browser,host,mobile):
     }""")
     assert page.locator("#dc-owned-optin-enable").is_checked(),status
 
-    # Start the ACTUAL owned arena through its real game controls.
+    # The game defaults to its NDS two-screen skin, where the floating
+    # liveBattleLaunch control is intentionally hidden. Switch through the
+    # genuine visible display-mode button, then open the real arena.
+    page.locator("#wideMode").click()
+    assert not page.evaluate("document.body.classList.contains('mode-nds')")
     page.locator("#liveBattleLaunch").click()
     page.locator("#lbMode").select_option("owned")
     page.locator("#lbTeamSize").select_option("1")
