@@ -18,6 +18,10 @@ on:
       - 'src/care-core.js'
       - 'src/championship-core.js'
       - 'tools/export-phaser-atlas.py'
+      - 'tools/export-phaser-duel.py'
+      - 'tests/test_phaser_duel.py'
+      - 'tests/phaser-duel-browser-smoke.py'
+      - '.gitignore'
       - 'tests/phaser-lab.cjs'
       - 'tests/phaser-domain-bridge.cjs'
       - 'tests/phaser-realtime.cjs'
@@ -67,7 +71,7 @@ jobs:
       - run: node --check src/battle-owned-optin.js
       - run: node --check tools/build-owned-battle-optin.cjs
       - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs tests/battle-legacy-storage.cjs tests/battle-owned-optin.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
-      - run: python -m unittest discover -s tests -p 'test_phaser_atlas.py' -v
+      - run: python -m unittest discover -s tests -p 'test_phaser_*.py' -v
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -99,6 +103,13 @@ jobs:
           test -s dist/phaser-preview/vendor/PHASER_LICENSE.txt
       - name: Desktop/touch browser smoke, safe preview offline
         run: python3 tests/phaser-browser-smoke.py
+      - name: Privately export BOTH original species for local duel QA (never upload)
+        run: |
+          python3 tools/export-phaser-duel.py
+          test -s phaser-lab/local-assets/duel-agumon/action_0.png
+          test -s phaser-lab/local-assets/duel-gabumon/action_0.png
+      - name: Local-only original Agumon vs Gabumon 1v1 browser smoke
+        run: python3 tests/phaser-duel-browser-smoke.py
       - name: Desktop/touch isolated browser save denial and reload regression
         run: python3 tests/battle-browser-storage-smoke.py
       - name: Build optional live-game HTML with default-off battle settlement
