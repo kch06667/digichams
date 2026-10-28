@@ -15,21 +15,36 @@ DEFAULT_OUTPUT = ROOT / "phaser-lab" / "local-assets"
 DEFAULT_ACTIONS = (0, 2, 3, 5, 7, 10, 14, 28, 30, 31, 32, 33, 37)
 
 
-def export(species, asset_root, output, actions=DEFAULT_ACTIONS):
+def resolve_species(species, asset_root):
     catalog = json.loads((asset_root / "sprite-index.json").read_text(encoding="utf-8"))
     item = catalog["game_species"].get(species)
+    # Preserve legacy names/aliases, then consult the actual 216-species catalog.
+    full_catalog = asset_root / "species-catalog.json"
+    if not item and full_catalog.is_file():
+        entries = json.loads(full_catalog.read_text(encoding="utf-8"))["entries"]
+        matches = [entry for entry in entries if entry["name"] == species]
+        if len(matches) > 1:
+            raise ValueError(f"ambiguous species in catalog: {species!r}")
+        item = matches[0] if matches else None
     if not item:
-        raise ValueError(f"unknown species: {species!r}. Check assets/sprite-index.json")
+        raise ValueError(f"unknown species: {species!r}. Check sprite-index.json / species-catalog.json")
     folder, stem = item["folder"], item["stem"]
     # Only use explicitly indexed GIFs, do not take arbitrary filesystem paths.
     if not all(x and "/" not in x and "\\" not in x and ".." not in x
                for x in (folder, stem)):
         raise ValueError("unsafe sprite index path")
+    return folder, stem
+
+
+def export(species, asset_root, output, actions=DEFAULT_ACTIONS):
+    folder, stem = resolve_species(species, asset_root)
     files = []
     for action in actions:
         if not 0 <= action <= 39:
             raise ValueError(f"action out of range: {action}")
-        path = asset_root / "sprites" / folder / f"{stem}_{action}.gif"
+        # Existing #5_1 GIF matches ROM animation #5 (not a guess at action meaning).
+        suffix = "5_1" if stem == "m357_unimon_main" and action == 5 else str(action)
+        path = asset_root / "sprites" / folder / f"{stem}_{suffix}.gif"
         if not path.is_file():
             raise FileNotFoundError(f"missing GIF: {path}")
         with Image.open(path) as gif:
@@ -74,7 +89,7 @@ def export(species, asset_root, output, actions=DEFAULT_ACTIONS):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--species", default="아구몬", help="species key in assets/sprite-index.json")
+    p.add_argument("--species", default="아구몬", help="name in sprite-index.json or species-catalog.json")
     p.add_argument("--asset-root", type=Path, default=ROOT / "assets")
     p.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     p.add_argument("--actions", default=",".join(map(str, DEFAULT_ACTIONS)))

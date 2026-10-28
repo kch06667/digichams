@@ -1,5 +1,15 @@
 # Phaser transition checkpoint (2026-10-28)
 
+Latest integration: `integrate/rom-phaser-checkpoint-20261028` combines main
+`66b6011` with ROM-analysis `ce56624` (merge `d5e689c`). The private atlas
+exporter now preserves the legacy 13-name index and falls back to the full
+216-species catalog; Unimon action 5 selects the ROM-compared existing #5_1 GIF.
+All 2,808 default source paths resolve. Actual Unimon and WarGreymon sheets
+were loaded together in desktop/touch 2v2 checks, retaining distinct textures
+and read-only save/result behavior. This is not all-species animation QA or
+proof of all action meanings. No generated artwork is included in this change.
+The cloned-state settlement module remains disconnected from live saves.
+
 Related: GitHub Issue #11. Work branch `feature/phaser-vertical-slice-20261028`.
 This phase intentionally does **not** modify original-game HTML, save format,
 battle rules, farm navigation logic, Digimon database, or private ROM analysis.

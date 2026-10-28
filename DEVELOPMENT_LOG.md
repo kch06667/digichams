@@ -82,3 +82,8 @@
 ## 2026-10-28 최신 main과 ROM 작업 통합
 - main66b6011의 사육장 그래픽/성능/좌표복구, Phaser 원본 AI/읽기전용 결과, 사본 정산 코어를 보존하여 ROM브랜치ce56624 병합. 충돌은 CONTINUE_HERE 이력만 발생해 양쪽 기록을 유지.
 - index/standalone은 main과 비교하여 유니몬 연결2곳만 다름. farm코어/UI/CSS 동기화통과. Node79/79, ROM35/35, atlas2/2, farm graphics2/2, sprite catalog9/9 통과.
+
+## 2026-10-28 Phaser atlas 카탈로그 호환 수정
+- tools/export-phaser-atlas.py: 기존 game_species 13종 이름/별칭을 우선하고 species-catalog 216종으로 fallback. 알려지지 않은 이름/중복/경로 이탈은 거부. 유니몬 #5는 기존 검증 #5_1 파일을 사용.
+- 합성 테스트 5/5; 전체216종의 기본13슬롯 경로2,808개 존재 확인. 실제 유니몬/워그레이몬 변환 및 PC/터치 2대2 동시 텍스처·읽기 전용 결과 검사 통과. 유니몬 #5 픽셀 및110ms 보존 확인.
+- 최신 main의 전투 AI/세이브/사육장 로직 추가 변경 없음. 사용자 push 요청에 따라 통합 브랜치를 원격 전송 대상으로 정리; main 직접 덮어쓰기/공개 배포 없음.

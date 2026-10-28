@@ -48,6 +48,45 @@ class TestAtlas(unittest.TestCase):
             with self.assertRaises(ValueError):
                 mod.export("bad", assets, Path(scratch) / "out", [30])
 
+    def test_full_catalog_unimon_uses_corrected_hit_not_surprise(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            base = Path(scratch)
+            assets = base / "assets"
+            sprites = assets / "sprites/champion"
+            sprites.mkdir(parents=True)
+            (assets / "sprite-index.json").write_text(json.dumps({"game_species": {}}))
+            item = {"name": "유니몬", "folder": "champion", "stem": "m357_unimon_main"}
+            (assets / "species-catalog.json").write_text(json.dumps({"entries": [item]}))
+            Image.new("RGB", (8, 8), "red").save(sprites / "m357_unimon_main_4.gif", duration=610)
+            Image.new("RGB", (8, 8), "blue").save(sprites / "m357_unimon_main_5_1.gif", duration=110)
+            result = mod.export("유니몬", assets, base / "out", [4, 5])
+            self.assertEqual(result["actions"]["5"]["durationsMs"], [110])
+            with Image.open(base / "out/action_5.png") as hit:
+                self.assertEqual(hit.getpixel((0, 0)), (0, 0, 255, 255))
+            with Image.open(base / "out/action_4.png") as surprise:
+                self.assertEqual(surprise.getpixel((0, 0)), (255, 0, 0, 255))
+
+    def test_legacy_index_takes_precedence_and_unknown_species_still_rejected(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            assets = Path(scratch)
+            (assets / "sprite-index.json").write_text(json.dumps({"game_species": {
+                "same": {"folder": "rookie", "stem": "legacy"}}}))
+            (assets / "species-catalog.json").write_text(json.dumps({"entries": [
+                {"name": "same", "folder": "mega", "stem": "different"}]}))
+            self.assertEqual(mod.resolve_species("same", assets), ("rookie", "legacy"))
+            with self.assertRaises(ValueError):
+                mod.resolve_species("missing", assets)
+
+    def test_catalog_rejects_ambiguous_names_and_unsafe_paths(self):
+        with tempfile.TemporaryDirectory() as scratch:
+            assets = Path(scratch)
+            (assets / "sprite-index.json").write_text(json.dumps({"game_species": {}}))
+            item = {"name": "new", "folder": "rookie", "stem": "valid"}
+            for entries in [[item, item], [dict(item, folder="../private")]]:
+                (assets / "species-catalog.json").write_text(json.dumps({"entries": entries}))
+                with self.assertRaises(ValueError):
+                    mod.resolve_species("new", assets)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -34,7 +34,13 @@ Reload `http://127.0.0.1:8000/phaser-lab/`. The exporter writes:
 **Do not commit or share those outputs.** The folder is ignored by Git.
 This conversion preserves every GIF frame and its source GIF duration and pads
 **all actions to one shared canvas size** to avoid pose-dependent scale jumps.
-It deliberately only exports one test Digimon. The input GIFs remain untouched.
+Each invocation exports one Digimon. Species names resolve through the legacy
+13-name index first (preserving aliases), then the full 216-species
+`assets/species-catalog.json`. For example, `--species 유니몬` now works;
+action 5 uses the existing ROM-compared `m357_unimon_main_5_1.gif`.
+The input GIFs remain untouched. This does not verify every action's meaning.
+For several species, use a different `--output` directory per invocation,
+then select each directory's manifest and PNGs in the browser's local art input.
 Not every GIF contains multiple frames (notably training action 32 can be static).
 
 Action 30 is user-confirmed **victory**, 32 is user-confirmed **training**.

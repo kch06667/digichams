@@ -99,3 +99,12 @@
 - `tools/sync-embedded-farm.py --check`: IN SYNC. 최신main HTML과 비교하여 index 유니몬경로1곳/standalone 슬롯5만 변경.
 - Node13개 스위트(build-dev/phaser/domain/arena parity/settlement/private-art/farm/navigation/avoidance/offmap 등):79/79. ROM35/35, atlas2/2, farm graphics integrated2/2, sprite catalog9/9.
 - 전투 정산은 기존처럼 사본만 생성, 본게임 연결/저장 동작 추가 없음.
+
+## 2026-10-28 최신 main + ROM 통합 / atlas 전체 카탈로그
+- 기준 main66b6011 + ROMce56624, 통합 d5e689c. 두 HTML의 main 대비 차이는 유니몬 #5 연결뿐임을 구조/바이트 비교. `python3 tools/sync-embedded-farm.py --check` 통과.
+- Node 13스위트79/79: build-dev-page, phaser-lab, phaser-domain-bridge, arena-navigation-core, arena-original-parity, battle-settlement-core, phaser-realtime, phaser-private-art, phaser-farm, phaser-preview, farm-navigation, farm-avoidance, farm-offmap-recovery. 명령은 `node --test tests/<이름>.cjs`로 묶어 실행. 세부 로그는 이 환경의 /tmp/digichams-integration-node.log.
+- `python3 -m unittest discover -s tests -p 'test_rom*.py' -q`:35/35. `test_phaser_atlas.py`:5/5. `test_farm_graphics_integrated.py`:2/2. `node tests/sprite-catalog.cjs`:9/9.
+- `CHROMIUM_PATH=/usr/bin/chromium python3 tests/farm-graphics-browser.py`: 두 HTML × PC/터치4조합 통과.
+- `CHROMIUM_PATH=/usr/bin/chromium python3 tests/phaser-browser-smoke.py`: PC/터치 전투·사육장 및 로컬 빌드 PWA 오프라인 재실행 통과. Phaser3.90.0 로컬 의존성, 아구몬 private atlas 및 `node tools/build-phaser-preview.cjs dist/phaser-preview`로 준비; 외부 배포 안 함.
+- 추가 로컬 QA `/tmp/digichams-atlas-actual-qa.py`:216종 기본13슬롯2,808경로, 실제 유니몬 #5_1→PNG 픽셀/110ms 일치, 유니몬/워그레이몬 동시2대2 텍스처 및 입력 세이브/localStorage 불변을 PC/터치에서 확인. 로그 /tmp/digichams-atlas-actual-qa.log. 캡처 test-output/phaser-integration/actual-atlas-{desktop,touch}.png(ignored). 이 임시 QA 스크립트/생성물은 다른 환경에 자동 복사되지 않음.
+- 미검증: 실제 Android, 전체216종 시각/모션 의미, 실세이브 정산 연결, 원작 진화/AP/능력치 데이터. 기존 기본13모션 선택과 GIF duration 최솟값 처리는 바꾸지 않음.
