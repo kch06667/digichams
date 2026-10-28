@@ -36,7 +36,10 @@ test('JS parser accepts browser-side game and test lab stays isolated', () => {
   const src = fs.readFileSync(path.join(__dirname,'../phaser-lab/game.js'),'utf8');
   assert.doesNotThrow(() => new vm.Script(src,{filename:'phaser-lab/game.js'}));
   assert.match(src,/Phaser\.Game/);
-  assert.match(src,/L\.selectAction\(state\)/);
+  assert.match(src,/RT\.createMatch/);
+  assert.match(src,/RT\.step/);
+  assert.match(src,/type==='victory'\?30/);
+  assert.match(src,/type==='walk'\?2/);
   assert.doesNotMatch(src,/localStorage|saveVersion|\.nds/i);
   const html=fs.readFileSync(path.join(__dirname,'../phaser-lab/index.html'),'utf8');
   assert.match(html,/phaser@3\.90\.0/);
