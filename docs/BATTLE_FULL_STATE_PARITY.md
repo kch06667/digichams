@@ -31,3 +31,13 @@ Run:
     node --test tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs
 
 Do not commit new ROM or extracted game artwork.
+
+## 2026-10-29: legacy checkpoints and real Chromium failure regression
+
+- New test `tests/battle-legacy-storage.cjs` covers an old v1 save, unknown historical fields, absent instance IDs, and migration that changed the in-memory snapshot. `persistCopy` must reject a migrated or otherwise modified save until the future game explicitly persists an identical pre-battle checkpoint; it never automatically overwrites old disk data.
+- New `tests/fixtures/battle-commit-browser.html` and `tests/battle-browser-storage-smoke.py` load the real JavaScript modules on an isolated Chromium HTTP origin and verify one successful commit + reload, replay rejection in the same origin, old raw save retention, then separate explicit test-only backup/checkpoint followed by commit. Both desktop and touch-sized browser contexts run.
+- Chromium quota and security denial are **simulated with DOMException injected into Storage.prototype**, because actual quotas/permissions vary across devices and environments. Reload confirms the old serialized save remains intact after these simulated failures. A silent-drop adapter is also rejected.
+- `persistCopy` now reads back `dc_recreation_save` after `setItem` and requires exact serialized equality before returning an adoptable state. A readback denial or ambiguous write is treated as failure: callers must re-read/reload instead of blindly retrying or rolling back; an earlier write might already have persisted.
+- The helper remains isolated. No production HTML/Phaser integration, automatic v1-v4 migration, irreversible disk rewrite, or physical Android quota/eviction/power-loss claim.
+
+Production integration must first preserve/export the original legacy snapshot, save the migrated pre-battle checkpoint deliberately, and show recovery guidance if storage is blocked. Do not assume this test simulates Android app termination.
