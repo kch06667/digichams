@@ -126,7 +126,12 @@
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
         privatePackStatus:()=>privatePack?{species:privatePack.species,
-          actions:Object.keys(privatePack.manifest.actions).length}:null
+          actions:Object.keys(privatePack.manifest.actions).length}:null,
+        renderedArt:()=>this.sim.fighters.map(f=>{
+          const v=this.visuals.get(f.id);
+          return {id:f.id,name:f.name,privateArt:!!v?.useArt,
+            textureKey:v?.sprite.texture.key||null};
+        })
       };
       for(const id of buttons)document.getElementById(id).disabled=false;
       if(this.requestedMode==='battle')this.beginBattle();
