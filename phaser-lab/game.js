@@ -114,6 +114,20 @@
         },
         speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
         matchSnapshot:()=>RT.snapshot(this.sim),
+        // Deterministic browser QA: exercise all remaining ORIGINAL engine
+        // ticks immediately, then render the authentic match conclusion.
+        // This isolated exhibition never writes to a player save.
+        qaFinishCombat:()=>{
+          if(this.mode!=='battle')return this.sim.finished;
+          for(let i=0;i<4200&&!this.sim.finished;i++){
+            RT.step(this.sim,1/30);
+            const end=this.sim.events.find(e=>e.type==='finish');
+            if(end)this.consumeEvent(end);
+          }
+          this.refreshActors(this.time.now);
+          this.updateHud();
+          return this.sim.finished;
+        },
         encounterSnapshot:()=>({
           ally:RT.snapshot(this.sim.fighters.find(f=>f.side===0)),
           enemy:RT.snapshot(this.sim.fighters.find(f=>f.side===1)),
