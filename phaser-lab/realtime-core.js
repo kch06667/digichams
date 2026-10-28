@@ -6,14 +6,14 @@
 (function(root,factory){
   const node=typeof module==='object'&&module.exports;
   const battle=root?.DCBattleCore||(node?require('../src/battle-core.js'):null);
-  const api=factory(battle);
+  const techniques=root?.DigiArenaTechniques||(node?require('./arena-techniques.js'):null);
+  const api=factory(battle,techniques);
   if(node)module.exports=api;
   if(root)root.DigiRealTimeCore=api;
-})(typeof globalThis!=='undefined'?globalThis:null,function(BC){
+})(typeof globalThis!=='undefined'?globalThis:null,function(BC,TECH){
   'use strict';
-  if(!BC)throw Error('DCBattleCore required');
+  if(!BC||!TECH)throw Error('DCBattleCore and DigiArenaTechniques required');
   const FIELD=Object.freeze({left:55,right:745,top:155,bottom:355});
-  const SKILL=Object.freeze({cost:24});
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
   const alive=(s,side)=>s.fighters.filter(f=>f.side===side&&f.hp>0);
@@ -22,9 +22,14 @@
     return s.seed/4294967296;
   }
   function range(s,min,max){return min+(max-min)*rand(s);}
-  const startingTeam=side=>Array.from({length:3},(_,i)=>({
-    name:(side===0?'육성 시연 ':'연습 상대 ')+(i+1),
-    hp:125,maxHp:125,atk:46+i*5,def:20+i*3,spd:47+i*6
+  // Public graphics are still original procedural placeholders. Species
+  // identity and move metadata, however, now match existing arena records.
+  const rosterNames=[
+    ['아구몬','파타몬','팔몬'],
+    ['가부몬','텐타몬','피요몬']
+  ];
+  const startingTeam=side=>rosterNames[side].map((name,i)=>({
+    name,hp:125,maxHp:125,atk:46+i*5,def:20+i*3,spd:47+i*6
   }));
   function makeFighter(s,source,side,slot,count){
     if(!source||typeof source.name!=='string'||!source.name||
@@ -36,20 +41,21 @@
     const spd=stat(source.spd,45);
     const tpInput={maxTp:source.maxTp??undefined,tp:source.tp??undefined,spd};
     const v=BC.fighterVitals(tpInput);
+    const technique=TECH.forFighter(source);
+    if(!TECH.valid(technique))throw Error('Invalid technique record');
     return {
       id:side+'-'+slot,side,slot,name:source.name,
       x:side===0?126+slot*11:674-slot*11,
       y:count===1?258:187+slot*71,
       dir:side===0?1:-1,hp,max,atk:stat(source.atk,45),
-      def:stat(source.def,22),spd,...v,
+      def:stat(source.def,22),spd,...v,technique,
       energy:0,skillCD:0,cd:range(s,.1,.6),dodgeCD:range(s,.3,.9),
       guardCD:range(s,.7,1.8),think:0,targetId:null,act:'idle',
       actTime:0,attackTargetId:null,hitDone:false,
       phase:'approach',phaseTime:range(s,.65,1.1),
       orbit:rand(s)<.5?-1:1,knockVX:0,knockVY:0,flash:0,
       moveDistance:0,attacks:0,specials:0,dodges:0,
-      kind:source.skillKind==='projectile'?'projectile':
-        source.skillKind==='melee'?'melee':slot===1?'projectile':'melee'
+      kind:technique.type==='claw'?'melee':'projectile'
     };
   }
   function createMatch({allies,opponents,teamSize=3,tactic='balanced',seed=12345}={}){
@@ -81,15 +87,19 @@
   }
   function impact(s,att,target,special){
     if(!att||!target||att.hp<=0||target.hp<=0)return;
-    const raw=(special?17:7)+att.atk*(special?.30:.20)-target.def*.115+
-      range(s,-2.3,2.3);
-    let damage=clamp(Math.round(raw),2,special?85:55);
+    // Matches the pre-existing HTML extension's damage factors more closely,
+    // while remaining a standalone lab formula, not proven ROM constants.
+    const raw=(special?range(s,22,29)+att.atk*
+      (att.kind==='melee'?.35:.32):range(s,6,9)+att.atk*.20)-
+      target.def*.16+range(s,-2.5,2.5);
+    let damage=clamp(Math.round(raw),2,special?95:70);
     const defended=target.act==='guard';
     if(defended)damage=Math.max(1,Math.round(damage*.42));
     target.hp=Math.max(0,target.hp-damage);
     target.flash=.2;
     const vx=target.x-att.x,vy=target.y-att.y,d=Math.max(1,Math.hypot(vx,vy));
-    const momentum=(special?220:128)*(defended?.65:1);
+    const momentum=(special?range(s,260,325):range(s,145,195))*
+      (defended?.60:1);
     target.knockVX=vx/d*momentum;
     target.knockVY=vy/d*momentum*.8;
     BC.regainTP(target,special?1:2);
@@ -103,7 +113,9 @@
     }
     s.stats.hits++;
     event(s,{type:'hit',attackerId:att.id,targetId:target.id,x:target.x,y:target.y,
-      damage,special,guarded:defended});
+      damage,special,guarded:defended,
+      technique:special?att.technique.name:null,
+      color:special?att.technique.color:null});
   }
   function setAction(f,act){
     if(f.act===act)return;
@@ -113,19 +125,21 @@
     f.dir=foe.x>=f.x?1:-1;
     f.attackTargetId=foe.id;f.hitDone=false;
     setAction(f,'attack');
-    f.cd=range(s,.82,1.22)*45/(39+f.spd*.12);
+    f.cd=range(s,1.55,2.35)*44/(37+f.spd*.16);
     f.attacks++;
     f.phase='disengage';f.phaseTime=range(s,.8,1.5);
   }
   function beginSkill(s,f,foe){
-    if(!BC.canUseSkill(f,SKILL,f.side===0?s.tactic:'balanced')||
-       !BC.spendTP(f,SKILL))return false;
+    if(!BC.canUseSkill(f,f.technique,f.side===0?s.tactic:'balanced')||
+       !BC.spendTP(f,f.technique))return false;
     f.attackTargetId=foe.id;f.hitDone=false;f.energy=0;
-    f.cd=1.45;f.skillCD=range(s,5.3,8.0);f.specials++;
+    f.cd=2.2;f.skillCD=range(s,8.5,12);f.specials++;
     setAction(f,'cast');
     f.phase='disengage';f.phaseTime=range(s,.95,1.6);
     s.stats.specials++;
-    event(s,{type:'skill',attackerId:f.id,targetId:foe.id,kind:f.kind,x:f.x,y:f.y});
+    event(s,{type:'skill',attackerId:f.id,targetId:foe.id,kind:f.kind,
+      technique:f.technique.name,color:f.technique.color,cost:f.technique.cost,
+      x:f.x,y:f.y});
     return true;
   }
   function walk(s,f,foe,dt){
@@ -184,9 +198,9 @@
     f.actTime+=dt;
     if(f.act==='attack'){
       const target=find(s,f.attackTargetId);
-      if(!f.hitDone&&f.actTime>=.31){
+      if(!f.hitDone&&f.actTime>=.36){
         f.hitDone=true;
-        if(target&&target.hp>0&&distance(f,target)<65){
+        if(target&&target.hp>0&&distance(f,target)<56){
           impact(s,f,target,false);
           f.energy=clamp(f.energy+range(s,17,24),0,100);
         }else{
@@ -194,24 +208,26 @@
           event(s,{type:'miss',attackerId:f.id,x:f.x,y:f.y});
         }
       }
-      if(f.actTime<.55)return;
+      if(f.actTime<.59)return;
       setAction(f,'idle');
     }
     if(f.act==='cast'){
       const target=find(s,f.attackTargetId);
-      if(!f.hitDone&&f.actTime>=.70){
+      if(!f.hitDone&&f.actTime>=1.03){
         f.hitDone=true;
         if(target&&target.hp>0){
           if(f.kind==='melee'){
-            if(distance(f,target)<110)impact(s,f,target,true);
+            if(distance(f,target)<96)impact(s,f,target,true);
             else{event(s,{type:'miss',attackerId:f.id});s.stats.misses++}
           }else{
             s.projectiles.push({id:s.frame+'-'+f.id,attackerId:f.id,targetId:target.id,
-              x:f.x+f.dir*18,y:f.y-14,speed:230,life:3.0});
+              x:f.x+f.dir*18,y:f.y-14,speed:158,life:3.0,
+              color:f.technique.color,technique:f.technique.name,
+              projectileType:f.technique.type});
           }
         }
       }
-      if(f.actTime<1.15)return;
+      if(f.actTime<2.05)return;
       setAction(f,'idle');
     }
     if(f.act==='hurt'||f.act==='guard'||f.act==='evade'){
@@ -227,7 +243,7 @@
     const d=distance(f,target);
     const tactic=f.side===0?s.tactic:'balanced';
     if(d<85&&target.act==='attack'&&target.actTime<.28&&
-       f.dodgeCD===0&&rand(s)<dt*2.5*BC.tactic(tactic).retreat){
+       f.dodgeCD===0&&rand(s)<dt*1.4*BC.tactic(tactic).retreat){
       setAction(f,'evade');f.dodgeCD=range(s,2.1,3.7);
       f.phase='disengage';f.phaseTime=.82;f.orbit*=-1;
       f.dodges++;s.stats.dodges++;
@@ -240,7 +256,7 @@
       return;
     }
     if(f.cd===0&&f.skillCD===0&&
-       BC.canUseSkill(f,SKILL,tactic)&&d<(f.kind==='projectile'?235:96)){
+       BC.canUseSkill(f,f.technique,tactic)&&d<(f.kind==='projectile'?235:96)){
       if(beginSkill(s,f,target))return;
     }
     if(f.cd===0&&d<52&&f.phase!=='disengage'){
