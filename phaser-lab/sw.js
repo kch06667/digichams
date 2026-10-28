@@ -3,7 +3,7 @@
 const CACHE='digichams-safe-pwa-__BUILD_ID__';
 const PREFIX='digichams-safe-pwa-';
 const FILES=[
-  './','./index.html','./game.js','./logic.js','./domain-bridge.js',
+  './','./index.html','./game.js','./logic.js','./domain-bridge.js','./realtime-core.js',
   './farm.html','./farm.js','./farm-model.js',
   './engine-core/battle-core.js','./engine-core/care-core.js',
   './engine-core/championship-core.js','./vendor/phaser.min.js',

@@ -4,7 +4,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),source=path.join(root,'phaser-lab');
 const output=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'dist','phaser-preview');
-const allow=['index.html','game.js','logic.js','domain-bridge.js',
+const allow=['index.html','game.js','logic.js','domain-bridge.js','realtime-core.js',
   'farm.html','farm.js','farm-model.js','manifest.webmanifest','icon.svg','pwa.js','sw.js'];
 const safeCore=['battle-core.js','care-core.js','championship-core.js'];
 const cdn='https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js';

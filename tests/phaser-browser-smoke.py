@@ -36,7 +36,7 @@ def check_page(browser, mobile, base_url):
     page.locator("#game canvas").wait_for(timeout=10000)
     assert "준비 완료" in page.locator("#status").inner_text()
     if (ROOT / "phaser-lab" / "local-assets" / "manifest.json").is_file():
-        assert "변환된 GIF 모션" in page.locator("#status").inner_text()
+        assert "개인 제공 모션" in page.locator("#status").inner_text()
     assert page.evaluate("DigiPhaserLabLogic.selectAction('victory')") == 30
     assert page.evaluate("DigiPhaserLabLogic.selectAction('training')") == 32
     if mobile:
@@ -47,13 +47,27 @@ def check_page(browser, mobile, base_url):
         timeout=7000)
     assert "11" in page.locator("#game").evaluate(
         "(el) => window.DigiPhaserLabLogic.gainTrainingStat(10,1).toString()")
+    assert page.evaluate("DigiRealTimeCore.createMatch().fighters.length")==6
+    page.locator("#squadSize").select_option("3")
     page.locator("#battle").click()
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('시연 중')",
         timeout=7000)
+    baseline=page.evaluate("DigiPhaserLab.matchSnapshot()")
+    assert len(baseline["fighters"])==6
+    assert "turn" not in baseline
+    page.wait_for_timeout(1100)
+    moving=page.evaluate("DigiPhaserLab.matchSnapshot()")
+    assert moving["stats"]["movement"]>20
+    assert len([f for f in moving["fighters"] if f["moveDistance"]>0])==6
+    assert any(abs(f["y"]-baseline["fighters"][i]["y"])>0.1
+               for i,f in enumerate(moving["fighters"]))
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('승리')",
-        timeout=25000)
+        timeout=65000)
+    finish=page.evaluate("DigiPhaserLab.matchSnapshot()")
+    assert finish["finished"]
+    assert finish["stats"]["hits"]>0
     # Existing rules are loaded into the real browser, and read-only JSON
     # inspection must not touch browser localStorage or the active scene.
     assert page.evaluate("typeof DigiDomainBridge.plan")=="function"
@@ -83,12 +97,13 @@ def check_page(browser, mobile, base_url):
     page.wait_for_function(
       "DigiPhaserLab.encounterSnapshot().ally.name === '시험용 디지몬'",
       timeout=6000)
-    assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.hp")==80
+    assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.max")==100
+    assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.hp")<=80
     assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.atk")==25
     assert page.evaluate("DigiPhaserLab.selectedRoster().name")=="시험용 디지몬"
     assert not errors, f"JS errors ({'mobile' if mobile else 'desktop'}): {errors}"
     print("OK", "touch" if mobile else "desktop",
-          "training + auto battle + victory")
+          "3v3 independent realtime movement + victory + roster")
     context.close()
 
 

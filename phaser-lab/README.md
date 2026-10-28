@@ -152,3 +152,36 @@ subset (name, vital stats, day, cups) is held in transient page memory.
 It is never uploaded to Pages or stored via localStorage, IndexedDB or
 service-worker cache. File size is limited to 3 MiB, and source data
 is validated before display.
+
+## Why we replaced the old turn-taking Phaser demonstration
+
+The first Phaser test scene was a **misleading scripted alternating attack
+sandbox**, and its two placeholder characters did not represent the game's
+planned auto-combat. The **original playable `index.html` arena already has**
+asynchronous AI-driven 2D movement, approach/flank/disengage, dynamic targets,
+dodge, guard, melee and ranged signature attacks, knockback and multimon
+team battles. We should have audited and reused that logic first.
+
+The default Phaser battle page now uses `realtime-core.js`, a pure deterministic
+fixed-step **concurrent autonomous AI** simulator **inspired by those existing
+arena behaviors**. Every actor independently chooses targets, walks/strifes
+and can simultaneously wind up/attack; 1v1 / 2v2 / **3v3 default**, different
+attack cooldowns, defensive reactions, orbiting, actual projectiles, damage,
+hit effects and victory. There is **no global alternating turn scheduler** in
+the active Phaser battle view. Node tests explicitly check simultaneous
+windups and 3v3 2D motion; desktop+touch browser tests verify the animation
+path and automatic outcome.
+
+This is still NOT the exact, already implemented original `index.html`
+arena logic ported into Phaser. The original has more detailed unit control,
+battle save settlement, AI variability, and species-specific technique/sprite
+systems. The current public web preview still uses distinct *original
+procedural test sprites*, not redistributed copyrighted Digimon imagery.
+User-provided private sprite sheets may be tested locally using the atlas
+export script. Never describe this lab as the finished game.
+
+**Next major goal:** extract existing original battle simulation as a
+renderer-independent production module (target behavior, cooldowns, attack
+outcomes, state transitions, championship settlement), replace
+`realtime-core.js` prototype rules with the production module in Phaser,
+add equivalence tests before writing any player save.
