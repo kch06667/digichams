@@ -3,6 +3,10 @@ on:
   pull_request:
     paths:
       - 'phaser-lab/**'
+      - 'src/dev-phaser-farm-launch.js'
+      - 'tools/build-dev-page.cjs'
+      - 'tests/build-dev-page.cjs'
+      - 'tests/phaser-farm-handoff-browser.py'
       - 'tests/phaser-preview.cjs'
       - 'tools/build-phaser-preview.cjs'
       - 'src/battle-core.js'
@@ -64,6 +68,8 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install 'Pillow>=10,<13'
       - run: node --check phaser-lab/game.js
+      - run: node --check src/dev-phaser-farm-launch.js
+      - run: node --test tests/build-dev-page.cjs
       - run: node --check phaser-lab/realtime-core.js
       - run: node --check src/arena-original-core.js
       - run: node --check src/battle-settlement-core.js
@@ -110,6 +116,8 @@ jobs:
           test -s phaser-lab/local-assets/duel-gabumon/action_0.png
       - name: Local-only original Agumon vs Gabumon 1v1 browser smoke
         run: python3 tests/phaser-duel-browser-smoke.py
+      - name: Dev farm handoff to original-AI Phaser 1v1 (desktop/touch; no writes)
+        run: python3 tests/phaser-farm-handoff-browser.py
       - name: Desktop/touch isolated browser save denial and reload regression
         run: python3 tests/battle-browser-storage-smoke.py
       - name: Build optional live-game HTML with default-off battle settlement

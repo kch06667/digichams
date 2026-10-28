@@ -51,9 +51,13 @@ function build({root = path.resolve(__dirname, '..'), input = 'index.html'} = {}
   // Opt-in performance overlay is referenced ONLY by generated developer HTML.
   // It does nothing unless ?perf=1 is set in the address bar.
   const diagnosticScript = '<script defer src="src/dev-performance-overlay.js"></script>';
+  // Read-only Phaser roster handoff: source exists only in generated dev entry.
+  // It is itself inert unless the user visits ?phaserBridge=1.
+  const farmHandoffScript = '<script defer src="src/dev-phaser-farm-launch.js"></script>';
+  const devScripts = diagnosticScript + '\n' + farmHandoffScript;
   const developerPage = generated.includes('</body>')
-    ? generated.replace('</body>', diagnosticScript + '\n</body>')
-    : generated + '\n' + diagnosticScript;
+    ? generated.replace('</body>', devScripts + '\n</body>')
+    : generated + '\n' + devScripts;
   fs.writeFileSync(outputFile, developerPage, 'utf8');
   return { input, output: path.relative(root, outputFile), originalBytes: Buffer.byteLength(source),
            developerBytes: Buffer.byteLength(developerPage), scripts: counters.script, styles: counters.style, files: written };

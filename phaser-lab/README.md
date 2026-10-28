@@ -317,3 +317,30 @@ settlement. Practice does not write any of those. Chromium tests
 check the new battle in PC/touch, and pure Node tests compare the ten
 extracted functions byte-for-byte to original source. Sprite mapping
 and ROM verification remain separate.
+
+
+## 2026-10-29 — 기존 사육장 → Phaser 연습전 (개발용 읽기 전용 연결)
+
+사육 중인 디지몬으로 Phaser **1대1 연습전**에 바로 진입하는 개발용 연결이 추가됐다.
+원본 `index.html`, `standalone.html`은 변경되지 않으며 저장 결과 반영은 **없다**.
+
+```sh
+node tools/build-dev-page.cjs
+python3 -m http.server 8000 --bind 127.0.0.1
+```
+
+`http://127.0.0.1:8000/index.dev.html?phaserBridge=1`에서 기존 게임을 실행하고
+하단 **내 디지몬으로 Phaser 연습전** 버튼을 누른다. 현재 사육 중인 정상 디지몬이
+최소 한 마리 필요하다. 새 브라우저 탭이 열리면 자동으로 첫 출전 가능 디지몬이
+선택되고, **실시간 자동 전투 시작**을 누르면 실제 HTML 전투 계산 코어의 1대1을 진행한다.
+다른 디지몬으로 바꾸려면 전투 전 출전 디지몬 선택 메뉴를 이용한다.
+
+- 기존 세이브 전체를 옮기지 않는다. 클릭 당시의 종 이름·전투 능력치·상태 등
+  일부 속성만 허용 목록으로 전달하고, 대상 탭이 다시 검증한다.
+- URL에는 무작위 연결 토큰만 넣고 세이브·이름·HP를 포함하지 않는다.
+  브라우저 탭 사이에 동일 출처 `postMessage`를 사용하며 저장소에 쓰지 않는다.
+- 진입한 전투의 보상, 경험치, HP/TP 등은 **읽기 전용 미리보기**라서 원본 게임에 적용되지 않는다.
+- 공개 GitHub Pages의 safe preview에는 기존 사육장/원본 스프라이트나 개발용 실행 스크립트가 포함되지 않는다.
+- 기존 본게임 자체의 전투 진입 경로 교체와 원자적 세이브 정산은 향후 별도 단계다.
+- 검증: `node --test tests/build-dev-page.cjs tests/phaser-domain-bridge.cjs`,
+  `python3 tests/phaser-farm-handoff-browser.py` (Playwright/Chromium, PC/터치).
