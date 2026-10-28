@@ -5,6 +5,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const vm=require('node:vm');
 const Engine=require('../src/arena-original-core.js');
+const Visual=require('../phaser-lab/logic.js');
 const original=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const extracted=fs.readFileSync(path.join(__dirname,'../src/arena-original-core.js'),'utf8');
 const funcs=['alive','chooseTarget','emit','hit','projectile','beginMelee',
@@ -88,6 +89,26 @@ test('Phaser visual hit events use ORIGINAL skill damage, not actor pose guesses
     }
   }
   assert.ok(s.stats.specials>0);
+});
+test('original autonomous combat generates charge then release before special hits and knockback',()=>{
+  const sim=Engine.createMatch({seed:83201,teamSize:3});
+  let charge=false,release=false,hit=false,lean=false;
+  for(let i=0;i<4200&&!sim.finished;i++){
+    Engine.step(sim,1/30);
+    for(const fighter of sim.fighters){
+      const phase=Visual.specialPhase(fighter);
+      if(phase==='charge')charge=true;
+      if(phase==='release')release=true;
+      if(Visual.knockbackTilt(fighter)!==0)lean=true;
+    }
+    if(sim.events.some(e=>e.type==='hit'&&e.special))hit=true;
+  }
+  assert.equal(sim.finished,true);
+  assert.ok(charge,'original real AI must enter pose 33 during a skill');
+  assert.ok(release,'original real AI must enter pose 10 after charging');
+  assert.ok(hit,'the original engine must generate real special damage events');
+  assert.ok(lean,'the real original impact velocities drive visible knockback');
+  assert.ok(sim.stats.knockback>0);
 });
 test('Phaser observes bounded ORIGINAL sparks and projectile trails without changing the engine',()=>{
   const sim=Engine.createMatch({seed:83201,teamSize:3});
