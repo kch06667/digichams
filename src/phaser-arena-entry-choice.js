@@ -110,7 +110,7 @@
         // In the older checked-in v0.23 cup engine, only the first foe
         // is defined; the ORIGINAL arena fills remaining slots using
         // teamMembers(opponent, side=1, size). Reproduce that exact order.
-        const names=eval('allNames');
+        const names=eval('SPECIES').map(spec=>spec.name);
         let foes=match.opponentTeam;
         if(!Array.isArray(foes)||foes.length!==match.size){
           const found=names.indexOf(match.opponent);
