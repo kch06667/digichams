@@ -33,6 +33,8 @@ on:
       - 'tests/battle-legacy-storage.cjs'
       - 'tests/battle-owned-optin.cjs'
       - 'tests/battle-owned-optin-browser.py'
+      - 'tests/battle-owned-completion-browser.py'
+      - 'tests/fixtures/battle-owned-optin-qa.js'
       - 'tests/fixtures/battle-commit-browser.html'
       - 'tests/battle-experience-parity.cjs'
       - 'tests/phaser-private-art.cjs'
@@ -100,6 +102,8 @@ jobs:
       - name: Desktop/touch isolated browser save denial and reload regression
         run: python3 tests/battle-browser-storage-smoke.py
       - name: Build optional live-game HTML with default-off battle settlement
-        run: node tools/build-owned-battle-optin.cjs dist/battle-optin
+        run: node tools/build-owned-battle-optin.cjs dist/battle-optin --qa
       - name: Optional battle save UI smoke (desktop/touch)
         run: python3 tests/battle-owned-optin-browser.py
+      - name: Actual original owned-battle AI completion, save and reload (desktop/touch)
+        run: python3 tests/battle-owned-completion-browser.py
