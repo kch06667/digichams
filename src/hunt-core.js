@@ -6,7 +6,13 @@
  const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
  function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
  function inside(p,poly){let hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)hit=!hit;}return hit;}
- function lasso(points,target){if(!Array.isArray(points)||points.length<9||!target)return {ok:false,reason:'원을 충분히 그려 줘.'};
+ function lasso(points,target){
+  // A malformed gesture must never form a valid closed circle or stall a
+  // mobile browser when an imported/scripted input supplies huge arrays.
+  if(!Array.isArray(points)||points.length<9||points.length>600||!target||
+     !Number.isFinite(target.x)||!Number.isFinite(target.y)||
+     points.some(p=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)))
+   return {ok:false,reason:'원을 충분히 그려 줘.'};
   let length=0,turn=0,minR=Infinity,maxR=0;const center=target;
   for(let i=1;i<points.length;i++){
    const a=points[i-1],b=points[i],radA=Math.atan2(a.y-center.y,a.x-center.x),radB=Math.atan2(b.y-center.y,b.x-center.x);
@@ -44,6 +50,32 @@
   if(e.hp===0)e.mode='stunned';
   return {ok:true,damage,stunned:e.mode==='stunned',hp:e.hp};
  }
+ // A temporary hunting session can be resumed from a JSON save.
+ // Validate instead of trusting imported JSON: only a live/tied/stunned hunt
+ // may be resumed. Captured/escaped sessions cannot grant a second Digimon.
+ function restoreSession(raw) {
+  if (!raw || raw.version!==1 || !raw.encounter || typeof raw.encounter!=='object')return null;
+  const e=raw.encounter;
+  if (typeof e.name!=='string'||!e.name||e.name.length>90||
+      typeof e.stage!=='string'||e.stage.length>40||
+      !['wild','tied','stunned'].includes(e.mode))return null;
+  const numeric=['x','y','vx','vy','maxHp','hp','time','bait','pulls','diff'];
+  if(numeric.some(k=>!Number.isFinite(e[k])))return null;
+  if(e.x<0||e.x>1||e.y<0||e.y>1||e.maxHp<=0||e.maxHp>1e5||
+     e.hp<0||e.hp>e.maxHp||e.time<0||e.time>300||
+     e.bait<0||e.bait>60||e.pulls<0||!Number.isInteger(e.pulls)||e.pulls>1000||
+     Math.abs(e.vx)>.3||Math.abs(e.vy)>.3||Math.abs(e.diff)>1e5||
+     typeof e.ropeSpent!=='boolean'||
+     (e.mode==='wild'&&e.ropeSpent)||
+     (e.mode!=='wild'&&!e.ropeSpent)||
+     (e.mode==='stunned'&&e.hp!==0)||
+     (e.mode!=='stunned'&&e.hp<=0)||
+     (e.mode==='wild'&&e.time<=0))return null;
+  const copy={name:e.name,stage:e.stage,diff:e.diff,mode:e.mode,
+   x:e.x,y:e.y,vx:e.vx,vy:e.vy,maxHp:e.maxHp,hp:e.hp,
+   time:e.time,ropeSpent:e.ropeSpent,pulls:e.pulls,bait:e.bait};
+  return {version:1,encounter:copy,arm:raw.arm===true&&e.mode==='wild'};
+ }
  function capture(e){if(!e||e.mode!=='stunned')return false;e.mode='captured';return true;}
- return Object.freeze({B,clamp,distance,inside,lasso,encounter,tick,bind,pull,capture});
+ return Object.freeze({B,clamp,distance,inside,lasso,encounter,tick,bind,pull,capture,restoreSession});
 });

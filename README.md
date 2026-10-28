@@ -4,6 +4,16 @@
 
 Extract the full ZIP, then open `index.html` or `standalone.html`. Retains the earlier v0.14.2 game's battle, hunting, evolution, ROM art and sprite code; progressively integrates the user-approved hex farm.
 
+## 2026-10-29 — 실제 사냥 포획·이어하기 안정성
+
+- 진행 중인 **야생 디지몬 포획 상태**를 저장해 새로고침 후에도
+  로프 결박, 남은 시간과 HP를 이어서 플레이할 수 있어.
+- 모바일 화면에서 원 그리기·당기기 입력은 한 손가락씩 처리하고,
+  '사냥 포기' 버튼으로 원하는 때 탐색을 다시 시작할 수 있어.
+- 포획 후 새로고침해도 디지몬이 중복 추가되지 않도록 검증해.
+- 원본 PC/모바일 저장 파일도 유지하며, 관련 테스트·제약은
+  `docs/HUNT_SAVE_TOUCH_20261029.md`에 정리했어.
+
 ## Playable added functions
 
 - Digimon walk to destinations before feeding, training and resting.
