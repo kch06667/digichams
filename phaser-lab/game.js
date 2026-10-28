@@ -112,6 +112,7 @@
       this.projectileGraphics=this.add.graphics().setDepth(8);
       this.particleColors=new Map();
       this.visuals=new Map();
+      this.motionEvidence={charge:false,release:false,specialHits:0,knockbackFrames:0};
       for(const actor of this.sim.fighters)this.addActor(actor);
       this.refreshActors();
       this.updateHud();
@@ -130,6 +131,7 @@
         },
         speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
         matchSnapshot:()=>RT.snapshot(this.sim),
+        motionEvidence:()=>({...this.motionEvidence}),
         // Deterministic browser QA: exercise all remaining ORIGINAL engine
         // ticks immediately, then render the authentic match conclusion.
         // This isolated exhibition never writes to a player save.
@@ -137,6 +139,13 @@
           if(this.mode!=='battle')return this.sim.finished;
           for(let i=0;i<4200&&!this.sim.finished;i++){
             RT.step(this.sim,1/30);
+            for(const fighter of this.sim.fighters){
+              const phase=L.specialPhase(fighter);
+              if(phase)this.motionEvidence[phase]=true;
+              if(L.knockbackTilt(fighter)!==0)this.motionEvidence.knockbackFrames++;
+            }
+            this.motionEvidence.specialHits+=this.sim.events.filter(e=>
+              e.type==='hit'&&e.special).length;
             const end=this.sim.events.find(e=>e.type==='finish');
             if(end)this.consumeEvent(end);
           }
@@ -168,6 +177,7 @@
           return {id:f.id,name:f.name,privateArt:!!v?.useArt,
             textureKey:v?.sprite.texture.key||null,
             action:v?.pose||null,angle:v?.sprite.angle||0,
+            phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37)};
         })
       };
@@ -271,8 +281,9 @@
         // When the sprite pack lacks the KO animation, show an actual
         // collapsed fighter instead of a standing idle sprite. Keep
         // original KO artwork upright: its own frames supply the motion.
+        const knockLean=L.knockbackTilt(f);
         v.sprite.setAngle(faintFallback?(f.side===0?-78:78):
-          (!v.useArt&&f.act==='hurt'?(f.side===0?-12:12):0));
+          (knockLean||(!v.useArt&&f.act==='hurt'?(f.side===0?-12:12):0)));
         // Original GIFs were left-facing. Flip when travelling right.
         v.sprite.setFlipX((f.visualDir??f.dir)>0);
         v.sprite.setAlpha(f.hp<=0?.5:f.flash>0?.65:1);
@@ -301,9 +312,19 @@
           this.graphics.lineStyle(2,0xd7eaff,.9);
           this.graphics.strokeEllipse(f.x,f.y-29,57,65);
         }
-        if(f.act==='cast'){
+        const skillPhase=L.specialPhase(f);
+        if(skillPhase==='charge'){
+          // Pose 33: real original windup; no launch before pose 10.
           this.graphics.lineStyle(2,0xffe393,.8);
           this.graphics.strokeCircle(f.x,f.y-34,35+Math.sin(time*.02)*3);
+        }else if(skillPhase==='release'){
+          // Pose 10: release aura only. Projectile and damage still come
+          // exclusively from the original engine's projectile/hit events.
+          const facing=(f.visualDir??f.dir)>0?1:-1;
+          this.graphics.lineStyle(3,0xb8ecff,.85);
+          this.graphics.strokeCircle(f.x+facing*19,f.y-34,24);
+          this.graphics.lineBetween(f.x+facing*29,f.y-34,
+            f.x+facing*48,f.y-34);
         }
       }
       // Render bounded original-engine sparks and projectile history.
