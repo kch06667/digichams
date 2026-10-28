@@ -124,6 +124,11 @@ def fight(ctx,farm,errors,expected_round):
       document.getElementById('dc-phaser-farm-apply').click();
     }""")
     farm.locator("#dc-phaser-cup-engine").wait_for(state="attached",timeout=15000)
+    farm.wait_for_function("""() => {
+      try { return !eval('state')?.pendingBattle &&
+        !eval('state')?.championship?.active?.awaiting; }
+      catch (_) { return false; }
+    }""",timeout=15000)
     saved=farm.evaluate("""() => JSON.parse(
       localStorage.getItem('dc_recreation_save'))""")
     assert "pendingBattle" not in saved
