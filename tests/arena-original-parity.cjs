@@ -67,6 +67,28 @@ test('real combat follows its original match finish, HP loss and skill rules',()
     assert.ok(Number.isFinite(f.x)&&Number.isFinite(f.y));
   }
 });
+test('Phaser visual hit events use ORIGINAL skill damage, not actor pose guesses',()=>{
+  const s=Engine.createMatch({seed:83201,teamSize:3});
+  const events=[];
+  for(let i=0;i<4200&&!s.finished;i++){
+    Engine.step(s,1/30);
+    for(const e of s.events)if(e.type==='hit')events.push(e);
+  }
+  assert.ok(events.length>0,'original simulation must deal damage');
+  assert.ok(events.some(e=>e.special),'original special damage must be marked');
+  for(const e of events){
+    assert.ok(Number.isFinite(e.damage)&&e.damage>0);
+    assert.ok(s.fighters.some(f=>f.id===e.targetId));
+    assert.equal(typeof e.special,'boolean');
+    if(e.special){
+      assert.ok(typeof e.attackerId==='string'&&e.attackerId.length>0,
+        'original skill source must survive projectile expiry');
+      assert.ok(typeof e.technique==='string'&&e.technique.length>0,
+        'show original skill name in Phaser hit effects');
+    }
+  }
+  assert.ok(s.stats.specials>0);
+});
 test('source Digimon records and their saved HP/TP are not changed',()=>{
   const allies=[
     {name:'아구몬',hp:170,maxHp:200,atk:50,def:24,spd:54,tp:65,maxTp:90},

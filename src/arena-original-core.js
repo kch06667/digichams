@@ -354,6 +354,17 @@ function update(dt){
      if(finished)return model;
      const prior=fighters.map(f=>({id:f.id,hp:f.hp}));
      const beforeSpecials=stats.specials, beforeDodge=stats.dodges;
+     const beforeSkillHits=stats.skillHits;
+     // Snapshot the REAL original attack references before update() may
+     // remove a projectile or clear the active skill sequence.
+     const pendingSkill=skillSequence?{
+       attackerId:skillSequence.att.id,targetId:skillSequence.target.id,
+       technique:skillSequence.technique.name,color:skillSequence.technique.color
+     }:null;
+     const incoming=bullets.map(b=>({
+       attackerId:b.att.id,targetId:b.target.id,
+       technique:skillInfo(b.att).name,color:b.color
+     }));
      const beforeFinished=finished;
      const previousPositions=fighters.map(f=>({x:f.x,y:f.y}));
      update(dt);
@@ -362,12 +373,19 @@ function update(dt){
        f.moveDistance=(f.moveDistance||0)+moved;
        const change=prior[i].hp-f.hp;
        if(change>0){
-         // Origin-derived HP delta, not recalculated or estimated in Phaser.
-         const attacker=fighters.find(a=>a.side!==f.side&&
-           (a.attackTarget===f||skillSequence?.target===f))||null;
+         // "special" is derived from the ORIGINAL engine's skillHits
+         // counter, not the actor's post-hit animation (which may be idle).
+         // Skill projectile references can disappear during update(dt).
+         const special=stats.skillHits>beforeSkillHits;
+         const source=special?incoming.find(b=>b.targetId===f.id)||
+           (pendingSkill?.targetId===f.id?pendingSkill:null):null;
+         const attacker=source?fighters.find(a=>a.id===source.attackerId):
+           fighters.find(a=>a.side!==f.side&&a.attackTarget===f)||null;
          model.events.push({type:'hit',attackerId:attacker?.id||null,
-           targetId:f.id,damage:change,guarded:f.act==='guard',
-           special:attacker?.act==='special'||false,
+           targetId:f.id,damage:change,
+           guarded:false,special,
+           technique:special?source?.technique||null:null,
+           color:special?source?.color||null:null,
            x:f.x*scaleX,y:f.y*scaleY});
        }
      });
