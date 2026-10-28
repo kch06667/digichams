@@ -17,12 +17,18 @@ button,.link{font:inherit;padding:10px 12px;min-height:44px;border-radius:7px;cu
 button:focus-visible,.link:focus-visible{outline:3px solid #ffe298;outline-offset:2px}
 .link{display:inline-flex;text-decoration:none;align-items:center}
 #status{min-height:38px;padding:9px 2px;color:#ffdfa1}
+.roster{display:flex;flex-direction:column;gap:5px;margin:10px 0}
+input[type=file]{max-width:100%;padding:9px;border:1px solid #61a69d;border-radius:6px}
 small{color:#acd1ca}
 @media(max-width:540px){body{padding:5px}button,.link{flex:1 0 29%;text-align:center;justify-content:center;font-size:13px}}
 #pwaStatus{font-size:.88rem;color:#e9c879;margin:4px 0}#updateBtn{margin:4px 0;background:#3b6878}#updateBtn[hidden]{display:none}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
 <script defer src="./pwa.js"></script>
+<script defer src="../src/battle-core.js"></script>
+<script defer src="../src/care-core.js"></script>
+<script defer src="../src/championship-core.js"></script>
+<script defer src="./domain-bridge.js"></script>
 <script defer src="./farm-model.js"></script>
 <script defer src="./farm.js"></script>
 </head>
@@ -40,8 +46,12 @@ small{color:#acd1ca}
 <button type="button" id="reset">초기화</button>
 <a class="link" href="./">전투 실험실</a>
 </nav>
+<section class="roster">
+<label for="farmSaveFile">기존 세이브의 디지몬을 사육장에 표시 (읽기 전용)</label>
+<input type="file" id="farmSaveFile" accept=".json,application/json">
+</section>
 <div id="pwaStatus" role="status" aria-live="polite"></div>
 <button type="button" id="updateBtn" hidden>새 버전 적용</button>
 <div role="status" aria-live="polite" id="status">게임 엔진 준비 중…</div>
-<small>모든 비용·훈련량·식사 횟수는 시연 수치이며 ROM 검증 값이 아닙니다. 타일 선택과 화면 드래그/터치를 지원합니다.</small>
+<small>시연 값은 ROM 검증 수치가 아닙니다. 세이브를 불러오면 원본을 변경하지 않고 최대 30마리의 사육장 모습을 확인할 수 있습니다.</small>
 </main></body></html>
