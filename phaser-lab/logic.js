@@ -30,7 +30,7 @@
           sheet.frameHeight < 1 || sheet.frameHeight > 512 ||
           sheet.frames < 1 || sheet.frames > 300 ||
           !Array.isArray(sheet.durationsMs) || sheet.durationsMs.length !== sheet.frames ||
-          sheet.durationsMs.some(v => !Number.isFinite(v) || v < 20 || v > 30000)) return false;
+          sheet.durationsMs.some(v => !Number.isFinite(v) || v < 10 || v > 30000)) return false;
     }
     return true;
   }
@@ -99,14 +99,27 @@
   // No simulation clock, attack damage, hit detection, or TP is changed.
   // Phaser adds a per-frame duration on top of 1000/frameRate.
   // Our exporter stores the TOTAL original GIF delay, not an extra delay.
-  // A 20ms base preserves even the shortest validated GIF frame exactly.
+  // A 10ms base preserves the 17 short frames discovered in the owner's
+  // 216-species source set; 60Hz displays may visually skip sub-frame motion.
   function gifFrameTiming(durationsMs) {
-    const baseMs = 20;
+    const baseMs = 10;
     if (!Array.isArray(durationsMs) || !durationsMs.length ||
         durationsMs.some(ms => !Number.isFinite(ms) || ms < baseMs || ms > 30000))
       throw Error('Invalid GIF frame timings');
     return {frameRate: 1000 / baseMs,
       extraMs: durationsMs.map(ms => ms - baseMs)};
+  }
+
+  // Render-only cues for the existing original battle effect TYPES.
+  // These do NOT claim a species->ROM e003_* effect ID match: the overlay
+  // confirms 151 resource strings but does not identify which move uses one.
+  function projectileShape(projectile) {
+    if (!projectile || typeof projectile !== 'object') return 'orb';
+    if (projectile.type === 'missile' ||
+        projectile.projectileType === 'missile') return 'missile';
+    if (projectile.type === 'claw' ||
+        projectile.projectileType === 'claw') return 'claw';
+    return 'orb';
   }
 
   function specialPhase(f) {
@@ -130,5 +143,6 @@
 
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
     knockbackForDamage, gainTrainingStat, playableAction, motionAction,
-    specialPhase, knockbackTilt, gifFrameTiming, validateLocalCatalog });
+    specialPhase, knockbackTilt, gifFrameTiming, validateLocalCatalog,
+    projectileShape });
 });

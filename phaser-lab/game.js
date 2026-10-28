@@ -546,10 +546,35 @@
           this.projectileGraphics.fillStyle(tint,progress*.42);
           this.projectileGraphics.fillCircle(trail[i].x,trail[i].y,1+4*progress);
         }
-        this.projectileGraphics.fillStyle(tint,.35);
-        this.projectileGraphics.fillCircle(shot.x,shot.y,13);
-        this.projectileGraphics.fillStyle(tint,1);
-        this.projectileGraphics.fillCircle(shot.x,shot.y,6);
+        // Renderer-only silhouette driven by existing original battle
+        // projectile TYPE; do not invent a ROM e003 effect ID for a species.
+        const shape=L.projectileShape(shot);
+        if(shape==='missile'){
+          const tail=trail.length?trail[trail.length-1]:{
+            x:shot.x-(shot.dir||1)*8,y:shot.y};
+          const dx=shot.x-tail.x,dy=shot.y-tail.y;
+          const magnitude=Math.hypot(dx,dy)||1;
+          const ux=dx/magnitude,uy=dy/magnitude;
+          const nx=-uy,ny=ux;
+          this.projectileGraphics.fillStyle(tint,.32);
+          this.projectileGraphics.fillEllipse(shot.x,shot.y,22,19);
+          this.projectileGraphics.fillStyle(tint,1);
+          this.projectileGraphics.fillTriangle(
+            shot.x+ux*13,shot.y+uy*13,
+            shot.x-ux*9+nx*6,shot.y-uy*9+ny*6,
+            shot.x-ux*9-nx*6,shot.y-uy*9-ny*6);
+        }else if(shape==='claw'){
+          this.projectileGraphics.lineStyle(3,tint,.92);
+          for(let line=-1;line<=1;line++)
+            this.projectileGraphics.lineBetween(
+              shot.x-10+line*5,shot.y+9,
+              shot.x+10+line*5,shot.y-9);
+        }else{
+          this.projectileGraphics.fillStyle(tint,.35);
+          this.projectileGraphics.fillCircle(shot.x,shot.y,13);
+          this.projectileGraphics.fillStyle(tint,1);
+          this.projectileGraphics.fillCircle(shot.x,shot.y,6);
+        }
       }
     }
     updateHud(){

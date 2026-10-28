@@ -41,11 +41,12 @@ test('Phaser GIF frame timings equal exported source delays, not source + 83ms',
   const source=[20,40,100,250,30000];
   const before=[...source];
   const result=L.gifFrameTiming(source);
-  assert.equal(result.frameRate,50);
-  assert.deepEqual(result.extraMs,[0,20,80,230,29980]);
+  assert.equal(result.frameRate,100);
+  assert.deepEqual(result.extraMs,[10,30,90,240,29990]);
   assert.deepEqual(result.extraMs.map(ms=>ms+1000/result.frameRate),source);
   assert.deepEqual(source,before,'source manifest must remain unchanged');
-  assert.throws(()=>L.gifFrameTiming([19]),/Invalid GIF/);
+  assert.deepEqual(L.gifFrameTiming([10,20]).extraMs,[0,10]);
+  assert.throws(()=>L.gifFrameTiming([9]),/Invalid GIF/);
   assert.throws(()=>L.gifFrameTiming([Infinity]),/Invalid GIF/);
   assert.throws(()=>L.gifFrameTiming([]),/Invalid GIF/);
 });
@@ -79,6 +80,19 @@ test('visible knockback tilt follows original impulse direction with safe bounds
   f.knockVX=100;f.hp=0;
   assert.equal(L.knockbackTilt(f),0,'real KO pose is never tilted by recoil');
   assert.equal(L.knockbackTilt(null),0);
+});
+test('original arena effect types have distinct renderer-only projectile silhouettes',()=>{
+  assert.equal(L.projectileShape({type:'missile'}),'missile');
+  assert.equal(L.projectileShape({projectileType:'missile'}),'missile');
+  assert.equal(L.projectileShape({type:'claw'}),'claw');
+  assert.equal(L.projectileShape({type:'orb'}),'orb');
+  assert.equal(L.projectileShape(null),'orb');
+  assert.equal(L.motionAction({hp:0,act:'special',pose:33},
+    new Set([0,33,37])),37,'KO must never keep charging a special');
+  assert.equal(L.motionAction({hp:1,act:'victory',pose:10},
+    new Set([0,10,30])),30,'victory must override an older attack pose');
+  assert.equal(L.motionAction({hp:1,act:'special',pose:10},
+    new Set([0,10,33])),10,'original attack4 release must not be lost');
 });
 test('stat and knockback functions bounded and side-effect free', () => {
   assert.equal(L.gainTrainingStat(10, 1), 11);

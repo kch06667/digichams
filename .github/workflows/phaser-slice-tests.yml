@@ -34,6 +34,9 @@ on:
       - 'tools/export-phaser-atlas.py'
       - 'tools/export-phaser-duel.py'
       - 'tools/export-phaser-roster.py'
+      - 'tools/audit-phaser-rom-battle.py'
+      - 'tests/test_phaser_rom_motion.py'
+      - 'docs/ROM_BATTLE_MOTION_EVIDENCE.md'
       - 'tests/test_phaser_roster.py'
       - 'tests/test_phaser_duel.py'
       - 'tests/phaser-duel-browser-smoke.py'
@@ -81,6 +84,7 @@ jobs:
           python-version: '3.11'
       - run: python -m pip install 'Pillow>=10,<13'
       - run: node --check phaser-lab/game.js
+      - run: node --check phaser-lab/logic.js
       - run: node --check src/dev-phaser-farm-launch.js
       - run: node --check src/phaser-arena-entry-choice.js
       - run: node --test tests/phaser-main-entry.cjs tests/phaser-championship-save.cjs
@@ -95,6 +99,8 @@ jobs:
       - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs tests/battle-legacy-storage.cjs tests/battle-owned-optin.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_*.py' -v
       - run: python3 tools/export-phaser-roster.py --all --verify-only --all-actions
+      - name: Verify all indexed GIF frame counts and sub-20ms timing (no ROM upload)
+        run: python3 tools/audit-phaser-rom-battle.py > /dev/null
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
