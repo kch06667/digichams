@@ -27,27 +27,43 @@
   // match against the currently persisted active bracket.
   function tournamentInfo(state,match){
     const a=state?.championship?.active;
-    if(!a||!match||!a.bracket||
-       typeof match.matchId!=='string'||
+    if(!a||!match||typeof match.matchId!=='string'||
        a.id+'-round-'+a.round!==match.matchId||
        a.awaiting!==match.matchId||
        a.cupId!==match.cupId||a.round!==match.round||
        ![1,2,3].includes(match.size))
       throw Error('Original championship match is not awaiting');
-    const fixture=a.bracket.rounds?.[a.round]?.[0];
-    if(!fixture||fixture.winner||!fixture.slots?.includes('player'))
-      throw Error('No valid player fixture in original bracket');
-    const foeId=fixture.slots.find(id=>id&&id!=='player');
-    const opponent=a.bracket.participants?.find(p=>p.id===foeId);
-    if(!opponent||typeof opponent.trainer!=='string'||
-       !Array.isArray(opponent.team)||opponent.team.length!==match.size||
-       !opponent.team.every((name,i)=>name===match.opponentTeam?.[i])||
-       match.trainer!==opponent.trainer||
-       match.opponent!==opponent.team[0])
-      throw Error('Opponent roster differs from original tournament bracket');
+    let team=null,trainer='상대 테이머';
+    if(a.bracket){
+      // v0.23.1+ current source: real 4/8-team seeded bracket.
+      const fixture=a.bracket.rounds?.[a.round]?.[0];
+      if(!fixture||fixture.winner||!fixture.slots?.includes('player'))
+        throw Error('No valid player fixture in original bracket');
+      const foeId=fixture.slots.find(id=>id&&id!=='player');
+      const opponent=a.bracket.participants?.find(p=>p.id===foeId);
+      if(!opponent||typeof opponent.trainer!=='string'||!Array.isArray(opponent.team))
+        throw Error('Missing opponent in original tournament bracket');
+      team=opponent.team;
+      trainer=opponent.trainer;
+    }else{
+      // Older checked-in HTML v0.23 has two-round cups, with a fixed
+      // leading opponent but no stored bracket/team. The real battle
+      // populates other opponents via teamMembers(name, side=1, size).
+      // The farm entry computes that exact lineup before invoking capture.
+      const cup=globalThis.DCChampionship?.get?.(a.cupId);
+      if(!cup||cup.size!==match.size||
+         cup.opponents?.[a.round]!==match.opponent||
+         cup.name!==match.name||a.round<0||a.round>1)
+        throw Error('Original legacy championship definition mismatch');
+    }
+    const expected=team||match.opponentTeam;
+    if(!Array.isArray(expected)||expected.length!==match.size||
+       !expected.every((name,i)=>name===match.opponentTeam?.[i])||
+       match.trainer!==trainer||match.opponent!==expected[0])
+      throw Error('Opponent roster differs from original tournament match');
     return {cupId:a.cupId,matchId:match.matchId,round:a.round,
-      trainer:opponent.trainer,opponentTeam:opponent.team.slice(),
-      size:match.size,activeSnapshot:JSON.stringify(a)};
+      trainer,opponentTeam:expected.slice(),size:match.size,
+      activeSnapshot:JSON.stringify(a)};
   }
   function capture(state,{teamSize=1,leadIndex=null,tournament=null}={}){
     if(!state||state.pendingBattle||!Array.isArray(state.team)||
