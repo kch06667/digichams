@@ -136,7 +136,7 @@ function ensure(s){
  s.world.accumulator??=0;s.farm.actors||={};s.farm.foods||=[];
  // Guard against malformed/older saves before the simulation begins.
  if(!Number.isFinite(s.world.seed))s.world.seed=12345;
- if(!Number.isFinite(s.world.accumulator)||s.world.accumulator<0||s.world.accumulator>=.05)s.world.accumulator=0;
+ if(!Number.isFinite(s.world.accumulator)||s.world.accumulator<0)s.world.accumulator=0;
  if(!Number.isFinite(s.farm.completed)||s.farm.completed<0)s.farm.completed=0;
  if(!Number.isFinite(s.farm.nextFood)||s.farm.nextFood<1)s.farm.nextFood=1;
  s.farm.nextFood??=1;s.farm.completed??=0;
@@ -333,6 +333,9 @@ function advance(s,realSeconds,hooks={}){
   // No offline fast-forward: bound malformed/imported delta values so an
   // unexpected resume cannot lock up the browser's main thread indefinitely.
   const safeSeconds=Math.min(realSeconds,300);
+  // Normal advance may hold many pending 50ms steps, so never erase the
+  // accumulator from step()->ensure(). Only validate it on ENTRY to advance.
+  if(s.world.accumulator>=.05)s.world.accumulator=0;
   s.world.accumulator+=safeSeconds*s.world.speed;
   while(s.world.accumulator>=.05-1e-9){
    s.world.accumulator-=.05;
