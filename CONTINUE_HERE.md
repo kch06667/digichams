@@ -1,3 +1,14 @@
+# 최신 전투 정산 이어받기 — 2026-10-28 (중요: 안전한 사본 정산, 본게임 미연결)
+
+- 작업 브랜치: `feature/atomic-battle-settlement-20261028`. GitHub 최신 main 기준. `src/battle-settlement-core.js` 신규 모듈과 `tests/battle-settlement-core.cjs` 추가.
+- 본게임 `index.html`의 전투 로직/세이브는 **아직 변경하지 않음**. Phaser 연습전도 기존처럼 읽기 전용. 이번 작업은 실제 게임 세이브를 건드리지 않는 **원자적 사본 정산 코어**만 구축한다.
+- `DCBattleSettlement.settleCopy(state,{battleId,final,initial,lookup})`: pendingBattle ID + stable instanceId + 시작 HP·TP + 최종 완료 상태를 검증하고, 새 사본에 HP/TP·승패·기존 경험치/친밀도·진화 기록·대회 정산을 적용. 중복 적용은 `pendingBattle` 제거로 차단. 잘못된 입력은 원본 무변경.
+- 구현 검증 시 원본 `grantExperience` 계산식과 `DCEvolution.recordBattle`, `DCChampionship.finishMatch`를 사용한다. 실제 게임 `settleMatch()`에 연결하기 전에 **종별 진화/레벨업/대회 결과 차이와 중도 종료 복구 경로**를 더 검증해야 한다.
+- 다음 세션에서: `AGENTS.md` → 이 문서 → `docs/PHASER_MIGRATION_CHECKPOINT.md` 순서로 읽고, `node --test tests/battle-settlement-core.cjs tests/arena-original-parity.cjs` 실행. PR CI 확인 후 검증된 변경만 main 병합.
+- **매 업데이트 ZIP 금지, 공개 Git에 NDS/ROM 추출 파일 추가 금지.** 모바일 ChatGPT 앱 렉이면 새 채팅에서도 GitHub와 체크포인트로 이어갈 것.
+
+---
+
 # 최신 그래픽 통합 체크포인트 — 2026-10-28 (v0.23.2 사육장 원본 이미지)
 
 - 최신 `main` 코드(`fe410bd0`)에서 별도 브랜치 `feature/integrate-v0232-farm-art-20261028`를 생성해 작업. 기존 JS 기능을 구버전 ZIP으로 덮어쓰지 않았다.
