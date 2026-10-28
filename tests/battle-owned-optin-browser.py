@@ -37,10 +37,10 @@ def check(browser, host, mobile=False):
       return true;
     }""")
     assert synced
-    page.locator("#dc-owned-optin-enable").check()
+    page.locator("#dc-owned-optin-enable").click()
     status=page.locator("#dc-owned-optin-status").inner_text()
+    assert page.locator("#dc-owned-optin-enable").is_checked(), status
     assert "다음 정상 종료" in status, status
-    assert page.locator("#dc-owned-optin-enable").is_checked()
     assert page.evaluate("""() => {
       const raw=localStorage.getItem('dc_recreation_save');
       return raw===localStorage.getItem(DCBattleOwnedOptin.BACKUP_KEY)
