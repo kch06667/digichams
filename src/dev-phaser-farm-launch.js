@@ -6,7 +6,9 @@
  */
 (() => {
   'use strict';
-  if (new URLSearchParams(location.search).get('phaserBridge') !== '1') return;
+  const params=new URLSearchParams(location.search);
+  const arenaChoice=params.get('phaserBattle')==='1';
+  if(params.get('phaserBridge')!=='1'&&!arenaChoice)return;
   const origin = location.origin;
   const button = document.createElement('button');
   button.type = 'button';
@@ -77,19 +79,19 @@
     }};
   }
 
-  button.addEventListener('click', () => {
-    let payload,launch;
+  function launch(){
+    let payload,launchRecord;
     pending=null;apply.hidden=true;apply.disabled=false;
     try {
       // The existing playable game defines global lexical `state`.
       // Read it on user click, not at page load (avoids stale roster).
       const live=eval('state');
       payload = snapshot(live);
-      launch=DCDevPhaserCommit.capture(live);
+      launchRecord=DCDevPhaserCommit.capture(live);
       if (!globalThis.crypto?.getRandomValues) throw Error('안전한 브라우저 환경이 필요해.');
     } catch (error) {
       notice.textContent = '연습전 연결 불가: ' + error.message;
-      return;
+      return false;
     }
     const random = new Uint8Array(16);
     crypto.getRandomValues(random);
@@ -99,7 +101,7 @@
     const popup = window.open(target.href,'_blank');
     if (!popup) {
       notice.textContent = '팝업이 차단됐어. 이 사이트의 새 탭 열기를 허용해 줘.';
-      return;
+      return false;
     }
     let done = false;
     const onReady = event => {
@@ -122,9 +124,9 @@
         // Pure staging performs all participant/HP/TP/identity checks
         // WITHOUT writing or mutating the player's current state.
         const live=eval('state');
-        DCDevPhaserCommit.stage(live,launch,packet,token,
+        DCDevPhaserCommit.stage(live,launchRecord,packet,token,
           eval('speciesLookup'));
-        pending={packet,token,launch};
+        pending={packet,token,launch:launchRecord};
         apply.hidden=false;
         notice.textContent='완료된 1대1 결과 확인 · 적용은 선택사항이야.';
       }catch(err){
@@ -141,6 +143,12 @@
         notice.textContent = '연결 시간이 초과됐어. 팝업 탭을 확인해 줘.';
       }
     },15000);
-  });
-  document.body.append(button,notice,apply);
+    return true;
+  }
+  button.addEventListener('click',launch);
+  // The production-layout opt-in entry calls this from the original arena's
+  // real lbStart click. It is inert unless an explicit opt-in URL was used.
+  window.DCDevPhaserLaunch=Object.freeze({launch});
+  if(arenaChoice)document.body.append(notice,apply);
+  else document.body.append(button,notice,apply);
 })();
