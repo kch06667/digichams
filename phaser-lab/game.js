@@ -166,7 +166,9 @@
         renderedArt:()=>this.sim.fighters.map(f=>{
           const v=this.visuals.get(f.id);
           return {id:f.id,name:f.name,privateArt:!!v?.useArt,
-            textureKey:v?.sprite.texture.key||null};
+            textureKey:v?.sprite.texture.key||null,
+            action:v?.pose||null,angle:v?.sprite.angle||0,
+            hasKoArt:!!v?.art?.actions.has(37)};
         })
       };
       for(const id of buttons)document.getElementById(id).disabled=false;
