@@ -105,7 +105,7 @@ test('opt-in page generator leaves both original HTML files unchanged',()=>{
      assert.match(html,/dcOwnedSaveEnabled=false/);
      assert.match(html,/dcTryOwnedCommit\(!!won\);return;/);
      assert.match(html,/function settleMatch\(won,aborted=false\)/);
-     assert.ok(html.length>original[i]);
+     assert.ok(Buffer.byteLength(html,'utf8')>original[i]);
      assert.equal(fs.statSync(path.join(root,name)).size,original[i]);
    }
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
