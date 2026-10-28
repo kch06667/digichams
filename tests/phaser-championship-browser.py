@@ -83,6 +83,10 @@ def fight(ctx,farm,errors,expected_round):
     }""")
     assert match["round"]==expected_round,match
     assert len(match["opponentTeam"])==match["size"]
+    # A semifinal can already have a verified backup from its previous
+    # approved round; receiving a final result must NOT write it again.
+    backup_before=farm.evaluate("""() =>
+      localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY)""")
     farm.locator('[data-tab="battle"]').click()
     # The opt-in selection is intentionally NOT persisted across reloads.
     # Explicitly choose Phaser again for the next cup round.
@@ -130,7 +134,7 @@ def fight(ctx,farm,errors,expected_round):
     apply.wait_for(state="visible",timeout=12000)
     assert "대회 경기" in farm.locator("#dc-phaser-farm-status").inner_text()
     assert farm.evaluate("""() =>
-      localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY)===null""")
+      localStorage.getItem(DCDevPhaserCommit.BACKUP_KEY)""")==backup_before
     farm.evaluate("""() => {
       // Synthetic test fixture needs a synchronous authoritative checkpoint.
       localStorage.setItem('dc_recreation_save',JSON.stringify(eval('state')));
