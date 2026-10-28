@@ -11,6 +11,7 @@
     return;
   }
   let manifest = null, soundEnabled = false, game;
+  let savePreview = B.previewSample();
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const actionKey = id => 'mon-' + id;
 
@@ -76,7 +77,8 @@
         reset: () => this.scene.restart(),
         sound: enabled => { soundEnabled = enabled; if (enabled && this.sound.context?.resume) this.sound.context.resume(); },
         encounterSnapshot: () => JSON.parse(JSON.stringify(this.encounter)),
-        cupPreview: () => B.cupPreview(B.previewSample()),
+        cupPreview: () => B.cupPreview(savePreview),
+        importedSavePreview: () => JSON.parse(JSON.stringify(savePreview)),
         trainingPreview: day => B.train(day, this.demoStat, 1)
       };
       buttons.forEach(id => { document.getElementById(id).disabled = false; });
@@ -273,6 +275,21 @@
     });
     document.getElementById('battle').addEventListener('click',()=>window.DigiPhaserLab?.battle());
     document.getElementById('train').addEventListener('click',()=>window.DigiPhaserLab?.train());
+    document.getElementById('saveFile').addEventListener('change',async e=>{
+      const file=e.currentTarget.files?.[0];
+      if(!file)return;
+      if(file.size>3*1024*1024){say('세이브 파일이 너무 커. 최대 3MB만 읽을 수 있어.');return;}
+      try {
+        const json=JSON.parse(await file.text());
+        const fresh=B.inspectExport(json);
+        savePreview=fresh;
+        const ready=fresh.team.filter(m=>m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage').length;
+        say('세이브 읽기 전용 확인 · DAY '+fresh.day+' · 디지몬 '+fresh.team.length+
+          '마리 · 출전 가능 '+ready+'마리 · 대회 조건 버튼으로 확인 가능');
+      } catch (err) {
+        say('세이브 미리보기 실패: '+err.message+' · 기존 데이터는 변경되지 않았어.');
+      }
+    });
     document.getElementById('cups').addEventListener('click',()=>{
       const cups=window.DigiPhaserLab?.cupPreview() || [];
       say('기존 대회 규칙 (샘플 팀): '+cups.map(c=>c.name+(c.available?' 참가 가능':' '+c.missing.join(', '))).join(' / '));
