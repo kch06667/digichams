@@ -1,3 +1,23 @@
+## 2026-10-28 추가 분석 완료 (이 항목이 아래 1차 수치보다 우선)
+
+- 전체 2D 그래픽 구조 **5,955파일 파싱, 0 구조 오류**. NANR의 0 tick 1건은 원문 그대로 보존하고 해당 시퀀스 APNG를 생성하지 않음 (`common/e003_giantmissile00`, 시퀀스 2/프레임 0). 의미는 미확정.
+- 전체 애니메이션 묶음 1,319개 중 **1,258개/24,602셀 실제 렌더링**. 남은 61개는 `database/item_badge001..061`: NCER 8bpp 지정 vs NCBR 4bpp/512바이트 불일치. 추측으로 강제 교정하지 않음.
+- NSCR/NBS **198개 구조 해석**, 그중 **194개 배경 렌더링**. 4개 `training/cageBG416_000..003.nscr`는 같은 stem의 캐릭터 파일 없음. 공유 `cageBG416.ncgr/nclr` 후보가 있지만 연결 미확정.
+- 기존 배경 이미지와 124건 대조: 66 일치 / 58 차이(서로 다른 NBS/NSCR 경로가 동일 PNG에 대응할 수 있어 고유 이미지 수가 아님). 4바이트 NBS를 2바이트로 오해하면 격자 형태로 깨지는 사례 확인.
+- NBS `(format_word,variant_word)=(1,1)` 6파일은 `flags:u16,tile:u16`. flags=4 → NSCR 0x400 좌우 반전과 A/C 맵에서 교차 일치. A/C/D/E 영역은 대응 NSCR과 전체 항목 일치. 다른 flag는 미지원. B의 NSCR은 512×128 전체 0으로 NBS와 별도 내용.
+- `tools/rom_scene.py`: **NXR 96(1,366레코드), OPM 75(1,537레코드), ATR 120, COL 40, ESC 30** 전체 구조 파싱, 0 오류. OPM 자산 이름(1개 대소문자 차이 포함) 75개와 low-13-bit 후보 인덱스 1,537개 모두 대응 NANR 범위 내. 좌표·회전·flip의 실행 의미는 INFERRED.
+- COL 40파일/20,100칸의 값에 대해 8방향 거리 모델 시험: **39파일 완전 일치**, cm29의 24칸만 불일치. 4방향 거리 모델은 완전 일치 0파일. 따라서 단순 boolean 통행 표로 해석하지 말 것. 수학적 일치는 원작 충돌 알고리즘 복원을 뜻하지 않는다.
+- 216종/8,640 GIF 비교 결과는 동일: 7,849 일치 / 791 차이. 세부 집계 및 실패 범위는 `docs/audits/rom-graphics-v023.json`. 원작 실행 중 팔레트 재설정 가능성이 있어 차이 전체를 GIF 버그로 확정하지 않음.
+- 합성 회귀 **31/31 통과**(database 6 + graphics 17 + scene 8). 게임 코드/세이브 변경 없음.
+- 다음 단위: BSA 19개의 배경 애니메이션 구조 탐색. 관찰상 프레임 수 2/3, tilemap + 시퀀스별 타일 참조 표 후보이며 아직 파서/테스트로 확정 전. 유니몬 연결 수정과 팔레트 재현은 별도 적용 작업.
+
+실행 추가:
+```sh
+python3 tools/rom_graphics.py --rom /path/game.nds --output-dir /outside/graphics --audit-sprites --audit-backgrounds
+python3 tools/rom_scene.py --rom /path/game.nds --output-dir /outside/graphics
+python3 -m unittest discover -s tests -p 'test_rom*.py' -v
+```
+
 # 2026-10-28 그래픽 분석 체크포인트
 
 - 새 작업 브랜치 `analysis/rom-graphics-20261028`, 기준 main `aa6db16`. 원본은 이전과 동일 SHA-256의 읽기 전용 로컬 NDS.

@@ -15,3 +15,8 @@ UTF-16LE 디코딩 자체와 문자열 위치는 ROM_VERIFIED. 첫 216항목의 
 ## 그래픽 복원 구조 (2026-10-28)
 `tools/rom_graphics.py`: source마다 NitroFS 경로/FAT ID/ROM 오프셋/크기/SHA-256 기록. NCER cell_index/file_offset/bounds/objects(x,y,width,height,tile,palette,bpp,flip)/transfer(source_offset,size)와 NANR animation_index/file_offset/loop_start/play_mode/frames(cell_index,duration_ticks,content_offset) 보존. NCER transfer.source_offset은 NCGR/NCBR 픽셀 payload 상대 오프셋이며 ROM 절대 오프셋이 아니다.
 프레임/좌표/팔레트 구조와 픽셀 대조는 ROM_VERIFIED 근거. action 이름과 미관찰 엔진 tick 속도는 INFERRED. 추출 PNG/APNG 및 전체 메타데이터는 저장소 밖에만 저장. GIF 비교는 여백 제거/BGR555 양자화 기준이며 기준점 위치와 게임 내 사용 의미를 검증하지 않는다.
+
+## 공간/씬 원문 (2026-10-28)
+ATR: DATR + u32(version,width,height) + width*height u8; COL: u8(version,width,height)+u8 grid; ESC:u8 version,u16 width/height+u8 grid. 원문 값의 충돌/도주 의미는 INFERRED.
+NXR: NXSR, u32(version,record_count,resource_count), u32 길이+4바이트 정렬 ASCII 자산/레코드명, 36바이트 레코드(i32,i32,6*f32,u32). OPM: OPMD,v4,u8 길이+이름/padding,u32 count,16바이트(Hhhhff) 레코드. 필드명 후보/부호/오프셋 원문 보존. OPM low13bits 인덱스 범위와 highflags는 별개, flip 의미 미확정.
+COL distance_models는 추출 값으로 재계산한 가설/반례이며 원작 엔진 구현이라고 표시하지 않는다.

@@ -67,8 +67,9 @@ class GraphicsTests(unittest.TestCase):
                 g.animations(raw)
         raw = bytearray(anim_fixture())
         struct.pack_into('<H', raw, 68, 0)
-        with self.assertRaises(ValueError):
-            g.animations(raw)
+        parsed = g.animations(raw)
+        self.assertEqual(parsed['sequences'][0]['frames'][0]['duration_ticks'], 0)
+        self.assertEqual(parsed['zero_duration_frames'], [{'animation_index': 0, 'frame_index': 0, 'file_offset': 64}])
 
     def test_cell_signed_coordinates_and_vram_reference(self):
         c = g.cells(cell_fixture())['cells'][0]
@@ -147,6 +148,29 @@ class GraphicsTests(unittest.TestCase):
         im.putpixel((1, 1), (248, 0, 0, 255))
         self.assertEqual(g.pixel_signature(im), g.pixel_signature(g.Image.new('RGBA', (1, 1), (255, 0, 0, 255))))
         self.assertNotEqual(g.pixel_signature(im), g.pixel_signature(g.Image.new('RGBA', (1, 1), (0, 255, 0, 255))))
+
+    def test_wide_nbs_flags_and_tile_are_separate_words(self):
+        raw = b'NBSR' + struct.pack('<IIIIHHHH', 1, 2, 1, 1, 0, 5, 4, 7)
+        parsed = g.tilemap(raw, 'nbs')
+        self.assertEqual(parsed['entries'], (5, 7 | 1024))
+        self.assertEqual(parsed['entry_size'], 4)
+        raw = bytearray(raw)
+        struct.pack_into('<H', raw, 20, 8)
+        with self.assertRaises(ValueError):
+            g.tilemap(raw, 'nbs')
+
+    def test_nbs_observed_short_profiles(self):
+        for first, last in [(1, 0), (2, 0), (2, 1)]:
+            raw = b'NBSR' + struct.pack('<IIIIH', first, 1, 1, last, 17)
+            self.assertEqual(g.tilemap(raw, 'nbs')['entries'], (17,))
+
+    def test_nonstandard_constant_screen_is_order_independent(self):
+        raw = nitro(b'RCSN', b'NRCS', struct.pack('<HHHHI', 512, 128, 1, 0, 2048) + bytes(2048))
+        self.assertEqual(g.tilemap(raw, 'nscr')['layout'], 'constant')
+        raw = bytearray(raw)
+        raw[-1] = 1
+        with self.assertRaises(ValueError):
+            g.tilemap(raw, 'nscr')
 
     def test_output_guard_and_negative_ranges(self):
         with self.assertRaises(ValueError):

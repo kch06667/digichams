@@ -1,3 +1,12 @@
+# 2026-10-28 추가 체크포인트
+
+- 그래픽/배경/공간 데이터 분석 도구 작성. 최신 수치와 보류 항목은 ROM_ANALYSIS_PROGRESS.md 최상단 및 docs/audits/rom-graphics-v023.json.
+- `analysis/rom-graphics-20261028`, 현재까지 게임 소스 수정 없음. 31개 합성 테스트 통과.
+- 216종 비교 재수행 불필요: 저장소 밖 graphics/web-sprite-comparison.json 재사용. 배경/씬 원문 보고서도 같은 private 경로.
+- 다음 BSA 배경 애니메이션 19파일 후보 검증 또는 유니몬 #5_1 적용. 새 추출 자산은 Git에 추가하지 않음.
+
+---
+
 # 2026-10-28 현재 분석 작업
 
 - `analysis/rom-graphics-20261028`: ROM 그래픽 복원 도구 + 합성 테스트 추가. 게임 소스는 현재 변경 없음.

@@ -146,13 +146,13 @@ def animations(data):
             at = framebase + off + j * 8
             ref, duration, padding = unpack(data, at, 'IHH')
             cell, = unpack(data, contentbase + ref, 'H')
-            if not duration:
-                raise ValueError('Zero-duration animation frame')
             frames.append({'frame_index': j, 'file_offset': at, 'content_offset': contentbase + ref,
                            'cell_index': cell, 'duration_ticks': duration})
         rows.append({'animation_index': i, 'file_offset': pos, 'loop_start': loop_start,
                      'play_mode': mode, 'frames': frames})
-    return dict(h, declared_frame_count=total, sequences=rows)
+    zero_duration = [{'animation_index': seq['animation_index'], 'frame_index': frame['frame_index'],
+                      'file_offset': frame['file_offset']} for seq in rows for frame in seq['frames'] if frame['duration_ticks'] == 0]
+    return dict(h, declared_frame_count=total, sequences=rows, zero_duration_frames=zero_duration)
 
 
 def tilemap(data, kind):
@@ -167,20 +167,40 @@ def tilemap(data, kind):
     elif kind == 'nbs':
         if span(data, 0, 4) != b'NBSR':
             raise ValueError('Unsupported NBS signature')
-        version, width, height, layers = unpack(data, 4, 'IIII')
-        if version != 2 or layers != 1:
-            raise ValueError('Unsupported NBS version/layers')
-        start, size, layout, h = 20, width * height * 2, 'rows', {}
+        format_word, width, height, variant_word = unpack(data, 4, 'IIII')
+        if format_word not in (1, 2) or variant_word not in (0, 1):
+            raise ValueError('Unsupported NBS profile')
+        wide = (format_word, variant_word) == (1, 1)
+        start, size, layout = 20, width * height * (4 if wide else 2), 'rows'
+        h = {'format_word': format_word, 'variant_word': variant_word,
+             'entry_size': 4 if wide else 2}
         if len(data) != start + size:
             raise ValueError('NBS dimensions do not match payload')
+        if wide:
+            # In six files, entry = flags:u16, tile:u16. Flag 4 is H-flip:
+            # A/C/D/E entries cross-match their NSCR maps, including nine flips.
+            # Other flags are deliberately unsupported until evidenced.
+            entries = []
+            for flags, tile in struct.iter_unpack('<HH', span(data, start, size)):
+                if flags & ~4 or tile > 1023:
+                    raise ValueError('Unsupported wide NBS flags/tile')
+                entries.append(tile | ((flags & 4) << 8))
+            if not (0 < width <= 512 and 0 < height <= 512):
+                raise ValueError('Invalid tilemap size')
+            return dict(h, width_tiles=width, height_tiles=height, layout=layout,
+                        data_offset=start, entries=tuple(entries))
     else:
         raise ValueError('Unknown tile map kind')
     if not (0 < width <= 512 and 0 < height <= 512) or size != width * height * 2:
         raise ValueError('Invalid tilemap size')
+    entries = unpack(data, start, 'H' * (size // 2))
     if layout == 'screen-blocks' and (width not in (32, 64) or height not in (32, 64)):
-        raise ValueError('Unsupported text screen dimensions')
+        if len(set(entries)) != 1:
+            raise ValueError('Unsupported nonconstant text screen dimensions')
+        # cageBG_B NSCR is an all-zero 512x128 map: order cannot affect pixels.
+        layout = 'constant'
     return dict(h, width_tiles=width, height_tiles=height, layout=layout, data_offset=start,
-                entries=unpack(data, start, 'H' * (size // 2)))
+                entries=entries)
 
 
 def indexed_pixel(payload, index, bpp):
@@ -232,7 +252,7 @@ def render_background(chars, pal, screen, transparent=False):
     px = im.load()
     for y in range(h):
         for x in range(w):
-            i = y * w + x if screen['layout'] == 'rows' else ((y // 32) * (w // 32) + x // 32) * 1024 + (y % 32) * 32 + x % 32
+            i = y * w + x if screen['layout'] in ('rows', 'constant') else ((y // 32) * (w // 32) + x // 32) * 1024 + (y % 32) * 32 + x % 32
             entry = screen['entries'][i]
             raw = span(chars['payload'], (entry & 1023) * 8 * chars['bpp'], 8 * chars['bpp'])
             for ty in range(8):
@@ -312,6 +332,9 @@ def export_sprite(rom, stem, output):
         draw.text((x + 2, y), str(i), fill='black')
     sheet.save(target / 'cells.png')
     for seq in anim['sequences']:
+        if any(f['duration_ticks'] == 0 for f in seq['frames']):
+            # Preserve raw duration; skip preview instead of inventing hold/skip semantics.
+            continue
         frames = [rendered[f['cell_index']] for f in seq['frames']]
         # PNG animation for inspection only: 60Hz is an assumption, raw ticks retained.
         frames[0].save(target / f"animation-{seq['animation_index']:02}.png", save_all=True,
@@ -321,7 +344,9 @@ def export_sprite(rom, stem, output):
     report = {'rom_sha256': rom.nds.sha256, 'stem': stem, 'sources': evidence,
               'canvas': canvas, 'cell_bank': bank, 'animations': anim,
               'confidence': {'structure': 'ROM_VERIFIED', 'action_names': 'INFERRED',
-                             'preview_60hz': 'INFERRED'}, 'note': 'Numeric animation IDs are not verified action semantics.'}
+                             'preview_60hz': 'INFERRED'},
+              'preview_skipped_indices': sorted({f['animation_index'] for f in anim['zero_duration_frames']}),
+              'note': 'Numeric animation IDs are not verified action semantics. Zero-tick sequences have no APNG preview.'}
     (target / 'metadata.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
     return {'stem': stem, 'cells': len(rendered), 'animations': len(anim['sequences']), 'output': str(target)}
 
@@ -341,6 +366,7 @@ def audit(rom, output, compare_web=False):
             row = {'source': rom.evidence(path)}
             if ext == '.nanr':
                 row.update(sequences=len(parsed['sequences']), frames=parsed['declared_frame_count'],
+                           zero_duration_frames=parsed['zero_duration_frames'],
                            play_modes=dict(Counter(s['play_mode'] for s in parsed['sequences'])))
             elif ext == '.ncer':
                 row.update(cells=len(parsed['cells']), mapping=parsed['mapping'],
@@ -415,6 +441,64 @@ def audit(rom, output, compare_web=False):
     print(json.dumps({'comparison': dict(totals), 'errors': len(errors)}), flush=True)
 
 
+def audit_backgrounds(rom, output):
+    rows, failures = [], []
+    for path in sorted(p for p in rom.paths if Path(p).suffix in ('.nbs', '.nscr')):
+        stem, kind = path.rsplit('.', 1)
+        try:
+            ch, pal = characters(rom.read(stem + '.ncgr')), palette(rom.read(stem + '.nclr'))
+            screen = tilemap(rom.read(path), kind)
+            im = render_background(ch, pal, screen)
+            row = {'path': path, 'sources': [rom.evidence(stem + e) for e in ('.ncgr', '.nclr', '.' + kind)],
+                   'size': im.size, 'layout': screen['layout'], 'pixel_signature': pixel_signature(im)}
+            existing = ROOT / 'assets/rom_images' / (stem.replace('/', '_') + '.png')
+            if existing.exists():
+                with Image.open(existing) as old:
+                    row.update(existing_file=str(existing.relative_to(ROOT)), existing_size=old.size,
+                               existing_pixels_match=pixel_signature(old) == pixel_signature(im))
+            if kind == 'nbs' and screen.get('entry_size') == 4 and stem + '.nscr' in rom.paths:
+                counterpart = tilemap(rom.read(stem + '.nscr'), 'nscr')
+                w, h = screen['width_tiles'], screen['height_tiles']
+                sw, sh = counterpart['width_tiles'], counterpart['height_tiles']
+                row['nscr_top_left_entries_match'] = (w <= sw and h <= sh and
+                    all(screen['entries'][y * w + x] == counterpart['entries'][y * sw + x] for y in range(h) for x in range(w)))
+            rows.append(row)
+        except (ValueError, OSError) as error:
+            failures.append({'path': path, 'error': str(error)})
+        if (len(rows) + len(failures)) % 20 == 0:
+            print(json.dumps({'backgrounds_rendered': len(rows), 'errors': len(failures)}), flush=True)
+    report = {'rom_sha256': rom.nds.sha256, 'rendered': len(rows), 'failures': failures,
+              'existing_matches': sum(r.get('existing_pixels_match', False) for r in rows),
+              'existing_differences': sum(r.get('existing_pixels_match') is False for r in rows),
+              'note': 'Static maps only; layers, palette animation, camera and runtime compositing are not reconstructed.',
+              'backgrounds': rows}
+    (output / 'background-audit.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n')
+    print(json.dumps({k: v for k, v in report.items() if k not in ('backgrounds', 'failures')}), flush=True)
+
+
+def audit_sprite_banks(rom, output):
+    rows, failures = [], []
+    for path in sorted(p for p in rom.paths if p.endswith('.nanr')):
+        stem = path[:-5]
+        try:
+            ch, pal, bank, anim = rom.sprite(stem)
+            rendered = [render_cell(ch, pal, bank, cell) for cell in bank['cells']]
+            rows.append({'stem': stem, 'source': rom.evidence(path),
+                         'sequences': len(anim['sequences']), 'cells': len(rendered),
+                         'zero_duration_frames': anim['zero_duration_frames'],
+                         'objects': sum(len(c['objects']) for c in bank['cells']),
+                         'largest_canvas': [max(im.width for im in rendered), max(im.height for im in rendered)]})
+        except (ValueError, OSError) as error:
+            failures.append({'stem': stem, 'error': str(error)})
+        if (len(rows) + len(failures)) % 200 == 0:
+            print(json.dumps({'sprite_banks_rendered': len(rows), 'errors': len(failures)}), flush=True)
+    result = {'rom_sha256': rom.nds.sha256, 'rendered_banks': len(rows),
+              'rendered_cells': sum(r['cells'] for r in rows), 'failures': failures, 'banks': rows,
+              'note': 'All cells rendered and sequence references checked; not visual/gameplay validation of every bank.'}
+    (output / 'sprite-bank-audit.json').write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n')
+    print(json.dumps({'rendered_banks': len(rows), 'rendered_cells': result['rendered_cells'], 'failures': len(failures)}), flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rom', type=Path, required=True)
@@ -423,17 +507,25 @@ def main():
     parser.add_argument('--background', action='append', default=[])
     parser.add_argument('--audit', action='store_true')
     parser.add_argument('--compare-web', action='store_true')
+    parser.add_argument('--audit-backgrounds', action='store_true')
+    parser.add_argument('--audit-sprites', action='store_true')
     args = parser.parse_args()
     output = destination(args.output_dir)
     rom = GraphicsROM(args.rom)
     if args.audit or args.compare_web:
         audit(rom, output, args.compare_web)
+    if args.audit_backgrounds:
+        audit_backgrounds(rom, output)
+    if args.audit_sprites:
+        audit_sprite_banks(rom, output)
     for stem in args.sprite:
         print(json.dumps(export_sprite(rom, stem, output)))
     for stem in args.background:
         kind = 'nscr' if stem + '.nscr' in rom.paths else 'nbs'
+        if stem.endswith(('.nscr', '.nbs')):
+            stem, kind = stem.rsplit('.', 1)
         im = render_background(characters(rom.read(stem + '.ncgr')), palette(rom.read(stem + '.nclr')), tilemap(rom.read(stem + '.' + kind), kind))
-        path = output / (stem.replace('/', '__') + '.png')
+        path = output / (stem.replace('/', '__') + '.' + kind + '.png')
         im.save(path)
         print(json.dumps({'stem': stem, 'size': im.size, 'output': str(path)}))
 
