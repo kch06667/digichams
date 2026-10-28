@@ -11,9 +11,9 @@ test('deploy archive is allowlisted and never contains extracted game art',()=>{
   try{
     cp.execFileSync(process.execPath,[path.join(root,'tools/build-phaser-preview.cjs'),d]);
     const files=fs.readdirSync(d).sort();
-    assert.deepEqual(files,['arena-techniques.js','build-info.json','domain-bridge.js','engine-core','farm-model.js','farm.html','farm.js','game.js','icon.svg','index.html','logic.js','manifest.webmanifest','pwa.js','realtime-core.js','sw.js',... (fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor']:[])]);
+    assert.deepEqual(files,['arena-techniques.js','build-info.json','domain-bridge.js','engine-core','farm-model.js','farm.html','farm.js','game.js','icon.svg','index.html','logic.js','manifest.webmanifest','private-art-loader.js','pwa.js','realtime-core.js','sw.js',... (fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor']:[])]);
     const data=JSON.parse(fs.readFileSync(path.join(d,'build-info.json'),'utf8'));
-    assert.deepEqual(data.files,['index.html','game.js','logic.js','domain-bridge.js','arena-techniques.js','realtime-core.js','farm.html','farm.js','farm-model.js','manifest.webmanifest','icon.svg','pwa.js','sw.js','engine-core/battle-core.js','engine-core/care-core.js','engine-core/championship-core.js',...(fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor/phaser.min.js','vendor/PHASER_LICENSE.txt']:[])]);
+    assert.deepEqual(data.files,['index.html','game.js','logic.js','domain-bridge.js','arena-techniques.js','private-art-loader.js','realtime-core.js','farm.html','farm.js','farm-model.js','manifest.webmanifest','icon.svg','pwa.js','sw.js','engine-core/battle-core.js','engine-core/care-core.js','engine-core/championship-core.js',...(fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor/phaser.min.js','vendor/PHASER_LICENSE.txt']:[])]);
     assert.ok(!files.some(name=>/\.(?:nds|gif|png|webp|zip)$/i.test(name)));
     const core=fs.readdirSync(path.join(d,'engine-core')).sort();
     assert.deepEqual(core,['battle-core.js','care-core.js','championship-core.js']);
@@ -21,6 +21,8 @@ test('deploy archive is allowlisted and never contains extracted game art',()=>{
     assert.match(html,/engine-core\/battle-core\.js/);
     assert.match(html,/realtime-core\.js/);
     assert.match(html,/arena-techniques\.js/);
+    assert.match(html,/private-art-loader\.js/);
+    assert.match(html,/id="artFiles"/);
     assert.ok(fs.existsSync(path.join(d,'realtime-core.js')));
     assert.doesNotMatch(html,/\.\.\/src\//);
     const farmHtml=fs.readFileSync(path.join(d,'farm.html'),'utf8');
