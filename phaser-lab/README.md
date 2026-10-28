@@ -1,5 +1,37 @@
 # Phaser rendering lab · separate from the existing game
 
+## 지금 바로 원작 스프라이트 1대1 테스트하기 (개인 PC 전용)
+
+프로젝트를 내려받아 압축을 해제하거나 최신 GitHub 저장소를 복제한 다음,
+**프로젝트 최상위 폴더**에서 아래 명령을 실행한다. Python과 Pillow가 필요하다.
+
+```powershell
+py -m pip install Pillow
+py tools/export-phaser-duel.py
+py -m http.server 8000
+```
+
+`http://127.0.0.1:8000/phaser-lab/`을 열고 **아구몬 vs 가부몬 1대1** 버튼을
+누르면, 기존 GIF를 변환한 아구몬·가부몬의 실제 종별 애니메이션으로
+원본 웹게임 전투 AI의 자동 1대1 연습전을 볼 수 있다.
+
+- 변환할 로컬 GIF들이 `assets/sprites/rookie/`에 이미 있어야 한다.
+  `export-phaser-duel.py`는 그 소스를 **새로 내려받거나 서버에 전송하지 않는다**.
+- 만든 모션 파일은 `phaser-lab/local-assets/duel-agumon/`,
+  `phaser-lab/local-assets/duel-gabumon/`에 저장한다. **Git에서 제외**하며
+  공개 GitHub Pages나 안전 미리보기 빌드에 포함하지 않는다.
+- 1대1 버튼만 누르면 팀을 자동으로 **1대1**로 선택한다. 두 디지몬의
+  파일이 모두 준비되면 양쪽 스프라이트가 자동 적용된다. 한쪽 파일이
+  없어도 게임은 정상 실행되지만 그때는 **임시 그림**이다.
+- `local-assets`는 브라우저가 자기 PC의 웹서버에서 읽는 경로다.
+  휴대폰에서 시험하려면 같은 Wi-Fi의 PC 서버에 IP 주소로 접속해야 하며
+  PC가 켜져 있어야 한다. 인터넷에 공개 업로드하지 않는다.
+- 이 기능은 **별도 Phaser 1대1 연습전**이다. 원본 세이브와 실제 사육장
+  출전·챔피언십 보상은 변경하지 않고, 실제 NDS ROM의 모든 모션 용도나
+  기술 피해량이 일치한다는 의미도 아니다. 공개 배포 권한과 별개로
+  개인 테스트 파일을 공개 저장소에 올리지 않는다.
+
+
 This is a **development vertical slice**, not a replacement for index.html / standalone.html.
 No main save, battle reward, evolution or ROM-backed AI logic is modified.
 
