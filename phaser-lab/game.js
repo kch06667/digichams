@@ -156,7 +156,7 @@
           // Original arena ticks already run at simSpeed; keep each private
           // GIF animation on that clock without changing combat calculations.
           for(const v of this.visuals.values())
-            if(v.useArt)v.sprite.anims.timeScale=simSpeed;
+            if(v.useArt&&v.sprite.anims)v.sprite.anims.timeScale=simSpeed;
           return simSpeed;
         },
         matchSnapshot:()=>RT.snapshot(this.sim),
@@ -213,7 +213,9 @@
             action:v?.pose||null,angle:v?.sprite.angle||0,
             phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37),
-            animationTimeScale:v?.useArt?v.sprite.anims.timeScale:null};
+            // During scene.restart(), Phaser may already have disposed an
+            // old sprite's AnimationState before the new scene is created.
+            animationTimeScale:v?.useArt?(v.sprite?.anims?.timeScale??null):null};
         })
       };
       for(const id of buttons)document.getElementById(id).disabled=false;
