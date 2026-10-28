@@ -81,6 +81,21 @@ def open_page(browser,origin,mobile=False,missing=False):
         assert len(item["expected"])==len(item["actual"]),item
         assert all(abs(expected-actual)<0.01 for expected,actual in zip(
             item["expected"],item["actual"])),item
+    # Playback speed must follow the original simulation's 2x default,
+    # then 3x/1x/2x without restarting the live autonomous battle.
+    # This checks ACTUAL sprite AnimationState.timeScale on both species.
+    for index,expected in enumerate([2,3,1,2]):
+        if index:
+            page.locator("#speed").click()
+        speeds=page.evaluate("DigiPhaserLab.renderedArt()")
+        assert [entry["animationTimeScale"] for entry in speeds]==[
+            expected,expected],speeds
+        assert f"속도 {expected}×" in page.locator("#speed").inner_text()
+    # A new pose may start after the speed was toggled. Ensure the latest
+    # speed survives combat updates instead of being reset to Phaser's 1x.
+    page.wait_for_timeout(300)
+    assert all(entry["animationTimeScale"]==2 for entry in
+               page.evaluate("DigiPhaserLab.renderedArt()"))
     # Genuine original AI completes: no forced damage, winner or reward.
     assert page.evaluate("DigiPhaserLab.qaFinishCombat()")
     finished=page.evaluate("DigiPhaserLab.matchSnapshot()")

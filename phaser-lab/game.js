@@ -151,7 +151,14 @@
           soundEnabled=enabled;
           if(enabled&&this.sound.context?.resume)this.sound.context.resume();
         },
-        speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
+        speed:()=>{
+          simSpeed=simSpeed===1?2:simSpeed===2?3:1;
+          // Original arena ticks already run at simSpeed; keep each private
+          // GIF animation on that clock without changing combat calculations.
+          for(const v of this.visuals.values())
+            if(v.useArt&&v.sprite.anims)v.sprite.anims.timeScale=simSpeed;
+          return simSpeed;
+        },
         matchSnapshot:()=>RT.snapshot(this.sim),
         motionEvidence:()=>({...this.motionEvidence}),
         // Read-only test probe; contains frame timing numbers, never art bytes.
@@ -205,7 +212,10 @@
             textureKey:v?.sprite.texture.key||null,
             action:v?.pose||null,angle:v?.sprite.angle||0,
             phase:L.specialPhase(f),
-            hasKoArt:!!v?.art?.actions.has(37)};
+            hasKoArt:!!v?.art?.actions.has(37),
+            // During scene.restart(), Phaser may already have disposed an
+            // old sprite's AnimationState before the new scene is created.
+            animationTimeScale:v?.useArt?(v.sprite?.anims?.timeScale??null):null};
         })
       };
       for(const id of buttons)document.getElementById(id).disabled=false;
@@ -286,8 +296,12 @@
       if(v.useArt&&v.art.actions.has(id)){
         const cfg=v.art.manifest.actions[String(id)];
         v.sprite.setTexture(key(v.art.source,id),0).setScale(v.scale);
-        if(cfg.frames>1)v.sprite.play('realtime-'+encodeURIComponent(v.art.source)+'-'+id);
-        else v.sprite.anims.stop();
+        if(cfg.frames>1){
+          v.sprite.play('realtime-'+encodeURIComponent(v.art.source)+'-'+id);
+          // Phaser resets the AnimationState scale on a new play(), so
+          // reapply the current simulation speed at every pose transition.
+          v.sprite.anims.timeScale=simSpeed;
+        }else v.sprite.anims.stop();
       }else{
         v.sprite.anims.stop();
         v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-0')
