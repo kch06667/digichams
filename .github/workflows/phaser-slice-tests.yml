@@ -24,6 +24,7 @@ on:
       - 'tests/battle-interruption-reload.cjs'
       - 'tests/battle-cup-final-reward.cjs'
       - 'tests/battle-full-state-parity.cjs'
+      - 'tests/battle-evolution-settlement-parity.cjs'
       - 'tests/battle-experience-parity.cjs'
       - 'tests/phaser-private-art.cjs'
       - 'tests/phaser-farm.cjs'
@@ -50,7 +51,7 @@ jobs:
       - run: node --check phaser-lab/realtime-core.js
       - run: node --check src/arena-original-core.js
       - run: node --check src/battle-settlement-core.js
-      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
+      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_atlas.py' -v
   browser:
     runs-on: ubuntu-latest
