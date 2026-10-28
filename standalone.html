@@ -2224,7 +2224,13 @@ window.DCHexFarm={get state(){return state},tick:(seconds)=>{core.advance(state,
  const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
  function distance(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
  function inside(p,poly){let hit=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){const a=poly[i],b=poly[j];if((a.y>p.y)!==(b.y>p.y)&&p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)hit=!hit;}return hit;}
- function lasso(points,target){if(!Array.isArray(points)||points.length<9||!target)return {ok:false,reason:'원을 충분히 그려 줘.'};
+ function lasso(points,target){
+  // A malformed gesture must never form a valid closed circle or stall a
+  // mobile browser when an imported/scripted input supplies huge arrays.
+  if(!Array.isArray(points)||points.length<9||points.length>600||!target||
+     !Number.isFinite(target.x)||!Number.isFinite(target.y)||
+     points.some(p=>!p||!Number.isFinite(p.x)||!Number.isFinite(p.y)))
+   return {ok:false,reason:'원을 충분히 그려 줘.'};
   let length=0,turn=0,minR=Infinity,maxR=0;const center=target;
   for(let i=1;i<points.length;i++){
    const a=points[i-1],b=points[i],radA=Math.atan2(a.y-center.y,a.x-center.x),radB=Math.atan2(b.y-center.y,b.x-center.x);
