@@ -63,6 +63,8 @@ def prepare(page,cup):
       if(!r.ok)throw Error('Original bracket cannot start: '+r.missing);
       DCChampionshipUI.render();
     }""",cup)
+    # Cup widgets are in the actual original BATTLE tab.
+    page.locator('[data-tab="battle"]').click()
     page.locator("#dc-phaser-cup-engine").select_option("phaser")
 
 def fight(ctx,farm,errors,expected_round):
@@ -81,6 +83,7 @@ def fight(ctx,farm,errors,expected_round):
     }""")
     assert match["round"]==expected_round,match
     assert len(match["opponentTeam"])==match["size"]
+    farm.locator('[data-tab="battle"]').click()
     with ctx.expect_page() as popup:
         farm.locator("#championshipFight").click()
     arena=popup.value
