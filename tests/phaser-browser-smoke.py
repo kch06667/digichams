@@ -54,6 +54,29 @@ def check_page(browser, mobile, base_url):
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('승리')",
         timeout=25000)
+    # Existing rules are loaded into the real browser, and read-only JSON
+    # inspection must not touch browser localStorage or the active scene.
+    assert page.evaluate("typeof DigiDomainBridge.plan")=="function"
+    assert page.evaluate("DigiPhaserLab.cupPreview().length")==3
+    page.locator("#tactic").select_option("conserve")
+    assert page.evaluate("DigiDomainBridge.plan(Object.assign("
+      "DigiDomainBridge.newEncounter('conserve'),{ally:"
+      "Object.assign({},DigiDomainBridge.newEncounter('conserve').ally,{tp:30})})).action")=="normal"
+    import json
+    sample={"format":"digicham-save","exportVersion":1,
+      "state":{"day":10,"wins":6,
+        "championship":{"crowns":{"novice":1,"regional":1}},
+        "team":[{"name":"시험용 디지몬","hp":80,"maxHp":100,
+          "atk":25,"def":12,"spd":34,"tp":35}]}}
+    page.locator("#saveFile").set_input_files({
+      "name":"test-save.json","mimeType":"application/json",
+      "buffer":json.dumps(sample,ensure_ascii=False).encode("utf-8")})
+    page.wait_for_function(
+      "document.querySelector('#status').textContent.includes('세이브 읽기 전용 확인')",
+      timeout=5000)
+    assert page.evaluate("DigiPhaserLab.importedSavePreview().team[0].name")=="시험용 디지몬"
+    page.locator("#cups").click()
+    assert "대회 규칙" in page.locator("#status").inner_text()
     assert not errors, f"JS errors ({'mobile' if mobile else 'desktop'}): {errors}"
     print("OK", "touch" if mobile else "desktop",
           "training + auto battle + victory")
