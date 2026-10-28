@@ -88,6 +88,8 @@ test('no original persistence, rendering or copyrighted artwork is exposed in ex
   // overrides these to no-ops. The facade itself never writes saved state.
   assert.match(extracted,/const syncBattleHP=\(\)=>\{\}/);
   assert.match(extracted,/const settleMatch=\(\)=>\{\}/);
+  assert.match(extracted,/preview=false,skillSequence=null/);
+  assert.match(extracted,/shout:33,guard:31,ko:37,happy:28,cheer:30/);
   assert.doesNotMatch(extracted,/localStorage\.setItem|\.nds|data:image\/png;base64/);
   const html=fs.readFileSync(path.join(__dirname,'../phaser-lab/index.html'),'utf8');
   const game=fs.readFileSync(path.join(__dirname,'../phaser-lab/game.js'),'utf8');
