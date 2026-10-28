@@ -121,8 +121,13 @@
         throw Error('Tournament bracket or returned match identity changed');
       for(let slot=0;slot<size;slot++){
         const before=packet.opponentsInitial[slot],after=foes[slot];
-        if(!before||before.id!=='1-'+slot||before.side!==1||
+        const expected=cup.opponents?.[slot];
+        if(!expected||!before||before.id!=='1-'+slot||before.side!==1||
            before.slot!==slot||before.name!==cup.opponentTeam[slot]||
+           expected.name!==before.name||
+           before.max!==expected.maxHp||before.hp!==expected.hp||
+           before.maxTp!==expected.maxTp||before.tp!==expected.tp||
+           !['atk','def','spd'].every(key=>before[key]===expected[key])||
            after.name!==before.name||after.max!==before.max||
            after.maxTp!==before.maxTp||
            !Number.isFinite(after.hp)||after.hp<0||after.hp>after.max||
