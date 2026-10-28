@@ -12,6 +12,7 @@
   }
   let manifest = null, soundEnabled = false, game;
   let savePreview = B.previewSample();
+  let rosterChosen = null;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const actionKey = id => 'mon-' + id;
 
@@ -64,9 +65,11 @@
       this.mode = 'idle';
       this.turn = 0;
       this.demoStat = 10;
-      this.encounter = B.newEncounter(this.requestedTactic);
+      this.encounter = B.newEncounter(this.requestedTactic,rosterChosen);
       this.left.hp = this.encounter.ally.hp;
       this.right.hp = this.encounter.enemy.hp;
+      this.left.nameText.setText(this.encounter.ally.name);
+      this.right.nameText.setText(this.encounter.enemy.name);
       this.pose(this.left, 'idle');
       this.pose(this.right, 'idle');
       this.updateHud();
@@ -79,6 +82,7 @@
         encounterSnapshot: () => JSON.parse(JSON.stringify(this.encounter)),
         cupPreview: () => B.cupPreview(savePreview),
         importedSavePreview: () => JSON.parse(JSON.stringify(savePreview)),
+        selectedRoster: () => rosterChosen ? JSON.parse(JSON.stringify(rosterChosen)) : null,
         trainingPreview: day => B.train(day, this.demoStat, 1)
       };
       buttons.forEach(id => { document.getElementById(id).disabled = false; });
@@ -114,8 +118,9 @@
       if (useAsset && color === 0x80c5c9) sprite.setTint(0x9dccff);
       container.add([shadow, sprite]);
       container.setDepth(4);
-      this.add.text(x, y+20, label, {color:'#fff',fontSize:'18px'}).setOrigin(.5);
-      return {container, sprite, color, hp:100, pose:'', originX:x, scale, demoFrame:0};
+      const nameText=this.add.text(x, y+20, label,
+        {color:'#fff',fontSize:'18px'}).setOrigin(.5);
+      return {container, sprite, nameText, color, hp:100, pose:'', originX:x, scale, demoFrame:0};
     }
     pose(f, state) {
       if (f.pose === state) return;
@@ -137,8 +142,10 @@
       }
     }
     updateHud() {
-      this.leftHp.setText('HP ' + this.encounter.ally.hp + '/100 · TP ' + Math.floor(this.encounter.ally.tp));
-      this.rightHp.setText('HP ' + this.encounter.enemy.hp + '/100 · TP ' + Math.floor(this.encounter.enemy.tp));
+      this.leftHp.setText('HP ' + this.encounter.ally.hp+'/'+this.encounter.ally.max +
+        ' · TP '+Math.floor(this.encounter.ally.tp));
+      this.rightHp.setText('HP ' + this.encounter.enemy.hp+'/'+this.encounter.enemy.max +
+        ' · TP '+Math.floor(this.encounter.enemy.tp));
       this.statLabel.setText('훈련 보너스(임시): ' + this.demoStat);
     }
     resetActors() {
@@ -283,16 +290,30 @@
         const json=JSON.parse(await file.text());
         const fresh=B.inspectExport(json);
         savePreview=fresh;
-        const ready=fresh.team.filter(m=>m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage').length;
+        const options=B.eligibleRoster(fresh);
+        const selection=document.getElementById('rosterChoice');
+        selection.replaceChildren(new Option('기본 시연',''));
+        for(const mon of options) selection.add(new Option(
+          mon.name+' · HP '+mon.hp+'/'+mon.maxHp+' · 공격 '+mon.atk, String(mon.index)));
+        rosterChosen=null;
+        const ready=options.length;
         say('세이브 읽기 전용 확인 · DAY '+fresh.day+' · 디지몬 '+fresh.team.length+
           '마리 · 출전 가능 '+ready+'마리 · 대회 조건 버튼으로 확인 가능');
       } catch (err) {
         say('세이브 미리보기 실패: '+err.message+' · 기존 데이터는 변경되지 않았어.');
       }
     });
+    document.getElementById('rosterChoice').addEventListener('change',e=>{
+      const idx=e.currentTarget.value;
+      const options=B.eligibleRoster(savePreview);
+      const m=options.find(mon=>String(mon.index)===idx);
+      rosterChosen=m ? {...m} : null;
+      say(m ? m.name+' 선택 완료 · 기존 HP·TP·능력치를 연습 전투에 복사해 사용해. 세이브는 변하지 않아.'
+        : '기본 시연 디지몬을 사용할게.');
+    });
     document.getElementById('cups').addEventListener('click',()=>{
       const cups=window.DigiPhaserLab?.cupPreview() || [];
-      say('기존 대회 규칙 (샘플 팀): '+cups.map(c=>c.name+(c.available?' 참가 가능':' '+c.missing.join(', '))).join(' / '));
+      say('기존 대회 규칙 (불러온 팀 / 미입력 시 샘플 팀): '+cups.map(c=>c.name+(c.available?' 참가 가능':' '+c.missing.join(', '))).join(' / '));
     });
     document.getElementById('reset').addEventListener('click',()=>window.DigiPhaserLab?.reset());
     document.getElementById('sound').addEventListener('click',e=>{
