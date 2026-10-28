@@ -7,7 +7,7 @@ import http.server
 import threading
 import subprocess
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 ROOT=Path(__file__).resolve().parents[1]
 VENDOR=ROOT/"node_modules/phaser/dist/phaser.min.js"
@@ -84,9 +84,19 @@ def fight(ctx,farm,errors,expected_round):
     assert match["round"]==expected_round,match
     assert len(match["opponentTeam"])==match["size"]
     farm.locator('[data-tab="battle"]').click()
-    with ctx.expect_page() as popup:
-        farm.locator("#championshipFight").click()
-    arena=popup.value
+    try:
+        with ctx.expect_page(timeout=8000) as popup:
+            farm.locator("#championshipFight").click()
+        arena=popup.value
+    except PlaywrightTimeout as error:
+        diagnostic=farm.evaluate("""() => ({
+          selected:document.getElementById('dc-phaser-cup-engine')?.value,
+          cupNote:document.getElementById('dc-phaser-cup-note')?.textContent,
+          farmStatus:document.getElementById('dc-phaser-farm-status')?.textContent,
+          current:eval('state')?.championship?.active,
+          originalModal:document.getElementById('liveBattle')?.style.display
+        })""")
+        raise AssertionError('Phaser cup popup refused: '+str(diagnostic)) from error
     arena.on("pageerror",lambda e:errors.append('arena:'+str(e)))
     arena.wait_for_function("""(id)=>window.DigiPhaserLab?.handoffInfo()
       ?.tournament?.matchId===id""",arg=match["matchId"],timeout=30000)
