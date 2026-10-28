@@ -278,7 +278,13 @@
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
         handoffInfo:()=>farmHandoffPeer?{
           teamSize:farmHandoffPeer.teamSize,
-          saveAllowed:farmHandoffPeer.saveAllowed
+          saveAllowed:farmHandoffPeer.saveAllowed,
+          tournament:farmHandoffPeer.tournament?{
+            cupId:farmHandoffPeer.tournament.cupId,
+            matchId:farmHandoffPeer.tournament.matchId,
+            trainer:farmHandoffPeer.tournament.trainer,
+            opponentTeam:farmHandoffPeer.tournament.opponentTeam.slice()
+          }:null
         }:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
         privatePackStatus:()=>{
