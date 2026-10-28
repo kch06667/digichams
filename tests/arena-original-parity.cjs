@@ -139,8 +139,12 @@ test('no original persistence, rendering or copyrighted artwork is exposed in ex
   const game=fs.readFileSync(path.join(__dirname,'../phaser-lab/game.js'),'utf8');
   assert.match(html,/src\/arena-original-core\.js/);
   assert.match(game,/RT=window\.DCOriginalArenaCore/);
-  assert.match(game,/Number\.isInteger\(f\.pose\)/);
+  const motion=fs.readFileSync(path.join(__dirname,'../phaser-lab/logic.js'),'utf8');
+  assert.match(game,/L\.motionAction\(f,v\.useArt\?v\.art\.actions:null\)/);
+  assert.match(motion,/Number\.isInteger\(f\.pose\)/,
+    'rendering must preserve the exact original pose when present');
   assert.match(game,/motionKey=type\+':'\+id/);
-  assert.match(game,/type==='victory'\?30/);
+  assert.match(motion,/type === 'victory' \? 30/,
+    'the fallback renderer still requires original victory motion 30');
   assert.doesNotMatch(game,/RT=window\.DigiRealTimeCore/);
 });
