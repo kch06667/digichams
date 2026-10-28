@@ -123,3 +123,26 @@ test('JS parser accepts browser-side game and test lab stays isolated', () => {
   assert.match(html,/phaser@3\.90\.0/);
   assert.match(html,/aria-live="polite"/);
 });
+
+test('216-species local catalog rejects traversal, duplicate folders and oversized catalogs',()=>{
+  const good={format:'digi-phaser-local-species-catalog-v1',
+    entries:{'아구몬':{folder:'species/m123_agumon_main',actions:13},
+      '가부몬':{folder:'species/m124_gabumon_main',actions:40}}};
+  assert.equal(L.validateLocalCatalog(good),true);
+  const bad=JSON.parse(JSON.stringify(good));
+  bad.entries['아구몬'].folder='../assets/rom';
+  assert.equal(L.validateLocalCatalog(bad),false);
+  bad.entries['아구몬'].folder='https://outside.example/art';
+  assert.equal(L.validateLocalCatalog(bad),false);
+  bad.entries['아구몬'].folder='species/m123_agumon_main';
+  bad.entries['가부몬'].folder='species/m123_agumon_main';
+  assert.equal(L.validateLocalCatalog(bad),false);
+  bad.entries['가부몬'].folder='species/m124_gabumon_main';
+  bad.entries['가부몬'].actions=41;
+  assert.equal(L.validateLocalCatalog(bad),false);
+  const oversized={format:good.format,entries:{}};
+  for(let i=0;i<217;i++)
+    oversized.entries['species'+i]={folder:'species/m'+i,actions:13};
+  assert.equal(L.validateLocalCatalog(oversized),false);
+  assert.equal(L.validateLocalCatalog({format:'bad',entries:good.entries}),false);
+});

@@ -13,11 +13,52 @@
     say('원본 전투 계산 모듈을 불러오지 못했어. 새로고침하거나 네트워크를 확인해.');
     return;
   }
-  let manifest=null, localDuelPacks=[],soundEnabled=false,simSpeed=2,
+  let manifest=null, localDuelPacks=[],localSpeciesCatalog=null,
+      soundEnabled=false,simSpeed=2,
       savePreview=B.previewSample(), rosterChosen=null, trainingBonus=10,
       latestSpecies=null;
   // Browser-memory-only packs. One pack per distinct species, never published.
   const privatePacks=new Map(),MAX_PRIVATE_PACKS=6,MAX_PRIVATE_BYTES=48*1024*1024;
+  // The local indexed catalog covers up to 216 species, but the renderer
+  // loads only the active fight's 1-6 species, never 8,640 PNGs on boot.
+  const convertedPacks=new Map(),MAX_CONVERTED_PACKS=6;
+  let artLoadSerial=0;
+  async function loadLocalMatchArt(names){
+    if(!localSpeciesCatalog)return;
+    const requested=[...new Set(names)].filter(Boolean).slice(0,6);
+    for(const name of requested){
+      if(convertedPacks.has(name)){
+        const existing=convertedPacks.get(name);
+        convertedPacks.delete(name);convertedPacks.set(name,existing);
+        continue;
+      }
+      // Legacy arena demonstration calls Palmon '팔몬'; the 216-species
+      // original GIF index uses its canonical Korean name '파르몬'.
+      // Remap ONLY this documented alias; the actual fighter/skill identity
+      // and original AI state are not renamed or modified.
+      const catalogName=name==='팔몬'?'파르몬':name;
+      const entry=Object.prototype.hasOwnProperty.call(localSpeciesCatalog.entries,catalogName)?
+        localSpeciesCatalog.entries[catalogName]:null;
+      if(!entry)continue; // never substitute the wrong species' sprite
+      try {
+        const response=await fetch('./local-assets/'+entry.folder+'/manifest.json',
+          {cache:'no-store'});
+        if(!response.ok)continue;
+        const candidate=await response.json();
+        if(candidate.species!==catalogName||!L.validateManifest(candidate)||
+           Object.keys(candidate.actions).length!==entry.actions)
+          throw Error('Invalid private species sprite manifest: '+name);
+        convertedPacks.set(name,{species:name,folder:entry.folder,
+          source:'catalog:'+entry.folder,manifest:candidate});
+        while(convertedPacks.size>MAX_CONVERTED_PACKS)
+          convertedPacks.delete(convertedPacks.keys().next().value);
+      }catch(err){
+        // Missing or corrupt local files must not prevent the match.
+        // A missing species renders with the safe procedural placeholder.
+        say('개인 그래픽 읽기 실패 · '+name+' · '+err.message);
+      }
+    }
+  }
   const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
   const key=(source,id)=>'private-motion-'+encodeURIComponent(source)+'-'+id;
   const artSources=()=>{
@@ -27,6 +68,10 @@
     // No assets are copied into the safe public preview build.
     for(const pack of localDuelPacks)sources.push({
       species:pack.species,source:'duel:'+pack.folder,manifest:pack.manifest,
+      lookup:filename=>'./local-assets/'+pack.folder+'/'+filename
+    });
+    for(const pack of convertedPacks.values())sources.push({
+      species:pack.species,source:pack.source,manifest:pack.manifest,
       lookup:filename=>'./local-assets/'+pack.folder+'/'+filename
     });
     for(const pack of privatePacks.values())sources.push({
@@ -151,6 +196,22 @@
       this.requestedSize=config.teamSize||3;
     }
     preload(){
+      // Release evicted auto-loaded species textures AND their animation
+      // definitions before creating the next scene. Manual file packs and
+      // the two private duel packs are not affected by this cleanup.
+      const retained=new Set([...convertedPacks.values()].map(pack=>
+        'private-motion-'+encodeURIComponent(pack.source)+'-'));
+      for(const name of this.textures.getTextureKeys()){
+        if(name.startsWith('private-motion-catalog%3A')&&
+           ![...retained].some(prefix=>name.startsWith(prefix)))
+          this.textures.remove(name);
+      }
+      for(const name of Object.keys(this.anims.anims.entries)){
+        if(name.startsWith('realtime-catalog%3A')&&
+           ![...convertedPacks.values()].some(pack=>
+             name.startsWith('realtime-'+encodeURIComponent(pack.source)+'-')))
+          this.anims.remove(name);
+      }
       for(const source of artSources())for(const [id,cfg] of Object.entries(source.manifest.actions)){
         // Reimport of one species replaces only that species' frames.
         const texture=key(source.source,id);
@@ -287,6 +348,12 @@
           }:null
         }:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
+        localCatalogStatus:()=>({
+          indexedSpecies:localSpeciesCatalog?
+            Object.keys(localSpeciesCatalog.entries).length:0,
+          residentSpecies:[...convertedPacks.keys()],
+          residentCount:convertedPacks.size
+        }),
         privatePackStatus:()=>{
           const latest=privatePacks.get(latestSpecies);
           return latest?{species:latest.species,
@@ -607,9 +674,25 @@
       say('원본 판정 시연 중 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
         ' 자동 전투 · 원본 AI·피해·필살기 타이밍 적용 · 세이브 변경 없음');
     }
-    battle(){
-      this.scene.restart({mode:'battle',tactic:document.getElementById('tactic').value,
-        teamSize:Number(document.getElementById('squadSize').value)});
+    async battle(){
+      const teamSize=Number(document.getElementById('squadSize').value);
+      const tactic=document.getElementById('tactic').value;
+      const candidates=available(),selected=rosterChosen&&candidates.find(
+        mon=>mon.index===rosterChosen.index);
+      const allies=selected?
+        [selected,...candidates.filter(mon=>mon.index!==selected.index)].slice(0,teamSize):
+        RT.defaultTeam(0).slice(0,teamSize);
+      const opponents=tournamentOpponents||RT.defaultTeam(1).slice(0,allies.length);
+      const request=++artLoadSerial;
+      const button=document.getElementById('battle');
+      button.disabled=true;
+      try{
+        await loadLocalMatchArt([...allies,...opponents].map(mon=>mon.name));
+        if(request!==artLoadSerial)return;
+        this.scene.restart({mode:'battle',tactic,teamSize});
+      }finally{
+        button.disabled=false;
+      }
     }
     beginTrain(){
       this.mode='train';
@@ -655,6 +738,13 @@
         if(L.validateManifest(maybe))manifest=maybe;
       }
     }catch(_){/* Locally converted GIFs are optional. */}
+    try{
+      const response=await fetch('./local-assets/catalog.json',{cache:'no-store'});
+      if(response.ok){
+        const candidate=await response.json();
+        if(L.validateLocalCatalog(candidate))localSpeciesCatalog=candidate;
+      }
+    }catch(_){/* The 216-species catalog is private and optional. */}
     // All-or-nothing: never substitute Agumon art for Gabumon, and never
     // advertise a real-art duel unless both species manifests are valid.
     try{

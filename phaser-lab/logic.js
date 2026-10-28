@@ -35,6 +35,30 @@
     return true;
   }
 
+  // A private catalog may contain 216 species but NEVER arbitrary URLs or
+  // filesystem traversal. Browser requests stay inside local-assets/species.
+  function validateLocalCatalog(catalog) {
+    if (!catalog || catalog.format !== 'digi-phaser-local-species-catalog-v1' ||
+        !catalog.entries || typeof catalog.entries !== 'object' ||
+        Array.isArray(catalog.entries)) return false;
+    const records=Object.entries(catalog.entries);
+    if (!records.length || records.length > 216) return false;
+    const paths=new Set();
+    for (const [name,entry] of records) {
+      if (!name || name.length>80 || name==='__proto__' ||
+          !entry || typeof entry !== 'object' ||
+          typeof entry.folder !== 'string' ||
+          !entry.folder.startsWith('species/m') ||
+          !entry.folder.slice('species/m'.length) ||
+          [...entry.folder.slice('species/m'.length)].some(ch=>
+            !'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-'.includes(ch)) ||
+          !Number.isSafeInteger(entry.actions) || entry.actions<1 ||
+          entry.actions>40 || paths.has(entry.folder)) return false;
+      paths.add(entry.folder);
+    }
+    return true;
+  }
+
   function knockbackForDamage(damage) {
     return clamp(55 + Math.max(0, Number(damage) || 0) * 1.8, 55, 140);
   }
@@ -106,5 +130,5 @@
 
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
     knockbackForDamage, gainTrainingStat, playableAction, motionAction,
-    specialPhase, knockbackTilt, gifFrameTiming });
+    specialPhase, knockbackTilt, gifFrameTiming, validateLocalCatalog });
 });

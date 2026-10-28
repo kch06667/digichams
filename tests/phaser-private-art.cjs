@@ -87,6 +87,13 @@ test('the intended public source references no private PNG and safe pack routes'
   assert.match(src,/privatePacks\.set\(pack\.species,pack\)/);
   assert.match(src,/this\.loadedActions\.get\(f\.name\)/);
   assert.match(src,/artSources\(\)/);
+  assert.match(src,/convertedPacks=new Map\(\)/);
+  assert.match(src,/MAX_CONVERTED_PACKS=6/);
+  assert.match(src,/loadLocalMatchArt/);
+  assert.match(src,/localSpeciesCatalog\.entries/);
+  assert.match(src,/\.\/local-assets\/catalog\.json/);
+  assert.match(src,/this\.textures\.remove\(name\)/);
+
   assert.match(src,/MAX_PRIVATE_PACKS=6,MAX_PRIVATE_BYTES=48\*1024\*1024/);
   assert.match(src,/Art\.fromFiles\(files,L\.validateManifest\)/);
   assert.doesNotMatch(src,/localStorage\.setItem|indexedDB\.open/i);

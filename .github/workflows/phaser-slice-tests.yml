@@ -33,8 +33,11 @@ on:
       - 'src/championship-core.js'
       - 'tools/export-phaser-atlas.py'
       - 'tools/export-phaser-duel.py'
+      - 'tools/export-phaser-roster.py'
+      - 'tests/test_phaser_roster.py'
       - 'tests/test_phaser_duel.py'
       - 'tests/phaser-duel-browser-smoke.py'
+      - 'tests/phaser-216-browser.py'
       - '.gitignore'
       - 'tests/phaser-lab.cjs'
       - 'tests/phaser-domain-bridge.cjs'
@@ -91,6 +94,7 @@ jobs:
       - run: node --check tools/build-owned-battle-optin.cjs
       - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/arena-navigation-core.cjs tests/arena-original-parity.cjs tests/battle-settlement-core.cjs tests/battle-experience-parity.cjs tests/battle-hp-tp-parity.cjs tests/battle-interruption-reload.cjs tests/battle-cup-final-reward.cjs tests/battle-full-state-parity.cjs tests/battle-evolution-settlement-parity.cjs tests/battle-commit-safety.cjs tests/battle-legacy-storage.cjs tests/battle-owned-optin.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_*.py' -v
+      - run: python3 tools/export-phaser-roster.py --all --verify-only --all-actions
   browser:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -108,6 +112,13 @@ jobs:
         run: |
           python3 -m pip install playwright==1.57.0
           python3 -m playwright install --with-deps chromium
+      - name: Six species from indexed private GIFs — local catalog + atlases only
+        run: |
+          python3 -m pip install 'Pillow>=10,<13'
+          python3 tools/export-phaser-roster.py --species 아구몬 --species 파타몬 --species 파르몬 --species 가부몬 --species 텐타몬 --species 피요몬
+          test -f phaser-lab/local-assets/catalog.json
+      - name: Original autonomous 3v3 with six real species GIF atlases (desktop/touch)
+        run: python3 tests/phaser-216-browser.py
       - name: Original championship semifinals and finals, named opponents, saved prizes (desktop/touch)
         run: python3 tests/phaser-championship-browser.py
       - name: Convert privately held Agumon GIFs to local-only Phaser sheets
