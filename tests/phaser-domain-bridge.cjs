@@ -57,6 +57,33 @@ test('tournament preview delegates eligibility with defensive clone',()=>{
   assert.equal(status[1].available,false);
   assert.equal(JSON.stringify(save),before,'caller state must not be mutated');
 });
+test('real save export preview is read-only, strips untrusted data and uses real cup rules',()=>{
+  const save={
+    format:'digicham-save',exportVersion:1,
+    state:{day:10,wins:6,points:20,facilityCredits:250,logs:['secret'],
+      championship:{crowns:{novice:1,regional:1},active:null},
+      team:[{name:'가상 디지몬',hp:80,maxHp:100,atk:33,def:15,spd:42,
+        tp:25,maxTp:80,hunger:33,location:'farm'}]}
+  };
+  const before=JSON.stringify(save);
+  const view=B.inspectExport(save);
+  assert.equal(view.day,10);
+  assert.equal(view.team.length,1);
+  assert.equal(view.team[0].name,'가상 디지몬');
+  assert.equal(view.team[0].tp,25);
+  assert.equal(view.source,'read-only-save-preview');
+  assert.equal(view.team[0].hunger,undefined,'extra save fields are not retained');
+  assert.equal(view.logs,undefined);
+  assert.equal(JSON.stringify(save),before,'original save must remain intact');
+  assert.equal(B.cupPreview(view).length,cups.CUPS.length);
+  assert.equal(JSON.stringify(save),before,'cup checks must not mutate original');
+  assert.throws(()=>B.inspectExport({...save,exportVersion:5}));
+  assert.throws(()=>B.inspectExport({format:'digicham-save',exportVersion:1,
+    state:{...save.state,pendingBattle:{active:true}}}));
+  assert.throws(()=>B.inspectExport({format:'digicham-save',exportVersion:1,
+    state:{...save.state,team:[{name:'bad',hp:'oops',maxHp:100}]}}));
+});
+
 test('browser-side bridge script parses, displays chosen tactic and core linkage',()=>{
   for(const file of ['domain-bridge.js','game.js']){
     const src=fs.readFileSync(path.join(__dirname,'..','phaser-lab',file),'utf8');
