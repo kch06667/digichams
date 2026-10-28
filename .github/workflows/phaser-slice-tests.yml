@@ -12,6 +12,7 @@ on:
       - 'tests/phaser-lab.cjs'
       - 'tests/phaser-domain-bridge.cjs'
       - 'tests/phaser-realtime.cjs'
+      - 'tests/phaser-private-art.cjs'
       - 'tests/phaser-farm.cjs'
       - 'tests/phaser-preview.cjs'
       - 'tests/phaser-browser-smoke.py'
@@ -34,7 +35,7 @@ jobs:
       - run: python -m pip install 'Pillow>=10,<13'
       - run: node --check phaser-lab/game.js
       - run: node --check phaser-lab/realtime-core.js
-      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/phaser-realtime.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
+      - run: node --test tests/phaser-lab.cjs tests/phaser-domain-bridge.cjs tests/phaser-realtime.cjs tests/phaser-private-art.cjs tests/phaser-farm.cjs tests/phaser-preview.cjs
       - run: python -m unittest discover -s tests -p 'test_phaser_atlas.py' -v
   browser:
     runs-on: ubuntu-latest
