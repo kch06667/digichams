@@ -37,7 +37,7 @@
   };
   const format=n=>Math.max(0,Math.round(n));
   const available=()=>B.eligibleRoster(savePreview);
-  let farmHandoffRequested=false;
+  let farmHandoffRequested=false, farmHandoffPeer=null;
   // A single-use same-origin message channel. No URL-based roster or
   // persistent-storage transfer; the independent Phaser scene remains read-only.
   function prepareFarmHandoff(){
@@ -57,6 +57,7 @@
         if(!roster.length)throw Error('전투 가능한 디지몬이 없어.');
         savePreview=preview;
         rosterChosen={...roster[0]};
+        farmHandoffPeer={parent,token};
         const select=document.getElementById('rosterChoice');
         select.replaceChildren(new Option('기본 시연',''));
         roster.forEach(m=>select.add(new Option(
@@ -511,6 +512,21 @@
             const c=this.reportContext;
             this.lastBattleReport=B.previewBattleResult(this.sim,c.imported,
               c.teamIndices,c.initialFighters);
+            // Only a validated, COMPLETE 1v1 result may be offered to
+            // the original farm for optional explicit settlement.
+            if(farmHandoffPeer&&c.teamIndices.length===1&&
+               this.sim.fighters.length===2){
+              const peer=farmHandoffPeer;
+              peer.parent.postMessage({
+                type:'dc-phaser-finished-v1',token:peer.token,
+                packet:{preview:this.lastBattleReport,
+                  initial:RT.snapshot(c.initialFighters),
+                  final:{finished:this.sim.finished,
+                    winner:this.sim.winner,elapsed:this.sim.elapsed,
+                    fighters:RT.snapshot(this.sim.fighters)}}
+              },location.origin);
+              farmHandoffPeer=null; // never send the same result twice
+            }
             document.getElementById('battleReport').textContent=
               '전투 결과 미리보기 (저장되지 않음): '+
               this.lastBattleReport.changes.map(m=>
