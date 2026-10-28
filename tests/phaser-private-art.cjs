@@ -83,8 +83,11 @@ test('real-time sprites/skill costs vary per Digimon and require full energy and
 test('the intended public source references no private PNG and safe pack routes',()=>{
   const pathGame=path.join(__dirname,'../phaser-lab/game.js');
   const src=fs.readFileSync(pathGame,'utf8');
-  assert.match(src,/privatePack\?\.lookup/);
-  assert.match(src,/manifest\?\.species===f\.name/);
+  assert.match(src,/privatePacks=new Map\(\)/);
+  assert.match(src,/privatePacks\.set\(pack\.species,pack\)/);
+  assert.match(src,/this\.loadedActions\.get\(f\.name\)/);
+  assert.match(src,/artSources\(\)/);
+  assert.match(src,/MAX_PRIVATE_PACKS=6,MAX_PRIVATE_BYTES=48\*1024\*1024/);
   assert.match(src,/Art\.fromFiles\(files,L\.validateManifest\)/);
   assert.doesNotMatch(src,/localStorage\.setItem|indexedDB\.open/i);
   const html=fs.readFileSync(path.join(__dirname,'../phaser-lab/index.html'),'utf8');

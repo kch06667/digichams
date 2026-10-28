@@ -247,3 +247,15 @@ evolution/championship progression event dispatch, ROM-exact values and
 a standalone production entry point. Do NOT claim complete NDS port
 or persistent gameplay before save roundtrip equivalence is proven.
 Existing `index.html` and `standalone.html` remain untouched.
+
+## 2026-10-28 — 다종 디지몬 로컬 전투 그래픽 1차
+
+Branch: `feature/multi-species-private-battle-art-20261028`.
+
+- Phaser 실시간 자동전투는 기존의 `src/arena-original-core.js` 원작 HTML 전투 계산을 그대로 사용하고, 플레이어의 원본 저장 데이터에 쓰지 않는다.
+- 기존에는 하나의 `manifest.json`만 유지하여 신규 아틀라스 업로드 시 이전 종을 대체했다. 이제 같은 브라우저 탭에서 서로 다른 종의 아틀라스를 **최대 6종**까지 순차 등록할 수 있다.
+- 새 종 추가는 기존 종 모션을 덮어쓰지 않는다. 모션 텍스처/애니메이션 키와 포즈 선택을 종별로 분리했다. 같은 종의 재등록만 해당 종을 교체한다.
+- 파일은 브라우저 임시 `blob:` URL로만 처리하고 서버·GitHub·게임 세이브에 넣지 않는다. 탭 사용 메모리 보호를 위해 총 입력 48MB 제한, 종 6개를 넘으면 가장 먼저 등록한 종을 해제한다.
+- Browser QA: 별도 로컬 생성 시트로 아구몬·가부몬 이름의 두 세트를 순차 등록하고, 3v3에서 둘 모두 각각 전용 텍스처를 유지하는지 확인하도록 테스트 추가. 테스트용 가부몬 데이터는 그림 자체가 가부몬임을 증명하지 않는다.
+- 미완료: **실제 216종 전체 모션 검증**, 모바일 Android 실기 메모리·프레임 측정, 원작 대회 전투의 저장/보상 연결, 원본 ROM 수치 검증.
+- GitHub 저장소 공개 이력의 추출 자산 관리 문제는 별도 해결 사항. 이 변경에는 자산 파일을 넣지 않는다.

@@ -333,7 +333,7 @@ function update(dt){
      technique:skillInfo(f)
    });
    const model={seed:seed>>>0,elapsed:0,finished:false,winner:null,
-     fighters:[],projectiles:[],events:[],eventHistory:[],
+     fighters:[],projectiles:[],particles:[],events:[],eventHistory:[],
      stats:{hits:0,misses:0,specials:0,dodges:0,guards:0,knockback:0,movement:0}};
    function refresh(){
      model.seed=randomSeed;model.elapsed=elapsed;model.finished=finished;
@@ -341,7 +341,15 @@ function update(dt){
      model.fighters=fighters.map(publicFighter);
      model.projectiles=bullets.map(b=>({
        x:b.x*scaleX,y:b.y*scaleY,color:b.color,
-       projectileType:b.type,life:b.life
+       projectileType:b.type,life:b.life,
+       trail:b.trail.slice(-10).map(pt=>({x:pt[0]*scaleX,y:pt[1]*scaleY}))
+     }));
+     // The ORIGINAL calculations already emit these hit, charge and dodge
+     // sparks. Project a bounded view only; no battle rules or RNG change.
+     model.particles=fx.slice(-180).map(p=>({
+       x:p.x*scaleX,y:p.y*scaleY,color:p.color,
+       radius:Math.max(1,Math.min(8,p.size*scaleX)),
+       alpha:Math.max(0,Math.min(1,p.life/p.max))
      }));
      Object.assign(model.stats,{hits:stats.hits,misses:stats.misses,
        specials:stats.specials,dodges:stats.dodges,guards:0,

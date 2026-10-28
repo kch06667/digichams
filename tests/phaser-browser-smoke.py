@@ -3,6 +3,8 @@ import contextlib
 import functools
 import http.server
 import os
+import json
+import tempfile
 from pathlib import Path
 import threading
 
@@ -36,7 +38,7 @@ def check_page(browser, mobile, base_url):
     page.locator("#game canvas").wait_for(timeout=10000)
     assert "준비 완료" in page.locator("#status").inner_text()
     if (ROOT / "phaser-lab" / "local-assets" / "manifest.json").is_file():
-        assert "전용 모션" in page.locator("#status").inner_text()
+        assert "개인 모션" in page.locator("#status").inner_text()
         # Private images are selected FROM THIS browser's local disk.
         # They must not be added to any published Pages build or sent online.
         local = ROOT / "phaser-lab" / "local-assets"
@@ -51,6 +53,32 @@ def check_page(browser, mobile, base_url):
         assert any(x["name"]=="아구몬" and x["privateArt"] for x in assignments)
         assert all((x["name"]=="아구몬") or not x["privateArt"]
                    for x in assignments), assignments
+        # Reimporting another species must retain the first species'
+        # textures. This uses temporary TEST-ONLY relabelled sheets;
+        # it makes no claim that the image is actual Gabumon artwork.
+        with tempfile.TemporaryDirectory() as directory:
+            second = json.loads((local / "manifest.json").read_text(encoding="utf-8"))
+            second["species"] = "가부몬"
+            other_manifest = Path(directory) / "manifest.json"
+            other_manifest.write_text(
+                json.dumps(second, ensure_ascii=False), encoding="utf-8")
+            page.locator("#artFiles").set_input_files([str(other_manifest), *sprites])
+            page.wait_for_function(
+              "() => window.DigiPhaserLab?.privatePackStatus()?.speciesList?.includes('가부몬')",
+              timeout=12000)
+            status = page.evaluate("DigiPhaserLab.privatePackStatus()")
+            assert status["speciesList"] == ["아구몬", "가부몬"], status
+            # Phaser scene.restart() is asynchronous; wait for textures
+            # to be loaded before checking assignments.
+            page.wait_for_function(
+              "() => window.DigiPhaserLab?.renderedArt()?.some(x => x.name === '가부몬' && x.privateArt)",
+              timeout=12000)
+            assignments = page.evaluate("DigiPhaserLab.renderedArt()")
+            for name in ("아구몬", "가부몬"):
+                assert any(x["name"] == name and x["privateArt"]
+                           for x in assignments), assignments
+            assert all(x["name"] in ("아구몬", "가부몬") or not x["privateArt"]
+                       for x in assignments), assignments
     assert page.evaluate("DigiPhaserLabLogic.selectAction('victory')") == 30
     assert page.evaluate("DigiPhaserLabLogic.selectAction('training')") == 32
     if mobile:
@@ -96,7 +124,6 @@ def check_page(browser, mobile, base_url):
     assert page.evaluate("DigiDomainBridge.plan(Object.assign("
       "DigiDomainBridge.newEncounter('conserve'),{ally:"
       "Object.assign({},DigiDomainBridge.newEncounter('conserve').ally,{tp:30})})).action")=="normal"
-    import json
     sample={"format":"digicham-save","exportVersion":1,
       "state":{"day":10,"wins":6,
         "championship":{"crowns":{"novice":1,"regional":1}},
@@ -175,7 +202,6 @@ def check_farm(browser, mobile, base_url):
     page.wait_for_function(
         "document.querySelector('#status').textContent.includes('행 개방')",
         timeout=5000)
-    import json
     sample={"format":"digicham-save","exportVersion":1,
       "state":{"day":18,"wins":7,"team":[
         {"name":"아구몬 테스트","hp":187,"maxHp":255,"atk":40,"def":25,
