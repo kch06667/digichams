@@ -43,6 +43,10 @@ def check(browser,host,mobile):
     }""")
     assert page.locator("#dc-owned-optin-enable").is_checked(),status
 
+    # The optional settings details popover overlaps the original floating
+    # arena launch button when left expanded. Collapse it through its real
+    # summary toggle before opening the battle.
+    page.locator("#dc-owned-optin summary").click()
     # The game defaults to its NDS two-screen skin, where the floating
     # liveBattleLaunch control is intentionally hidden. Switch through the
     # genuine visible display-mode button, then open the real arena.
