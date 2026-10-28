@@ -48,6 +48,16 @@ test('invalid version, impossible vitals and forged data cannot be revived',()=>
   {...s,encounter:{...s.encounter,bait:100}}
  ])assert.equal(H.restoreSession(bad),null,JSON.stringify(bad).slice(0,100));
 });
+test('invalid multi-pointer lasso input cannot trap browser or consume a rope',()=>{
+ const good=Array.from({length:42},(_,i)=>({
+  x:.5+Math.cos(i/41*2*Math.PI)*.12,
+  y:.5+Math.sin(i/41*2*Math.PI)*.12
+ }));
+ assert.equal(H.lasso(good,{x:.5,y:.5}).ok,true);
+ assert.equal(H.lasso([...good,{x:Infinity,y:.5}],{x:.5,y:.5}).ok,false);
+ assert.equal(H.lasso(Array(1000).fill({x:.4,y:.4}),{x:.5,y:.5}).ok,false);
+ assert.equal(H.lasso(good,{x:NaN,y:.5}).ok,false);
+});
 test('tied encounter preserves remaining countdown and cost when resuming',()=>{
  const e=saved().encounter;
  H.bind(e);H.tick(e,.15);const before=e.time;
