@@ -13,6 +13,11 @@ function realGame(){
   assert.ok(match,'Original embedded championship code missing');
   const root={};root.globalThis=root;vm.createContext(root);
   vm.runInContext(match[1],root);
+  console.log('CUP_DIAGNOSTIC',JSON.stringify({
+    inlineLength:match[1].length,sourcePreview:match[1].slice(0,140),
+    enterSource:root.DCChampionship.enter.toString().slice(0,500),
+    rosterKeys:root.DCChampionship.ROSTERS&&Object.keys(root.DCChampionship.ROSTERS)
+  }));
   root.DCEvolution=require('../src/evolution-core.js');
   for(const file of ['battle-settlement-core.js','battle-commit-core.js',
     'dev-phaser-commit.js'])
