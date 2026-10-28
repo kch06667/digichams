@@ -58,6 +58,30 @@ def open_page(browser,origin,mobile=False,missing=False):
     assert rendered[1]["name"]=="가부몬" and rendered[1]["privateArt"],rendered
     assert rendered[0]["textureKey"]!=rendered[1]["textureKey"],rendered
     assert all("duel%3Aduel-" in entry["textureKey"] for entry in rendered),rendered
+    # Real Phaser animations must retain the GIF delays exported privately:
+    # Phaser's per-frame duration is an ADDITIONAL delay.
+    timings=page.evaluate("""async () => {
+      const game=Phaser.GAMES[0];
+      const data=[];
+      for(const folder of ['duel-agumon','duel-gabumon']){
+        const manifest=await (await fetch(
+          './local-assets/'+folder+'/manifest.json')).json();
+        for(const [id,cfg] of Object.entries(manifest.actions)){
+          if(cfg.frames<2)continue;
+          const key='realtime-'+encodeURIComponent('duel:'+folder)+'-'+id;
+          const anim=game.anims.get(key);
+          if(!anim)throw Error('Missing animation '+key);
+          data.push({key,expected:cfg.durationsMs,
+            actual:anim.frames.map(frame=>anim.msPerFrame+frame.duration)});
+        }
+      }
+      return data;
+    }""")
+    assert timings,"Expected multi-frame original art for GIF timing check"
+    for item in timings:
+        assert len(item["expected"])==len(item["actual"]),item
+        assert all(abs(expected-actual)<0.01 for expected,actual in zip(
+            item["expected"],item["actual"])),item
     # Genuine original AI completes: no forced damage, winner or reward.
     assert page.evaluate("DigiPhaserLab.qaFinishCombat()")
     finished=page.evaluate("DigiPhaserLab.matchSnapshot()")
