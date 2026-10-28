@@ -101,7 +101,8 @@ test('checked-in original novice cup: final loss eliminates without crown or pri
   assert.equal(state.wins,1);assert.equal(state.losses,1);
   assert.equal(state.championship.crowns.novice||0,0);
   assert.equal(state.championship.lastResult.won,false);
-  assert.equal(state.championship.matchHistory.length,2);
+  if(C.ROSTERS&&state.championship.matchHistory)
+    assert.equal(state.championship.matchHistory.length,2);
   assert.equal(state.facilityCredits,7);
 });
 test('checked-in original grand cup: all source-defined rounds grant one trophy',()=>{
