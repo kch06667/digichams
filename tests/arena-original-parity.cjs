@@ -89,6 +89,28 @@ test('Phaser visual hit events use ORIGINAL skill damage, not actor pose guesses
   }
   assert.ok(s.stats.specials>0);
 });
+test('Phaser observes bounded ORIGINAL sparks and projectile trails without changing the engine',()=>{
+  const sim=Engine.createMatch({seed:83201,teamSize:3});
+  let sparkFrames=0,trailFrames=0;
+  for(let i=0;i<4200&&!sim.finished;i++){
+    Engine.step(sim,1/30);
+    assert.ok(sim.particles.length<=180,'limit particle draw cost for mobile');
+    for(const p of sim.particles){
+      assert.ok(Number.isFinite(p.x)&&Number.isFinite(p.y));
+      assert.ok(p.radius>=1&&p.radius<=8);
+      assert.ok(p.alpha>=0&&p.alpha<=1);
+    }
+    for(const shot of sim.projectiles){
+      assert.ok(shot.trail.length<=10);
+      assert.ok(shot.trail.every(p=>Number.isFinite(p.x)&&Number.isFinite(p.y)));
+      if(shot.trail.length)trailFrames++;
+    }
+    if(sim.particles.length)sparkFrames++;
+  }
+  assert.ok(sparkFrames>0,'hit and skill visuals must use emitted engine particles');
+  assert.ok(trailFrames>0,'original projectile traces must be available to Phaser');
+  assert.equal(sim.finished,true);
+});
 test('source Digimon records and their saved HP/TP are not changed',()=>{
   const allies=[
     {name:'아구몬',hp:170,maxHp:200,atk:50,def:24,spd:54,tp:65,maxTp:90},
