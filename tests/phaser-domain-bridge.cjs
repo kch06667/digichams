@@ -8,6 +8,7 @@ const B=require('../phaser-lab/domain-bridge.js');
 const core=require('../src/battle-core.js');
 const care=require('../src/care-core.js');
 const cups=require('../src/championship-core.js');
+const arena=require('../src/arena-original-core.js');
 
 test('Phaser uses existing battle target, TP thresholds and skill costs',()=>{
   const state=B.newEncounter('balanced');
@@ -122,6 +123,48 @@ test('roster with absent TP uses legacy TP capacity instead of forced zero',()=>
   });
   assert.ok(s.ally.tp>0);
   assert.equal(s.ally.tp,s.ally.maxTp);
+});
+
+test('finished original 2v2 battle produces immutable read-only result for same-name teammates',()=>{
+  const imported=B.inspectExport({format:'digicham-save',exportVersion:1,state:{
+    day:4,wins:0,team:[
+      {name:'아구몬',hp:125,maxHp:140,atk:46,def:24,spd:53,tp:40,maxTp:95},
+      {name:'아구몬',hp:100,maxHp:135,atk:39,def:20,spd:38,tp:32,maxTp:86},
+      {name:'창고',hp:90,maxHp:100,location:'storage'}]
+  }});
+  const sourceBefore=JSON.stringify(imported);
+  const roster=B.eligibleRoster(imported);
+  assert.equal(roster.length,2);
+  const sim=arena.createMatch({allies:roster,
+    opponents:arena.defaultTeam(1).slice(0,2),teamSize:2,seed:20261028});
+  const initial=arena.snapshot(sim.fighters.filter(f=>f.side===0));
+  assert.throws(()=>B.previewBattleResult(sim,imported,[0,1],initial),/종료/);
+  for(let n=0;n<4200&&!sim.finished;n++)arena.step(sim,1/30);
+  assert.equal(sim.finished,true);
+  const result=B.previewBattleResult(sim,imported,[0,1],initial);
+  assert.equal(result.type,'read-only-battle-result');
+  assert.equal(result.source,'original-arena-completed-match-preview');
+  assert.equal(result.saveApplied,false);
+  assert.equal(result.rewardsApplied,false);
+  assert.equal(result.changes.length,2);
+  assert.deepEqual(result.changes.map(x=>x.teamIndex),[0,1]);
+  assert.deepEqual(result.changes.map(x=>x.name),['아구몬','아구몬']);
+  assert.equal(result.changes[0].hpBefore,125);
+  assert.equal(result.changes[1].hpBefore,100);
+  for(const change of result.changes){
+    assert.ok(change.hpAfter>=0&&change.hpAfter<=change.hpBefore);
+    assert.ok(change.tpBefore>=0&&change.tpAfter>=0);
+  }
+  assert.equal(JSON.stringify(imported),sourceBefore,'do not mutate imported save');
+  assert.ok(Object.isFrozen(result)&&Object.isFrozen(result.changes));
+  assert.throws(()=>B.previewBattleResult(sim,imported,[0,0],initial),/명단/);
+  assert.throws(()=>B.previewBattleResult(sim,imported,[1,0],initial),/일치/);
+  assert.throws(()=>B.previewBattleResult(sim,imported,[0,99],initial),/일치/);
+  assert.throws(()=>B.previewBattleResult(sim,B.previewSample(),[0,1],initial),/읽기 전용/);
+  const tampered=initial.map(x=>({...x}));
+  tampered[0].hp+=1;
+  assert.throws(()=>B.previewBattleResult(sim,imported,[0,1],tampered),/일치/);
+  assert.equal(JSON.stringify(imported),sourceBefore);
 });
 
 test('browser-side bridge script parses, displays chosen tactic and core linkage',()=>{

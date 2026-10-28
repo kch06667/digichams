@@ -148,6 +148,22 @@ def check_page(browser, mobile, base_url):
     assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.hp")<=80
     assert page.evaluate("DigiPhaserLab.encounterSnapshot().ally.atk")==25
     assert page.evaluate("DigiPhaserLab.selectedRoster().name")=="시험용 디지몬"
+    assert page.evaluate("DigiPhaserLab.battleResultPreview()") is None
+    preview_before=page.evaluate("DigiPhaserLab.importedSavePreview()")
+    assert page.evaluate("DigiPhaserLab.qaFinishCombat()")
+    report=page.evaluate("DigiPhaserLab.battleResultPreview()")
+    assert report["type"]=="read-only-battle-result", report
+    assert report["source"]=="original-arena-completed-match-preview"
+    assert report["saveApplied"] is False and report["rewardsApplied"] is False
+    assert report["changes"][0]["teamIndex"]==0
+    assert report["changes"][0]["name"]=="시험용 디지몬"
+    assert report["changes"][0]["hpBefore"]==80
+    assert report["changes"][0]["hpAfter"]<=80
+    assert "저장되지 않음" in page.locator("#battleReport").inner_text()
+    assert page.evaluate("DigiPhaserLab.importedSavePreview()")==preview_before
+    page.locator("#reset").click()
+    page.wait_for_function("Boolean(window.DigiPhaserLab?.battleResultPreview() === null)")
+    assert page.locator("#battleReport").inner_text()==""
     assert not errors, f"JS errors ({'mobile' if mobile else 'desktop'}): {errors}"
     print("OK", "touch" if mobile else "desktop",
           "3v3 independent realtime movement + victory + roster")
