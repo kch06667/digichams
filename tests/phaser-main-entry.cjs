@@ -5,8 +5,7 @@ const fs=require('node:fs');
 const os=require('node:os');
 const path=require('node:path');
 const {build}=require('../tools/build-phaser-optin-page.cjs');
-const modules=['src/evolution-core.js','src/championship-core.js',
-  'src/battle-settlement-core.js','src/battle-commit-core.js',
+const modules=['src/battle-settlement-core.js','src/battle-commit-core.js',
   'src/dev-phaser-commit.js','src/dev-phaser-farm-launch.js',
   'src/phaser-arena-entry-choice.js'];
 const fixture='<!doctype html><html><body><button id="lbStart"></button>'+
