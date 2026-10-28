@@ -129,10 +129,52 @@
       championship:{active:null,crowns,history:[],sequence:0,rank:0,lastResult:null},
       source:'read-only-save-preview'};
   }
+  // Read-only handoff contract for a *completed* original-arena match.
+  // Team indices refer only to this imported JSON snapshot. No rewards,
+  // championship actions, localStorage or save mutation are performed here.
+  function previewBattleResult(match,imported,teamIndices,initialFighters){
+    if(!imported||imported.source!=='read-only-save-preview'||
+       !Array.isArray(imported.team)||!match||match.finished!==true||
+       ![0,1].includes(match.winner)||!Number.isFinite(match.elapsed)||
+       match.elapsed<0||!Array.isArray(match.fighters)||
+       !Array.isArray(teamIndices)||!Array.isArray(initialFighters))
+      throw Error('종료된 원본 전투와 읽기 전용 세이브가 필요해.');
+    const allies=match.fighters.filter(f=>f.side===0);
+    if(!allies.length||allies.length>3||teamIndices.length!==allies.length||
+       initialFighters.length!==allies.length||new Set(teamIndices).size!==teamIndices.length)
+      throw Error('출전 명단이 일치하지 않아.');
+    const finite=(n,max)=>typeof n==='number'&&Number.isFinite(n)&&n>=0&&n<=max;
+    const changes=allies.map((after,slot)=>{
+      const index=teamIndices[slot],before=initialFighters[slot];
+      const original=imported.team[index];
+      if(!Number.isSafeInteger(index)||index<0||!original||
+         !before||before.side!==0||after.side!==0||
+         before.slot!==slot||after.slot!==slot||
+         before.id!==after.id||before.name!==after.name||
+         original.name!==after.name||original.egg||original.lost||
+         original.location==='storage'||original.hp<=0||
+         !finite(before.max,999999)||before.max<=0||
+         !finite(before.hp,before.max)||before.hp!==original.hp||
+         after.max!==before.max||!finite(after.hp,after.max)||
+         !finite(before.maxTp,999999)||before.maxTp<=0||
+         !finite(after.maxTp,999999)||after.maxTp!==before.maxTp||
+         !finite(before.tp,before.maxTp)||!finite(after.tp,after.maxTp))
+        throw Error('출전 디지몬 기록이 일치하지 않아.');
+      return Object.freeze({teamIndex:index,name:after.name,
+        fighterId:after.id,hpBefore:before.hp,hpAfter:after.hp,
+        tpBefore:before.tp,tpAfter:after.tp});
+    });
+    return Object.freeze({
+      type:'read-only-battle-result',winner:match.winner,
+      elapsed:match.elapsed,changes:Object.freeze(changes),
+      saveApplied:false,rewardsApplied:false,
+      source:'original-arena-completed-match-preview'
+    });
+  }
   function eligibleRoster(input){
     return input.team.map((m,index)=>({index,...m})).filter(m=>
       m.hp>0&&!m.egg&&!m.lost&&m.location!=='storage');
   }
   return Object.freeze({tactics,newEncounter,rosterFighter,eligibleRoster,
-    plan,apply,train,cupPreview,previewSample,inspectExport});
+    plan,apply,train,cupPreview,previewSample,inspectExport,previewBattleResult});
 });
