@@ -10,7 +10,8 @@ const modules=['src/battle-settlement-core.js','src/battle-commit-core.js',
   'src/phaser-arena-entry-choice.js'];
 const fixture='<!doctype html><html><body><button id="lbStart"></button>'+
   '<select id="lbMode"></select><select id="lbTeamSize"></select>'+
-  '<script>function settleMatch(){};'+
+  '<script>root.DCEvolution=api;root.DCChampionship=api;'+
+  'function bracketFor(s){};function settleMatch(){};'+
   'window.DCBattleArena={launchTournament(){}};'+
   "el('lbStart').onclick=()=>start(false);"+'</script></body></html>';
 function workspace(fn){
