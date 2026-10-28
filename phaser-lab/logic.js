@@ -71,6 +71,21 @@
     return [...actions].sort((a,b)=>a-b)[0];
   }
 
+  // These cues describe only the already-computed ORIGINAL arena pose.
+  // No simulation clock, attack damage, hit detection, or TP is changed.
+  function specialPhase(f) {
+    if (!f || f.hp <= 0 || f.act !== 'special') return null;
+    return f.pose === 33 ? 'charge' : f.pose === 10 ? 'release' : null;
+  }
+
+  function knockbackTilt(f) {
+    if (!f || f.hp <= 0 || !Number.isFinite(f.knockVX) ||
+        Math.abs(f.knockVX) < 12) return 0;
+    // A slight visual lean follows the actual 2D impulse direction,
+    // not a synthetic damage event. Fades as the original impulse decays.
+    return clamp(f.knockVX * 0.075, -14, 14);
+  }
+
   function playableAction(manifest, action) {
     if (!validateManifest(manifest)) return null;
     const entry = manifest.actions[String(action)];
@@ -78,5 +93,6 @@
   }
 
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
-    knockbackForDamage, gainTrainingStat, playableAction, motionAction });
+    knockbackForDamage, gainTrainingStat, playableAction, motionAction,
+    specialPhase, knockbackTilt });
 });

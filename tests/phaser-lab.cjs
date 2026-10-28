@@ -37,6 +37,37 @@ test('sparse species atlas chooses nearest original motion instead of idle',()=>
   assert.equal(L.motionAction(f('attack',8),new Set()),null);
   assert.equal(L.motionAction(f('attack',8),null),null);
 });
+test('original special pose 33→10 drives visual cues, not fake hits',()=>{
+  const f={act:'special',pose:33,hp:100,knockVX:0};
+  assert.equal(L.specialPhase(f),'charge');
+  f.pose=10;
+  assert.equal(L.specialPhase(f),'release');
+  f.pose=0;
+  assert.equal(L.specialPhase(f),null);
+  f.act='idle';f.pose=33;
+  assert.equal(L.specialPhase(f),null,
+    'a stale shout pose outside an active skill must not show a charge');
+  f.act='special';f.hp=0;
+  assert.equal(L.specialPhase(f),null,'KO cannot keep charging');
+  assert.equal(L.specialPhase(null),null);
+});
+test('visible knockback tilt follows original impulse direction with safe bounds',()=>{
+  const f={hp:75,act:'hurt',knockVX:120};
+  assert.equal(L.knockbackTilt(f),9);
+  f.knockVX=-120;
+  assert.equal(L.knockbackTilt(f),-9);
+  f.knockVX=9999;
+  assert.equal(L.knockbackTilt(f),14);
+  f.knockVX=-9999;
+  assert.equal(L.knockbackTilt(f),-14);
+  f.knockVX=11.99;
+  assert.equal(L.knockbackTilt(f),0);
+  f.knockVX=Infinity;
+  assert.equal(L.knockbackTilt(f),0);
+  f.knockVX=100;f.hp=0;
+  assert.equal(L.knockbackTilt(f),0,'real KO pose is never tilted by recoil');
+  assert.equal(L.knockbackTilt(null),0);
+});
 test('stat and knockback functions bounded and side-effect free', () => {
   assert.equal(L.gainTrainingStat(10, 1), 11);
   assert.equal(L.gainTrainingStat(9999, 1), 9999);
