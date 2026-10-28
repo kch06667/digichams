@@ -97,10 +97,13 @@
           if(cfg.frames>1){
             const animation='realtime-'+encodeURIComponent(source.source)+'-'+id;
             if(this.anims.exists(animation))this.anims.remove(animation);
+            // Frame durations in the manifest already include the whole GIF
+            // delay. Phaser ADDS frame.duration to 1000/frameRate.
+            const timing=L.gifFrameTiming(cfg.durationsMs);
             const frames=this.anims.generateFrameNumbers(texture,{
               start:0,end:cfg.frames-1
-            }).map((frame,i)=>({...frame,duration:clamp(cfg.durationsMs[i],30,30000)}));
-            this.anims.create({key:animation,frames,frameRate:12,
+            }).map((frame,i)=>({...frame,duration:timing.extraMs[i]}));
+            this.anims.create({key:animation,frames,frameRate:timing.frameRate,
               repeat:[0,2,3,14,32].includes(idx)?-1:0});
           }
         }
@@ -151,6 +154,11 @@
         speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
         matchSnapshot:()=>RT.snapshot(this.sim),
         motionEvidence:()=>({...this.motionEvidence}),
+        // Read-only test probe; contains frame timing numbers, never art bytes.
+        animationFrameTiming:(source,id)=>{
+          const a=this.anims.get('realtime-'+encodeURIComponent(source)+'-'+id);
+          return a?{baseMs:a.msPerFrame,extraMs:a.frames.map(f=>f.duration)}:null;
+        },
         // Deterministic browser QA: exercise all remaining ORIGINAL engine
         // ticks immediately, then render the authentic match conclusion.
         // This isolated exhibition never writes to a player save.

@@ -73,6 +73,18 @@
 
   // These cues describe only the already-computed ORIGINAL arena pose.
   // No simulation clock, attack damage, hit detection, or TP is changed.
+  // Phaser adds a per-frame duration on top of 1000/frameRate.
+  // Our exporter stores the TOTAL original GIF delay, not an extra delay.
+  // A 20ms base preserves even the shortest validated GIF frame exactly.
+  function gifFrameTiming(durationsMs) {
+    const baseMs = 20;
+    if (!Array.isArray(durationsMs) || !durationsMs.length ||
+        durationsMs.some(ms => !Number.isFinite(ms) || ms < baseMs || ms > 30000))
+      throw Error('Invalid GIF frame timings');
+    return {frameRate: 1000 / baseMs,
+      extraMs: durationsMs.map(ms => ms - baseMs)};
+  }
+
   function specialPhase(f) {
     if (!f || f.hp <= 0 || f.act !== 'special') return null;
     return f.pose === 33 ? 'charge' : f.pose === 10 ? 'release' : null;
@@ -94,5 +106,5 @@
 
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
     knockbackForDamage, gainTrainingStat, playableAction, motionAction,
-    specialPhase, knockbackTilt });
+    specialPhase, knockbackTilt, gifFrameTiming });
 });
