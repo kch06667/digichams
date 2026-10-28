@@ -5,7 +5,7 @@
 let dcOwnedSaveEnabled=false;
 const dcOwnedSaveBox=document.createElement('details');
 dcOwnedSaveBox.id='dc-owned-optin';
-dcOwnedSaveBox.style.cssText='position:fixed;right:8px;bottom:8px;z-index:99999;max-width:min(310px,90vw);padding:8px 10px;background:#19253c;color:#fff;border:2px solid #7ad7ad;border-radius:10px;font:12px sans-serif;';
+dcOwnedSaveBox.style.cssText='position:fixed;left:8px;top:8px;z-index:40;max-width:min(310px,90vw);padding:8px 10px;background:#19253c;color:#fff;border:2px solid #7ad7ad;border-radius:10px;font:12px sans-serif;';
 dcOwnedSaveBox.innerHTML='<summary style="cursor:pointer">실험적 전투 정산 (기본 꺼짐)</summary>'+
  '<label><input id="dc-owned-optin-enable" type="checkbox"> 새 전투 저장 사용</label>'+
  '<p style="margin:5px 0">선택 시에만 작동. 중단/기권은 기존 방식. 실패 시 백업을 확인하세요.</p>'+
