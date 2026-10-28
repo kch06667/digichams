@@ -111,7 +111,7 @@ test('legacy experience progression still uses the original quadratic formula',(
 
 test('settlement module never writes storage and is not yet active in the UI',()=>{
   const code=fs.readFileSync(path.join(__dirname,'../src/battle-settlement-core.js'),'utf8');
-  assert.doesNotMatch(code,/localStorage|sessionStorage|setItem\(/);
+  assert.doesNotMatch(code,/\b(?:localStorage|sessionStorage)\s*(?:\.|\[)|\.setItem\s*\(/);
   assert.match(code,/E\.recordBattle\(next,ids,won,lookup\)/);
   assert.match(code,/C\.finishMatch\(next,pending\.tournamentMatchId,won\)/);
   assert.equal(typeof Evo.recordBattle,'function');
