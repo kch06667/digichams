@@ -13,7 +13,7 @@ test('deploy archive is allowlisted and never contains extracted game art',()=>{
     const files=fs.readdirSync(d).sort();
     assert.deepEqual(files,['build-info.json','domain-bridge.js','engine-core','farm-model.js','farm.html','farm.js','game.js','icon.svg','index.html','logic.js','manifest.webmanifest','pwa.js','realtime-core.js','sw.js',... (fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor']:[])]);
     const data=JSON.parse(fs.readFileSync(path.join(d,'build-info.json'),'utf8'));
-    assert.deepEqual(data.files,['index.html','game.js','logic.js','domain-bridge.js','farm.html','farm.js','farm-model.js','manifest.webmanifest','icon.svg','pwa.js','sw.js','realtime-core.js','engine-core/battle-core.js','engine-core/care-core.js','engine-core/championship-core.js',...(fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor/phaser.min.js','vendor/PHASER_LICENSE.txt']:[])]);
+    assert.deepEqual(data.files,['index.html','game.js','logic.js','domain-bridge.js','farm.html','farm.js','farm-model.js','manifest.webmanifest','icon.svg','pwa.js','realtime-core.js','sw.js','engine-core/battle-core.js','engine-core/care-core.js','engine-core/championship-core.js',...(fs.existsSync(path.join(root,'node_modules/phaser/dist/phaser.min.js'))?['vendor/phaser.min.js','vendor/PHASER_LICENSE.txt']:[])]);
     assert.ok(!files.some(name=>/\.(?:nds|gif|png|webp|zip)$/i.test(name)));
     const core=fs.readdirSync(path.join(d,'engine-core')).sort();
     assert.deepEqual(core,['battle-core.js','care-core.js','championship-core.js']);
