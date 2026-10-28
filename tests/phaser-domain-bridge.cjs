@@ -84,6 +84,45 @@ test('real save export preview is read-only, strips untrusted data and uses real
     state:{...save.state,team:[{name:'bad',hp:'oops',maxHp:100}]}}));
 });
 
+test('choose a real raised Digimon for a read-only AI sparring demonstration',()=>{
+  const save=B.inspectExport({format:'digicham-save',exportVersion:1,state:{
+    day:17,wins:4,team:[
+      {name:'내 디지몬',hp:270,maxHp:300,atk:76,def:42,spd:61,tp:37,maxTp:99,hunger:10},
+      {name:'창고 디지몬',hp:100,maxHp:100,atk:50,def:22,spd:40,location:'storage'},
+      {name:'부화 중',hp:40,maxHp:40,atk:1,def:1,spd:1,egg:true},
+      {name:'기절',hp:0,maxHp:100,atk:1,def:1,spd:1}
+    ]
+  }});
+  const before=JSON.stringify(save);
+  const eligible=B.eligibleRoster(save);
+  assert.equal(eligible.length,1);
+  assert.equal(eligible[0].index,0);
+  const s=B.newEncounter('conserve',eligible[0]);
+  assert.equal(s.ally.name,'내 디지몬');
+  assert.equal(s.ally.hp,270);
+  assert.equal(s.ally.max,300);
+  assert.equal(s.ally.atk,76);
+  assert.equal(s.ally.spd,61);
+  assert.equal(s.ally.tp,37);
+  assert.equal(s.ally.maxTp,99);
+  assert.equal(s.source,'roster-preview');
+  const event=B.plan(s);
+  assert.equal(event.action,'normal','TP-saving tactics keep low TP');
+  const next=B.apply(s,event);
+  assert.equal(next.turn,1);
+  assert.equal(JSON.stringify(save),before,'never mutate imported save on battle preview');
+  assert.throws(()=>B.newEncounter('balanced',save.team[1]),/출전/);
+  assert.throws(()=>B.newEncounter('balanced',save.team[2]),/출전/);
+  assert.throws(()=>B.newEncounter('balanced',save.team[3]),/출전/);
+});
+test('roster with absent TP uses legacy TP capacity instead of forced zero',()=>{
+  const s=B.newEncounter('balanced',{
+    name:'TP 생략',hp:50,maxHp:90,atk:23,def:8,spd:39,tp:null,maxTp:null
+  });
+  assert.ok(s.ally.tp>0);
+  assert.equal(s.ally.tp,s.ally.maxTp);
+});
+
 test('browser-side bridge script parses, displays chosen tactic and core linkage',()=>{
   for(const file of ['domain-bridge.js','game.js']){
     const src=fs.readFileSync(path.join(__dirname,'..','phaser-lab',file),'utf8');
