@@ -208,11 +208,17 @@
     }
     pose(f,v){
       const type=f.hp<=0?'ko':f.act;
-      if(type===v.pose)return;
-      v.pose=type;
-      const id=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
-        type==='attack'?7:type==='cast'?7:type==='evade'?3:
+      // Original HTML combat already chooses exact animation slot for
+      // each action, including shout -> attack4 within one special move.
+      // Never collapse those phases into one generic 'cast' pose.
+      const fallback=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
+        type==='attack'?7:type==='special'?10:type==='evade'?3:
         type==='guard'?5:type==='run'?3:type==='walk'?2:0;
+      const id=type==='victory'?30:type==='ko'?37:
+        Number.isInteger(f.pose)&&f.pose>=0&&f.pose<=39?f.pose:fallback;
+      const motionKey=type+':'+id;
+      if(motionKey===v.pose)return;
+      v.pose=motionKey;
       if(v.useArt&&this.loadedActions.has(id)){
         const cfg=manifest.actions[String(id)];
         v.sprite.setTexture(key(id),0).setScale(v.scale);
