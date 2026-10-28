@@ -2,6 +2,7 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
+const vm=require('node:vm');
 const evo=require('../src/evolution-core.js');
 const root=path.resolve(__dirname,'..');
 const catalog=JSON.parse(fs.readFileSync(path.join(root,'assets/species-catalog.json'),'utf8')).entries;
@@ -15,12 +16,18 @@ check('216 species have unique keys and valid stages',()=>{
  for(const x of catalog)assert.ok(['fresh','in-training','rookie','champion','ultimate','mega'].includes(x.stageKey));
 });
 check('all 216 species can resolve source GIF frames',()=>{
+ const start=idx.indexOf('function spriteUrl('),end=idx.indexOf('const SPRITE_STATES=',start);
+ const resolve=vm.runInNewContext(idx.slice(start,end)+';spriteUrl',{
+  ASSET_SPECIES:Object.fromEntries(catalog.map(x=>[x.name,x]))
+ });
  for(const x of catalog){
   for(let i=0;i<40;i++){
-   const actual=(x.stem==='m357_unimon_main'&&i===5)?4:i;
-   assert.ok(fs.existsSync(path.join(root,'assets/sprites',x.folder,`${x.stem}_${actual}.gif`)),`${x.stem} ${i}`)
+   assert.ok(fs.existsSync(path.join(root,resolve(x.name,i))),`${x.stem} ${i}`)
   }
  }
+ const unimon=catalog.find(x=>x.stem==='m357_unimon_main');
+ assert.equal(resolve(unimon.name,5),'assets/sprites/champion/m357_unimon_main_5_1.gif');
+ assert.notEqual(resolve(unimon.name,5),resolve(unimon.name,4));
 });
 check('main HTML registers source assets and sprite catalog UI',()=>{
  assert.ok(idx.includes('const SPRITE_CATALOG='));assert.ok(idx.includes('const ASSET_SPECIES='));
@@ -34,6 +41,8 @@ check('standalone HTML embeds 203 extra sets with 40 action GIFs',()=>{
  const obj=JSON.parse(solo.slice(start+'const EXTRA_SPRITE_FRAMES='.length,end));
  assert.equal(Object.keys(obj).length,203);
  for(const vals of Object.values(obj))assert.equal(vals.length,40);
+ assert.equal(obj.m357_unimon_main[5],fs.readFileSync(path.join(root,'assets/sprites/champion/m357_unimon_main_5_1.gif')).toString('base64'));
+ assert.notEqual(obj.m357_unimon_main[5],obj.m357_unimon_main[4]);
  for(const x of ['m503_warglaymon_main','m529_metalgarurumon_va_main','m518_blackwargreymon_main'])assert.ok(obj[x]?.[7]?.length>50);
 });
 check('WAR / BLACKWAR / METALGARURUMON cataloged',()=>{

@@ -81,3 +81,10 @@
 ## 2026-10-28 최종 BSA 검증
 - 합성 `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`: 33/33 통과. 새 BSA 2/3프레임 lookup, 플립 비트, 잘린 파일/범위 오류 검사 포함.
 - BSA 실제19파일 파싱/NCGR 참조 범위 통과, 전체 그래픽 구조5,974개 실패0. 대표2종 렌더링/시각 확인. 원작 실행 중 합성/재생속도 미검증.
+
+## 2026-10-28 유니몬 모션 연결
+- `node tests/sprite-catalog.cjs`: 9/9. 실제 index resolver로216종/40슬롯 파일 존재 확인, 유니몬5는5_1 경로, standalone5는 파일 바이트 동일/4와 다름.
+- `python3 -m unittest discover -s tests -p test_sprite_audit.py -v`:1/1. `python3 tools/audit-sprites.py --output /tmp/digichams-sprite-audit-fixed.json`:8,640개 오류0, 단일프레임3,677개.
+- Chromium 실제 HTTP 페이지 index/standalone ×390/1365의4조합에서 spriteUrl(유니몬,5) 로딩/파일바이트/이전4와차이/페이지오류0 확인. 임시 검사 스크립트 /tmp/check-unimon-browser.py; 캡처 test-output/unimon-rom-fix.
+- 최초 브라우저 검사 스크립트는 도감에 없는 #4/#5 버튼을 가정해 timeout. 실제 도감은6종 버튼만 제공하므로 공유 resolver를 직접 사용해 수정·재검사. 도감 #5 버튼 기능을 추가한 것은 아님.
+- 이전 커밋과 비교하여 index URL 예외1곳 및 standalone 유니몬 슬롯5 외의 게임 소스/프레임은 동일. 전체 게임 회귀/실제 전투의 피격 장면·실기 Android는 이번 변경에서 추가 실행하지 않음.

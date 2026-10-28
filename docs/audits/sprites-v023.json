@@ -1,10 +1,12 @@
 {
   "species_count": 216,
-  "checked_assets": 8639,
-  "errors": [
+  "checked_assets": 8640,
+  "errors": [],
+  "asset_overrides": [
     {
-      "path": "assets/sprites/champion/m357_unimon_main_5.gif",
-      "error": "Expected indexed filename is absent; existing runtime substitutes index 4."
+      "stem": "m357_unimon_main",
+      "index": 5,
+      "path": "assets/sprites/champion/m357_unimon_main_5_1.gif"
     }
   ],
   "single_frame_by_species": {
@@ -2079,6 +2081,7 @@
     ],
     "유니몬": [
       4,
+      5,
       6,
       13,
       15,
@@ -4117,7 +4120,7 @@
       39
     ]
   },
-  "single_frame_count": 3676,
+  "single_frame_count": 3677,
   "large_canvases": [],
   "semantic_status": "INFERRED: existing mapping is community-guessed; successful decoding does not verify action meaning.",
   "unverified_indices": [
@@ -4126,15 +4129,5 @@
     36,
     38,
     39
-  ],
-  "runtime_fallbacks": [
-    {
-      "species": "유니몬",
-      "requested_index": 5,
-      "current_index": 4,
-      "candidate": "assets/sprites/champion/m357_unimon_main_5_1.gif",
-      "candidate_semantics": "UNVERIFIED",
-      "standalone_4_and_5_identical": true
-    }
   ]
 }

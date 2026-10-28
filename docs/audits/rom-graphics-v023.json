@@ -87,5 +87,15 @@
       "training/field_cm09_01_anim"
     ],
     "timing_and_runtime_layering": "INFERRED"
-  }
+  },
+  "applied_asset_corrections": [
+    {
+      "stem": "m357_unimon_main",
+      "index": 5,
+      "asset": "assets/sprites/champion/m357_unimon_main_5_1.gif",
+      "verification": "ROM animation #5 visible pixel sequence and timing conversion match; action meaning not separately verified",
+      "application": "index.html filename and standalone.html embedded slot5; existing asset reused",
+      "date": "2026-10-28"
+    }
+  ]
 }

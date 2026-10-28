@@ -9,11 +9,15 @@ ROOT = Path(__file__).resolve().parent.parent
 def audit(root):
     catalog = json.loads((root / 'assets/species-catalog.json').read_text())['entries']
     mapping = json.loads((root / 'assets/sprite-action-map.json').read_text())
-    errors, static, sizes = [], {}, []
+    errors, static, sizes, overrides = [], {}, [], []
     total = 0
     for species in catalog:
         for action, index in mapping['sprite_actions'].items():
-            relative = Path('assets/sprites') / species['folder'] / f"{species['stem']}_{index}.gif"
+            # Existing asset matches ROM animation #5; see ROM_ANALYSIS_PROGRESS.md.
+            suffix = '5_1' if species['stem'] == 'm357_unimon_main' and index == 5 else str(index)
+            relative = Path('assets/sprites') / species['folder'] / f"{species['stem']}_{suffix}.gif"
+            if suffix != str(index):
+                overrides.append({'stem': species['stem'], 'index': index, 'path': str(relative)})
             path = root / relative
             try:
                 with Image.open(path) as im:
@@ -29,7 +33,7 @@ def audit(root):
                         sizes.append({'path':str(relative),'size':dimensions})
             except (OSError, ValueError) as exc:
                 errors.append({'path':str(relative),'error':str(exc)})
-    return {'species_count':len(catalog),'checked_assets':total,'errors':errors,
+    return {'species_count':len(catalog),'checked_assets':total,'errors':errors,'asset_overrides':overrides,
             'single_frame_by_species':static, 'single_frame_count':sum(map(len, static.values())),'large_canvases':sizes,
             'semantic_status':'INFERRED: existing mapping is community-guessed; successful decoding does not verify action meaning.',
             'unverified_indices':[6,27,36,38,39]}

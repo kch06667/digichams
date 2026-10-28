@@ -692,7 +692,7 @@ function spriteUrl(name,index=0){
  if(name==='forest')return FOREST_SRC;
   const ix=Math.max(0,Math.min(39,Number.isFinite(Number(index))?Math.floor(Number(index)):0));
   const item=ASSET_SPECIES[name];
-  if(item)return `assets/sprites/${item.folder}/${item.stem}_${item.stem==='m357_unimon_main'&&ix===5?4:ix}.gif`;
+  if(item)return `assets/sprites/${item.folder}/${item.stem}_${item.stem==='m357_unimon_main'&&ix===5?'5_1':ix}.gif`;
   const arr=SPRITE_FRAMES[name]||SPRITE_FRAMES['코로몬'];
   return `data:image/gif;base64,${arr[Math.min(ix,arr.length-1)]}`;
 }
