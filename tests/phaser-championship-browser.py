@@ -84,6 +84,9 @@ def fight(ctx,farm,errors,expected_round):
     assert match["round"]==expected_round,match
     assert len(match["opponentTeam"])==match["size"]
     farm.locator('[data-tab="battle"]').click()
+    # The opt-in selection is intentionally NOT persisted across reloads.
+    # Explicitly choose Phaser again for the next cup round.
+    farm.locator("#dc-phaser-cup-engine").select_option("phaser")
     try:
         with ctx.expect_page(timeout=8000) as popup:
             farm.locator("#championshipFight").click()
