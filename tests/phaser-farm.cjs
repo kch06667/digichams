@@ -47,6 +47,42 @@ test('multiple bites decrease food and hunger without disappearing on first bite
   assert.equal(s.cages['1:0'].hunger,45);
   assert.equal(cmd(s,'bite',{at:'0:0'}).changed,false);
 });
+test('imported Digimon are projected into read-only small hex cages',()=>{
+  const roster={day:8,facilityCredits:700,team:[
+    {name:'아구몬',hp:190,maxHp:240,hunger:72,location:'farm',lost:false},
+    {name:'가부몬',hp:65,maxHp:100,hunger:18,location:'farm',lost:false},
+    {name:'창고몬',hp:90,maxHp:90,hunger:30,location:'storage',lost:false},
+    {name:'실종몬',hp:90,maxHp:90,hunger:30,location:'farm',lost:true}
+  ]};
+  const before=JSON.stringify(roster);
+  const farm=M.fromRoster(roster);
+  assert.equal(farm.viewOnly,true);
+  assert.equal(farm.rows,2);
+  assert.equal(farm.cages['0:0'].name,'아구몬');
+  assert.equal(farm.cages['0:0'].hp,190);
+  assert.equal(farm.cages['0:1'].name,'가부몬');
+  assert.equal(farm.cages['0:2'],undefined);
+  assert.equal(farm.sourceDay,8);
+  assert.equal(M.transition(farm,{type:'select',row:0,col:1}).changed,true);
+  for(const action of ['buy','feed','bite','train','expand']){
+    const result=M.transition(farm,{type:action});
+    assert.equal(result.changed,false);
+    assert.equal(result.state,farm);
+  }
+  assert.equal(JSON.stringify(roster),before);
+});
+test('up to 30 mons display, extras counted, strict invalid roster rejected',()=>{
+  const team=Array.from({length:37},(_,i)=>({
+    name:'몬'+i,hp:100,maxHp:100,hunger:i,location:'farm'
+  }));
+  const state=M.fromRoster({day:50,team,facilityCredits:555});
+  assert.equal(state.rows,5);
+  assert.equal(Object.keys(state.cages).length,30);
+  assert.equal(state.hiddenCount,7);
+  assert.equal(state.cages['4:5'].name,'몬29');
+  assert.throws(()=>M.fromRoster({day:1,team:[{name:'bad',hp:NaN,maxHp:20}]}));
+});
+
 test('training costs no genuine game saves, JS syntax parses',()=>{
   const before=M.initial();const after=cmd(before,'train');
   assert.equal(before.training,10);assert.equal(after.state.training,11);
