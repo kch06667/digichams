@@ -67,7 +67,7 @@
    const settleMatch=()=>{};  // never grants rewards or losses in this lab
    const updateCamera=()=>{}; // camera owned by Phaser
    let fighters=[],bullets=[],fx=[],finished=false,elapsed=0,winningSide=-1,
-     winElapsed=0,lastBattleSave=0,preview=true,skillSequence=null,specialCallout=null,
+     winElapsed=0,lastBattleSave=0,preview=false,skillSequence=null,specialCallout=null,
      popups=[],cameraShake=0;
    const stats={meleeAttempts:0,meleeHits:0,skillHits:0,specials:0,
      meleeSkills:0,rangedSkills:0,dodges:0,retreats:0,hits:0,misses:0,
