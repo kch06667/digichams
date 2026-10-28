@@ -38,7 +38,7 @@ def check_page(browser, mobile, base_url):
     page.locator("#game canvas").wait_for(timeout=10000)
     assert "준비 완료" in page.locator("#status").inner_text()
     if (ROOT / "phaser-lab" / "local-assets" / "manifest.json").is_file():
-        assert "전용 모션" in page.locator("#status").inner_text()
+        assert "개인 모션" in page.locator("#status").inner_text()
         # Private images are selected FROM THIS browser's local disk.
         # They must not be added to any published Pages build or sent online.
         local = ROOT / "phaser-lab" / "local-assets"
