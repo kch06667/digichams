@@ -1,327 +1,420 @@
-/* Phaser 3 visual prototype only. No original game/save mutation. */
+/* Real-time independent AI battle visualizer — not a turn-based scheduler.
+ * The original in-index arena remains the full gameplay authority.
+ * Exhibition outcomes here NEVER write to the original save.
+ */
 (() => {
   'use strict';
-  const status = document.getElementById('status');
-  const buttons = ['battle', 'train', 'reset', 'sound', 'cups'];
-  const say = text => { status.textContent = text; };
-  const L = window.DigiPhaserLabLogic;
-  const B = window.DigiDomainBridge;
-  if (!window.Phaser || !L || !B) {
-    say('Phaser 라이브러리를 불러오지 못했습니다. 인터넷 연결과 CDN 접근을 확인하세요.');
+  const status=document.getElementById('status');
+  const say=message=>{status.textContent=message;};
+  const L=window.DigiPhaserLabLogic, B=window.DigiDomainBridge,
+        RT=window.DigiRealTimeCore;
+  const buttons=['battle','train','reset','sound','cups','speed'];
+  if(!window.Phaser||!L||!B||!RT){
+    say('엔진 로드 실패 · Phaser와 전투 모듈 연결을 확인해.');
     return;
   }
-  let manifest = null, soundEnabled = false, game;
-  let savePreview = B.previewSample();
-  let rosterChosen = null;
-  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  const actionKey = id => 'mon-' + id;
+  let manifest=null,soundEnabled=false,simSpeed=2,savePreview=B.previewSample(),
+      rosterChosen=null, trainingBonus=10;
+  const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
+  const key=id=>'private-motion-'+id;
+  const format=n=>Math.max(0,Math.round(n));
+  const available=()=>B.eligibleRoster(savePreview);
 
-  function drawDemoTextures(scene) {
-    for (const color of [0xe3ac54, 0x80c5c9]) for (let frame = 0; frame < 2; frame++) {
-      const g = scene.make.graphics({ x: 0, y: 0 });
-      // Original procedural test character: no redistributed game graphics.
-      const px = (x,y,w,h,c) => { g.fillStyle(c); g.fillRect(x,y,w,h); };
-      px(14,10+frame*2,30,34,color);
-      px(10,1+frame*2,9,18,color); px(38,2+frame*2,9,18,color);
-      px(20,43+frame*2,9,12,color); px(35,43-frame*2,9,12,color);
-      px(40,22+frame*2,11,9,color);
-      px(22,23+frame*2,5,5,0x122f42); px(38,23+frame*2,5,5,0x122f42);
-      px(31,33+frame*2,9,3,0x68482f);
-      g.generateTexture('demo-' + color + '-' + frame, 60, 66);
-      g.destroy();
-    }
-  }
-
-  class LabScene extends Phaser.Scene {
-    constructor() { super('Lab'); }
-    init(data) { this.requestedMode = data?.autoMode || 'idle'; this.requestedTactic = data?.tactic || 'balanced'; }
-    preload() {
-      if (!manifest) return;
-      for (const [id, sheet] of Object.entries(manifest.actions)) {
-        this.load.spritesheet(actionKey(id), './local-assets/' + sheet.file,
-          { frameWidth: sheet.frameWidth, frameHeight: sheet.frameHeight, endFrame: sheet.frames-1 });
+  function mockTextures(scene){
+    const colors=[0xffc666,0x92dbfc,0xeaa6ed,0x8bd0a1,0xe8aa92,0xb5bded];
+    for(let side=0;side<2;side++)for(let slot=0;slot<3;slot++){
+      const color=colors[side*3+slot];
+      for(let frame=0;frame<2;frame++){
+        const texture='practice-'+side+'-'+slot+'-'+frame;
+        if(scene.textures.exists(texture))continue;
+        const g=scene.make.graphics({x:0,y:0});
+        const rect=(x,y,w,h,c)=>{g.fillStyle(c);g.fillRect(x,y,w,h);};
+        const bob=frame*2;
+        // Original, non-Digimon procedural silhouettes for public safety.
+        rect(21,8+bob,30,27,color);
+        rect(12,15+bob,13,15,color);
+        rect(45,15+bob,12,15,color);
+        rect(24,2+bob,9,13,color);
+        rect(41,2+bob,9,13,color);
+        rect(25,34+bob,23,17,color);
+        rect(23,50+(frame?0:2),10,8,color);
+        rect(40,50+(frame?2:0),10,8,color);
+        rect(26,21+bob,5,5,0x192535);
+        rect(43,21+bob,5,5,0x192535);
+        rect(33,32+bob,10,3,0x594438);
+        rect(20,44+bob,7,7,0x334454);
+        g.generateTexture(texture,72,64);
+        g.destroy();
       }
     }
-    create() {
-      this.cameras.main.setBackgroundColor('#152b45');
-      drawDemoTextures(this);
-      this.drawStage();
-      this.readyActions = new Set();
-      if (manifest) {
-        for (const [id, cfg] of Object.entries(manifest.actions)) {
-          if (!this.textures.exists(actionKey(id))) continue;
-          this.readyActions.add(Number(id));
-          if (cfg.frames > 1) {
-            const frames = this.anims.generateFrameNumbers(actionKey(id),
-              { start: 0, end: cfg.frames - 1 })
-              .map((f, i) => ({...f, duration: clamp(cfg.durationsMs[i], 40, 30000) }));
-            this.anims.create({ key: 'act-' + id, frames, frameRate: 10,
-              repeat: [0, 2, 3, 14, 32].includes(Number(id)) ? -1 : 0 });
+  }
+  class RealTimeScene extends Phaser.Scene {
+    constructor(){super('RealTimeArena');}
+    init(config={}){
+      this.requestedMode=config.mode||'idle';
+      this.requestedTactic=config.tactic||'balanced';
+      this.requestedSize=config.teamSize||3;
+    }
+    preload(){
+      if(!manifest)return;
+      for(const [id,cfg] of Object.entries(manifest.actions)){
+        this.load.spritesheet(key(id),'./local-assets/'+cfg.file,{
+          frameWidth:cfg.frameWidth,frameHeight:cfg.frameHeight,
+          endFrame:cfg.frames-1
+        });
+      }
+    }
+    create(){
+      this.cameras.main.setBackgroundColor('#172d43');
+      mockTextures(this);
+      this.loadedActions=new Set();
+      if(manifest){
+        for(const [id,cfg] of Object.entries(manifest.actions)){
+          const idx=Number(id);
+          if(!this.textures.exists(key(id)))continue;
+          this.loadedActions.add(idx);
+          if(cfg.frames>1&&!this.anims.exists('realtime-'+id)){
+            const frames=this.anims.generateFrameNumbers(key(id),{
+              start:0,end:cfg.frames-1
+            }).map((frame,i)=>({...frame,duration:clamp(cfg.durationsMs[i],30,30000)}));
+            this.anims.create({
+              key:'realtime-'+id,frames,frameRate:12,
+              repeat:[0,2,3,14,32].includes(idx)?-1:0
+            });
           }
         }
       }
-      this.left = this.fighter(175, 290, 0xe3ac54, false, '테이머');
-      this.right = this.fighter(620, 290, 0x80c5c9, true, '상대');
-      this.mode = 'idle';
-      this.turn = 0;
-      this.demoStat = 10;
-      this.encounter = B.newEncounter(this.requestedTactic,rosterChosen);
-      this.left.hp = this.encounter.ally.hp;
-      this.right.hp = this.encounter.enemy.hp;
-      this.left.nameText.setText(this.encounter.ally.name);
-      this.right.nameText.setText(this.encounter.enemy.name);
-      this.pose(this.left, 'idle');
-      this.pose(this.right, 'idle');
+      this.drawStage();
+      this.createMatch();
+      this.mode='idle';
+      this.accum=0;
+      this.frameId=0;
+      this.graphics=this.add.graphics().setDepth(7);
+      this.projectileGraphics=this.add.graphics().setDepth(8);
+      this.visuals=new Map();
+      for(const actor of this.sim.fighters)this.addActor(actor);
+      this.refreshActors();
       this.updateHud();
-      say('실행 준비 완료 · ' + (this.readyActions.size ? '변환된 GIF 모션 ' + this.readyActions.size + '종 로드됨' : '저작권 없는 임시 그래픽으로 실행 중'));
-      window.DigiPhaserLab = {
-        battle: () => this.battle(),
-        train: () => this.train(),
-        reset: () => this.scene.restart(),
-        sound: enabled => { soundEnabled = enabled; if (enabled && this.sound.context?.resume) this.sound.context.resume(); },
-        encounterSnapshot: () => JSON.parse(JSON.stringify(this.encounter)),
-        cupPreview: () => B.cupPreview(savePreview),
-        importedSavePreview: () => JSON.parse(JSON.stringify(savePreview)),
-        selectedRoster: () => rosterChosen ? JSON.parse(JSON.stringify(rosterChosen)) : null,
-        trainingPreview: day => B.train(day, this.demoStat, 1)
+      say('준비 완료 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
+        ' 실시간 AI 연습전 · '+(this.loadedActions.size?
+          '개인 제공 모션 '+this.loadedActions.size+'종':'저작권 없는 임시 도형 그래픽')+
+        ' · 본게임 전투가 아님');
+      window.DigiPhaserLab={
+        battle:()=>this.battle(),train:()=>this.train(),
+        reset:()=>this.scene.restart({mode:'idle',
+          tactic:this.requestedTactic,teamSize:this.requestedSize}),
+        sound:enabled=>{
+          soundEnabled=enabled;
+          if(enabled&&this.sound.context?.resume)this.sound.context.resume();
+        },
+        speed:()=>{simSpeed=simSpeed===1?2:simSpeed===2?3:1;return simSpeed;},
+        matchSnapshot:()=>RT.snapshot(this.sim),
+        encounterSnapshot:()=>({
+          ally:RT.snapshot(this.sim.fighters.find(f=>f.side===0)),
+          enemy:RT.snapshot(this.sim.fighters.find(f=>f.side===1)),
+          fighters:RT.snapshot(this.sim.fighters),elapsed:this.sim.elapsed,
+          winner:this.sim.winner,finished:this.sim.finished,
+          source:'realtime-ai-exhibition'
+        }),
+        cupPreview:()=>B.cupPreview(savePreview),
+        importedSavePreview:()=>JSON.parse(JSON.stringify(savePreview)),
+        selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
+        trainingPreview:day=>B.train(day,trainingBonus,1)
       };
-      buttons.forEach(id => { document.getElementById(id).disabled = false; });
-      if (this.requestedMode === 'battle') this.beginBattle();
-      if (this.requestedMode === 'train') this.beginTrain();
+      for(const id of buttons)document.getElementById(id).disabled=false;
+      if(this.requestedMode==='battle')this.beginBattle();
+      if(this.requestedMode==='train')this.beginTrain();
     }
-    drawStage() {
-      const g = this.add.graphics();
-      g.fillStyle(0x314c6c, 1); g.fillRect(0, 0, 800, 450);
-      g.fillStyle(0x365e62, 1); g.fillEllipse(400, 335, 670, 200);
-      g.lineStyle(3, 0x759b9e, .65); g.strokeEllipse(400, 335, 650, 184);
-      g.lineStyle(1, 0x7fa9a7, .25);
-      for (let x = 110; x < 720; x += 60) g.lineBetween(x, 270, x, 400);
-      this.add.text(400, 32, 'PHASER · BATTLE / TRAINING LAB',
-        {fontFamily:'monospace',fontSize:'18px',color:'#eafaff'}).setOrigin(.5);
-      this.leftHp = this.add.text(35, 72, '', {fontFamily:'monospace',fontSize:'21px',color:'#a0edaf'});
-      this.rightHp = this.add.text(570, 72, '', {fontFamily:'monospace',fontSize:'21px',color:'#ffb9a9'});
-      this.statLabel = this.add.text(35, 104, '', {fontSize:'17px',color:'#ecdb99'});
-      this.add.text(400, 420, '독립 실험: 대전·훈련 수치는 원작 규칙이 아닙니다.',
-        {fontFamily:'sans-serif',fontSize:'14px',color:'#d2e7f2'}).setOrigin(.5);
-    }
-    fighter(x, y, color, leftFacing, label) {
-      const container = this.add.container(x, y);
-      const shadow = this.add.ellipse(0, 1, 106, 20, 0x0b202c, .48);
-      const useAsset = this.readyActions.size > 0;
-      const key = useAsset ? actionKey(this.readyActions.has(0) ? 0 : [...this.readyActions][0]) : 'demo-' + color + '-0';
-      const sprite = this.add.sprite(0, -54, key);
-      // Normalize the displayed object once; never rescale for action changes.
-      const w = useAsset ? manifest.actions[String(this.readyActions.has(0)?0:[...this.readyActions][0])].frameWidth : 60;
-      const h = useAsset ? manifest.actions[String(this.readyActions.has(0)?0:[...this.readyActions][0])].frameHeight : 66;
-      const scale = Math.min(130 / w, 116 / h, 3);
-      sprite.setScale(scale).setFlipX(leftFacing);
-      if (useAsset && color === 0x80c5c9) sprite.setTint(0x9dccff);
-      container.add([shadow, sprite]);
-      container.setDepth(4);
-      const nameText=this.add.text(x, y+20, label,
-        {color:'#fff',fontSize:'18px'}).setOrigin(.5);
-      return {container, sprite, nameText, color, hp:100, pose:'', originX:x, scale, demoFrame:0};
-    }
-    pose(f, state) {
-      if (f.pose === state) return;
-      f.pose = state;
-      const id = L.selectAction(state);
-      if (this.readyActions.has(id)) {
-        const cfg = manifest.actions[String(id)];
-        f.sprite.setTexture(actionKey(id), 0);
-        if (cfg.frames > 1) f.sprite.play('act-' + id);
-        else f.sprite.anims.stop();
-        f.sprite.setScale(f.scale);
-      } else if (this.readyActions.size) {
-        const fallback = this.readyActions.has(0) ? 0 : [...this.readyActions][0];
-        f.sprite.anims.stop();
-        f.sprite.setTexture(actionKey(fallback), 0).setScale(f.scale);
-      } else {
-        f.sprite.anims.stop();
-        f.sprite.setTexture('demo-' + f.color + '-0').setScale(f.scale);
-      }
-    }
-    updateHud() {
-      this.leftHp.setText('HP ' + this.encounter.ally.hp+'/'+this.encounter.ally.max +
-        ' · TP '+Math.floor(this.encounter.ally.tp));
-      this.rightHp.setText('HP ' + this.encounter.enemy.hp+'/'+this.encounter.enemy.max +
-        ' · TP '+Math.floor(this.encounter.enemy.tp));
-      this.statLabel.setText('훈련 보너스(임시): ' + this.demoStat);
-    }
-    resetActors() {
-      this.tweens.killTweensOf([this.left.container, this.right.container]);
-      this.left.container.x = this.left.originX;
-      this.right.container.x = this.right.originX;
-      this.pose(this.left,'idle'); this.pose(this.right,'idle');
-    }
-    thud() {
-      if (!soundEnabled) return;
-      const ctx = this.sound.context;
-      if (!ctx || !ctx.createOscillator || ctx.state !== 'running') return;
-      const osc = ctx.createOscillator(), gain = ctx.createGain(), now = ctx.currentTime;
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(115, now);
-      osc.frequency.exponentialRampToValueAtTime(45, now+.13);
-      gain.gain.setValueAtTime(.085, now);
-      gain.gain.exponentialRampToValueAtTime(.001, now+.15);
-      osc.connect(gain).connect(ctx.destination); osc.start(now); osc.stop(now+.16);
-    }
-    impact(x,y,dmg) {
-      this.thud();
-      this.cameras.main.shake(140,.009);
-      this.cameras.main.zoomTo(1.065,75);
-      this.time.delayedCall(160,() => this.cameras.main.zoomTo(1,130));
-      const flash = this.add.circle(x,y,20,0xffec9a,.93).setDepth(9);
-      this.tweens.add({targets:flash,scale:2.5,alpha:0,duration:210,onComplete:()=>flash.destroy()});
-      for (let i=0;i<9;i++) {
-        const angle = Math.PI*2*i/9, spark = this.add.circle(x,y,3,0xffe5a3).setDepth(9);
-        this.tweens.add({targets:spark,x:x+Math.cos(angle)*55,y:y+Math.sin(angle)*45,
-          alpha:0,duration:220,onComplete:()=>spark.destroy()});
-      }
-      const value = this.add.text(x,y-45,'-'+dmg,
-        {fontFamily:'monospace',fontSize:'24px',fontStyle:'bold',color:'#fff3bf'}).setDepth(10).setOrigin(.5);
-      this.tweens.add({targets:value,y:y-96,alpha:0,duration:550,onComplete:()=>value.destroy()});
-    }
-    battle() { this.scene.restart({autoMode:'battle',tactic:document.getElementById('tactic').value}); }
-    beginBattle() {
-      if (this.mode !== 'idle') return;
-      this.mode='battle'; this.turn=0;
-      say('자동 전투 시연 중 · 타격, 넉백, 이동 모션 관찰');
-      this.time.delayedCall(220,()=>this.attackCycle());
-    }
-    attackCycle() {
-      if (this.mode !== 'battle') return;
-      const decision = B.plan(this.encounter);
-      if (!decision) return;
-      const actor = decision.side === 'ally' ? this.left : this.right;
-      const target = decision.side === 'ally' ? this.right : this.left;
-      const sign = actor === this.left ? 1 : -1;
-      this.resetActors();
-      this.pose(actor,'moving');
-      this.tweens.add({targets:actor.container,x:actor.originX+sign*174,duration:440,ease:'Sine.easeOut',
-        onComplete:()=>{
-          if(this.mode!=='battle')return;
-          this.pose(actor,'attacking');
-          this.tweens.add({targets:actor.container,x:actor.container.x+sign*48,duration:115,
-            onComplete:()=>{
-              if(this.mode!=='battle')return;
-              const damage=decision.damage;
-              this.encounter=B.apply(this.encounter,decision);
-              target.hp=this.encounter[decision.other].hp;
-              this.pose(target,'hit');
-              this.impact(target.container.x-sign*36, target.container.y-78, damage);
-              this.updateHud();
-              const knockback=L.knockbackForDamage(damage);
-              // Explicit 75ms hitstop: pause tweens while camera/effects remain independent.
-              this.tweens.pauseAll();
-              setTimeout(()=>{
-                if(!this.sys.isActive()||this.mode!=='battle')return;
-                this.tweens.resumeAll();
-                this.tweens.add({targets:target.container,x:target.container.x+sign*knockback,
-                  duration:230,ease:'Cubic.easeOut',onComplete:()=>{
-                    if(this.encounter.winner){
-                      this.mode='finished';this.pose(actor,'victory');this.pose(target,'hit');
-                      say((actor===this.left?'테이머':'상대')+' 승리 · 30번 승리 모션 적용');
-                    }else{
-                      this.pose(target,'idle');
-                      this.turn+=1;
-                      this.time.delayedCall(350,()=>this.attackCycle());
-                    }
-                  }});
-              },75);
-            }});
-        }});
-    }
-    train() { this.scene.restart({autoMode:'train'}); }
-    beginTrain() {
-      if(this.mode!=='idle')return;
-      this.mode='training'; this.pose(this.left,'training');
-      say('32번 훈련 자세 → 짧은 공격 → 능력치 상승 (연출 가설 검증용)');
-      this.time.delayedCall(300,()=>{
-        this.pose(this.left,'attacking');
-        this.tweens.add({targets:this.left.container,x:this.left.originX+36,y:280,duration:140,yoyo:true,
-          onComplete:()=>{
-            const gain=B.train(1,this.demoStat,1);
-            this.demoStat=gain.next;
-            this.updateHud();this.pose(this.left,'idle');
-            this.mode='idle';
-            say('훈련 1회 완료 · 능력치 +'+gain.gained+' · '+gain.season+' 계절 보정 (기존 care-core, 수치 임시)');
-          }});
+    createMatch(){
+      const candidates=available(),selected=rosterChosen&&candidates.find(
+        mon=>mon.index===rosterChosen.index);
+      const size=this.requestedSize;
+      const allies=selected?
+        [selected,...candidates.filter(mon=>mon.index!==selected.index)].slice(0,size):
+        RT.defaultTeam(0).slice(0,size);
+      this.sim=RT.createMatch({
+        allies,
+        teamSize:size,
+        opponents:RT.defaultTeam(1).slice(0,allies.length),
+        tactic:this.requestedTactic,
+        seed:20261028
       });
     }
-    update(_t, delta) {
-      if(this.readyActions.size) return;
-      // Animation fallback also moves; not a stationary 'GIF' first frame.
-      this._gait = (this._gait||0)+delta;
-      if(this._gait < 170) return;
-      this._gait=0;
-      for(const f of [this.left,this.right]){
-        if(['moving','idle','training'].includes(f.pose)){
-          f.demoFrame=1-f.demoFrame;
-          f.sprite.setTexture('demo-'+f.color+'-'+f.demoFrame);
-        }
+    drawStage(){
+      const g=this.add.graphics();
+      g.fillStyle(0x294866,1);g.fillRect(0,0,800,450);
+      g.fillStyle(0x4e7773,1);g.fillEllipse(400,275,735,300);
+      g.lineStyle(2,0x9bc7bd,.45);g.strokeEllipse(400,275,730,290);
+      g.lineStyle(1,0xb2d5ce,.25);
+      for(let x=65;x<750;x+=66)g.lineBetween(x,138,x,385);
+      for(let y=155;y<390;y+=57)g.lineBetween(60,y,740,y);
+      const overlay=this.add.graphics().setDepth(18);
+      overlay.fillStyle(0x102339,.92);overlay.fillRoundedRect(12,10,776,90,9);
+      this.title=this.add.text(23,16,
+        '실시간 자동 전투 · 독립 AI (시연용)',{
+        color:'#f6eed0',fontSize:'18px',fontFamily:'sans-serif'
+      }).setDepth(19);
+      this.hud=this.add.text(23,44,'',{color:'#defff3',
+        fontFamily:'monospace',fontSize:'16px'}).setDepth(19);
+      this.metrics=this.add.text(23,70,'',{color:'#c4dceb',
+        fontFamily:'monospace',fontSize:'13px'}).setDepth(19);
+      this.foot=this.add.text(400,429,
+        '도트 그래픽은 임시 · 원본 전투 로직 완전 이식 전 · 승패/HP는 저장되지 않음',
+        {color:'#e0e6ed',fontSize:'13px'}).setOrigin(.5).setDepth(19);
+    }
+    addActor(f){
+      const useArt=this.loadedActions.size>0;
+      const atlas=useArt?(this.loadedActions.has(0)?0:[...this.loadedActions][0]):null;
+      const texture=useArt?key(atlas):'practice-'+f.side+'-'+f.slot+'-0';
+      const sprite=this.add.sprite(f.x,f.y-31,texture).setDepth(4);
+      const cfg=useArt?manifest.actions[String(atlas)]:null;
+      const scale=useArt?Math.min(64/cfg.frameWidth,69/cfg.frameHeight,2.4):.90;
+      sprite.setScale(scale);
+      if(useArt&&f.side===1)sprite.setTint(0xe8b8ad);
+      const label=this.add.text(f.x,f.y+4,f.name,{
+        color:f.side===0?'#b9ffe0':'#ffe0ce',fontSize:'12px',
+        fontFamily:'sans-serif',backgroundColor:'#142b3980',
+        padding:{x:3,y:1}
+      }).setOrigin(.5).setDepth(9);
+      this.visuals.set(f.id,{sprite,label,pose:null,scale,side:f.side,slot:f.slot,frame:0});
+    }
+    pose(f,v){
+      const type=f.hp<=0?'ko':f.act;
+      if(type===v.pose)return;
+      v.pose=type;
+      const id=type==='victory'?30:type==='ko'?37:type==='hurt'?5:
+        type==='attack'?7:type==='cast'?7:type==='evade'?3:
+        type==='guard'?5:type==='walk'?2:0;
+      if(this.loadedActions.has(id)){
+        const cfg=manifest.actions[String(id)];
+        v.sprite.setTexture(key(id),0).setScale(v.scale);
+        if(cfg.frames>1)v.sprite.play('realtime-'+id);
+        else v.sprite.anims.stop();
+      }else if(this.loadedActions.size){
+        v.sprite.anims.stop();
+        v.sprite.setTexture(key(this.loadedActions.has(0)?0:[...this.loadedActions][0]),0)
+          .setScale(v.scale);
+      }else{
+        v.sprite.anims.stop();
+        v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-0')
+          .setScale(v.scale);
       }
     }
+    refreshActors(time=0){
+      for(const f of this.sim.fighters){
+        const v=this.visuals.get(f.id);
+        if(!v)continue;
+        this.pose(f,v);
+        const bob=(f.act==='walk'||f.act==='evade')?
+          Math.sin(time*.012+f.slot)*1.7:Math.sin(time*.003+f.slot)*.4;
+        v.sprite.x=f.x;v.sprite.y=f.y-34+bob;
+        // Original GIFs were left-facing. Flip when travelling right.
+        v.sprite.setFlipX(f.dir>0);
+        v.sprite.setAlpha(f.hp<=0?.5:f.flash>0?.65:1);
+        if(!this.loadedActions.size&&f.hp>0&&
+           (f.act==='walk'||f.act==='evade')&&Math.floor(time/160)%2===1){
+          v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-1');
+        }else if(!this.loadedActions.size){
+          v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-0');
+        }
+        v.label.x=f.x;v.label.y=f.y+8;
+        v.label.setText(f.name);
+        v.label.setAlpha(f.hp<=0?.5:1);
+      }
+      this.graphics.clear();
+      this.projectileGraphics.clear();
+      for(const f of this.sim.fighters){
+        this.graphics.fillStyle(0x0b1d22,.32);
+        this.graphics.fillEllipse(f.x,f.y,41,9);
+        this.graphics.fillStyle(0x172231,.9);
+        this.graphics.fillRoundedRect(f.x-25,f.y+22,50,5,2);
+        this.graphics.fillStyle(f.side===0?0x75e9b4:0xffa48f,1);
+        this.graphics.fillRect(f.x-24,f.y+23,48*clamp(f.hp/f.max,0,1),3);
+        this.graphics.fillStyle(0x79baff,.9);
+        this.graphics.fillRect(f.x-24,f.y+30,48*clamp(f.tp/f.maxTp,0,1),2);
+        if(f.act==='guard'){
+          this.graphics.lineStyle(2,0xd7eaff,.9);
+          this.graphics.strokeEllipse(f.x,f.y-29,57,65);
+        }
+        if(f.act==='cast'){
+          this.graphics.lineStyle(2,0xffe393,.8);
+          this.graphics.strokeCircle(f.x,f.y-34,35+Math.sin(time*.02)*3);
+        }
+      }
+      for(const shot of this.sim.projectiles){
+        this.projectileGraphics.fillStyle(0xfff3b5,.4);
+        this.projectileGraphics.fillCircle(shot.x,shot.y,13);
+        this.projectileGraphics.fillStyle(0xffd768,1);
+        this.projectileGraphics.fillCircle(shot.x,shot.y,6);
+      }
+    }
+    updateHud(){
+      const alive0=RT.alive(this.sim,0).length,alive1=RT.alive(this.sim,1).length;
+      this.hud.setText('아군 '+alive0+'명   vs   상대 '+alive1+
+        '명   ·   '+this.sim.elapsed.toFixed(1)+'초   ·   속도 '+simSpeed+'×');
+      this.metrics.setText('실시간 AI: 이동 '+Math.round(this.sim.stats.movement)+'px'+
+        ' · 공격 적중 '+this.sim.stats.hits+' · 회피 '+this.sim.stats.dodges+
+        ' · 필살기 '+this.sim.stats.specials+
+        ' · 넉백 '+Math.round(this.sim.stats.knockback)+'px');
+    }
+    soundImpact(){
+      if(!soundEnabled)return;
+      const ctx=this.sound.context;
+      if(!ctx||!ctx.createOscillator||ctx.state!=='running')return;
+      const osc=ctx.createOscillator(),gain=ctx.createGain(),now=ctx.currentTime;
+      osc.type='triangle';
+      osc.frequency.setValueAtTime(125,now);
+      osc.frequency.exponentialRampToValueAtTime(48,now+.11);
+      gain.gain.setValueAtTime(.10,now);
+      gain.gain.exponentialRampToValueAtTime(.001,now+.16);
+      osc.connect(gain).connect(ctx.destination);osc.start(now);osc.stop(now+.17);
+    }
+    consumeEvent(e){
+      if(e.type==='hit'){
+        this.soundImpact();
+        this.cameras.main.shake(e.special?180:90,e.special?.010:.005);
+        const hit=this.add.circle(e.x,e.y-29,e.special?26:14,
+          e.special?0xf6ac77:0xffe5a2,.86).setDepth(13);
+        this.tweens.add({targets:hit,alpha:0,scale:2.7,duration:260,
+          onComplete:()=>hit.destroy()});
+        const dmg=this.add.text(e.x,e.y-54,String(e.damage),{
+          color:'#fff3bf',fontSize:e.special?'25px':'18px',
+          fontFamily:'monospace',fontStyle:'bold'
+        }).setOrigin(.5).setDepth(14);
+        this.tweens.add({targets:dmg,y:e.y-91,alpha:0,duration:650,
+          onComplete:()=>dmg.destroy()});
+        if(e.special)this.cameras.main.zoomTo(1.04,100);
+        if(e.special)this.time.delayedCall(165,()=>this.cameras.main.zoomTo(1,180));
+      }
+      if(e.type==='skill'){
+        const f=this.sim.fighters.find(a=>a.id===e.attackerId);
+        const notice=this.add.text(400,120,
+          (f?.name||'디지몬')+' · 필살기!',{
+          color:'#fff3ce',fontFamily:'sans-serif',fontSize:'26px',
+          backgroundColor:'#122b42bb',padding:{x:12,y:7}
+        }).setOrigin(.5).setDepth(30);
+        this.tweens.add({targets:notice,alpha:0,y:108,duration:940,
+          onComplete:()=>notice.destroy()});
+      }
+      if(e.type==='dodge'){
+        const t=this.add.text(e.x,e.y-70,'회피!',{
+          color:'#bcfff2',fontSize:'15px'
+        }).setDepth(15).setOrigin(.5);
+        this.tweens.add({targets:t,alpha:0,y:e.y-104,duration:500,
+          onComplete:()=>t.destroy()});
+      }
+      if(e.type==='finish'){
+        this.mode='finished';
+        const win=e.winner===0?'아군':'상대';
+        say(win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
+          '초 · 원본 세이브는 변경되지 않았어');
+      }
+    }
+    beginBattle(){
+      this.mode='battle';
+      say('시연 중 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
+        ' 실시간 자동 전투 · 각 디지몬이 독립적으로 추적·회피·기술 사용');
+    }
+    battle(){
+      this.scene.restart({mode:'battle',tactic:document.getElementById('tactic').value,
+        teamSize:Number(document.getElementById('squadSize').value)});
+    }
+    beginTrain(){
+      this.mode='train';
+      const left=this.sim.fighters.find(f=>f.side===0);
+      this.time.delayedCall(270,()=>{
+        left.act='attack';left.actTime=0;
+        this.time.delayedCall(370,()=>{
+          left.act='idle';left.actTime=0;
+          const result=B.train(1,trainingBonus,1);
+          trainingBonus=result.next;
+          this.mode='idle';
+          say('훈련 1회 완료 · 능력치 +'+result.gained+
+            ' (기존 care-core 계절 보정 시연 · 세이브 변경 없음)');
+        });
+      });
+    }
+    train(){
+      this.scene.restart({mode:'train',tactic:this.requestedTactic,
+        teamSize:this.requestedSize});
+    }
+    update(time,delta){
+      if(this.mode==='battle'){
+        this.accum+=Math.min(delta/1000,.1)*simSpeed;
+        let steps=0;
+        while(this.accum>=1/30&&steps<15&&!this.sim.finished){
+          RT.step(this.sim,1/30);
+          for(const e of this.sim.events)this.consumeEvent(e);
+          this.accum-=1/30;steps++;
+        }
+        if(steps>=15)this.accum=0;
+      }
+      this.refreshActors(time);
+      this.frameId++;
+      if(this.frameId%6===0)this.updateHud();
+    }
   }
-
-  async function start() {
-    buttons.forEach(id => document.getElementById(id).disabled = true);
-    try {
-      const res = await fetch('./local-assets/manifest.json',{cache:'no-store'});
-      if(res.ok) {
-        const candidate=await res.json();
-        if(L.validateManifest(candidate))manifest=candidate;
-        else say('스프라이트 manifest 형식 오류 · 임시 그래픽으로 실행합니다.');
+  async function boot(){
+    for(const id of buttons)document.getElementById(id).disabled=true;
+    try{
+      const resp=await fetch('./local-assets/manifest.json',{cache:'no-store'});
+      if(resp.ok){
+        const maybe=await resp.json();
+        if(L.validateManifest(maybe))manifest=maybe;
       }
-    } catch (_) { /* Atlas export is optional; placeholders always work. */ }
-    game = new Phaser.Game({
-      type: Phaser.AUTO, width:800, height:450, parent:'game',
+    }catch(_){/* Locally converted GIFs are optional. */}
+    new Phaser.Game({
+      type:Phaser.AUTO,width:800,height:450,parent:'game',
       scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},
-      render:{pixelArt:true,antialias:false}, backgroundColor:'#152b45',
-      audio:{disableWebAudio:false}, scene:[LabScene]
+      render:{pixelArt:true,antialias:false},backgroundColor:'#172d43',
+      scene:[RealTimeScene]
     });
-    document.getElementById('battle').addEventListener('click',()=>window.DigiPhaserLab?.battle());
-    document.getElementById('train').addEventListener('click',()=>window.DigiPhaserLab?.train());
-    document.getElementById('saveFile').addEventListener('change',async e=>{
-      const file=e.currentTarget.files?.[0];
-      if(!file)return;
-      if(file.size>3*1024*1024){say('세이브 파일이 너무 커. 최대 3MB만 읽을 수 있어.');return;}
-      try {
-        const json=JSON.parse(await file.text());
-        const fresh=B.inspectExport(json);
-        savePreview=fresh;
-        const options=B.eligibleRoster(fresh);
-        const selection=document.getElementById('rosterChoice');
-        selection.replaceChildren(new Option('기본 시연',''));
-        for(const mon of options) selection.add(new Option(
-          mon.name+' · HP '+mon.hp+'/'+mon.maxHp+' · 공격 '+mon.atk, String(mon.index)));
-        rosterChosen=null;
-        const ready=options.length;
-        say('세이브 읽기 전용 확인 · DAY '+fresh.day+' · 디지몬 '+fresh.team.length+
-          '마리 · 출전 가능 '+ready+'마리 · 대회 조건 버튼으로 확인 가능');
-      } catch (err) {
-        say('세이브 미리보기 실패: '+err.message+' · 기존 데이터는 변경되지 않았어.');
-      }
+    document.getElementById('battle').addEventListener('click',
+      ()=>window.DigiPhaserLab?.battle());
+    document.getElementById('train').addEventListener('click',
+      ()=>window.DigiPhaserLab?.train());
+    document.getElementById('reset').addEventListener('click',
+      ()=>window.DigiPhaserLab?.reset());
+    document.getElementById('speed').addEventListener('click',e=>{
+      const n=window.DigiPhaserLab?.speed()||simSpeed;
+      e.currentTarget.textContent='속도 '+n+'×';
     });
-    document.getElementById('rosterChoice').addEventListener('change',e=>{
-      const idx=e.currentTarget.value;
-      const options=B.eligibleRoster(savePreview);
-      const m=options.find(mon=>String(mon.index)===idx);
-      rosterChosen=m ? {...m} : null;
-      say(m ? m.name+' 선택 완료 · 기존 HP·TP·능력치를 연습 전투에 복사해 사용해. 세이브는 변하지 않아.'
-        : '기본 시연 디지몬을 사용할게.');
-    });
-    document.getElementById('cups').addEventListener('click',()=>{
-      const cups=window.DigiPhaserLab?.cupPreview() || [];
-      say('기존 대회 규칙 (불러온 팀 / 미입력 시 샘플 팀): '+cups.map(c=>c.name+(c.available?' 참가 가능':' '+c.missing.join(', '))).join(' / '));
-    });
-    document.getElementById('reset').addEventListener('click',()=>window.DigiPhaserLab?.reset());
     document.getElementById('sound').addEventListener('click',e=>{
       soundEnabled=!soundEnabled;
       e.currentTarget.setAttribute('aria-pressed',String(soundEnabled));
       e.currentTarget.textContent=soundEnabled?'타격음 끄기':'타격음 켜기';
       window.DigiPhaserLab?.sound(soundEnabled);
     });
+    document.getElementById('saveFile').addEventListener('change',async e=>{
+      const file=e.currentTarget.files?.[0];if(!file)return;
+      if(file.size>3*1024*1024){say('세이브 파일은 최대 3MB야.');return;}
+      try{
+        const preview=B.inspectExport(JSON.parse(await file.text()));
+        savePreview=preview;
+        const options=available();
+        const select=document.getElementById('rosterChoice');
+        select.replaceChildren(new Option('기본 시연',''));
+        options.forEach(m=>select.add(new Option(m.name+
+          ' · HP '+m.hp+'/'+m.maxHp+' · 공격 '+m.atk,String(m.index))));
+        rosterChosen=null;
+        say('세이브 읽기 전용 확인 · DAY '+preview.day+' · 디지몬 '+
+          preview.team.length+'마리 · 출전 가능 '+options.length+'마리');
+      }catch(err){
+        say('세이브 미리보기 실패: '+err.message+
+          ' · 기존 상태는 변경되지 않았어');
+      }
+    });
+    document.getElementById('rosterChoice').addEventListener('change',e=>{
+      const mon=available().find(f=>String(f.index)===e.currentTarget.value);
+      rosterChosen=mon?{...mon}:null;
+      say(mon?mon.name+' 선택 완료 · 연습전에는 원본 스탯을 복사해 사용해.':
+        '기본 시연 팀을 사용할게.');
+    });
+    document.getElementById('cups').addEventListener('click',()=>{
+      const cups=window.DigiPhaserLab?.cupPreview()||[];
+      say('기존 대회 규칙: '+cups.map(c=>c.name+
+        (c.available?' 참가 가능':' '+c.missing.join(', '))).join(' / '));
+    });
   }
-  start().catch(err=>say('게임 초기화 실패: '+err.message));
+  boot().catch(err=>say('전투 시연 초기화 실패: '+err.message));
 })();
