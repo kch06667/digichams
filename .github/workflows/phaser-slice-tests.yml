@@ -7,6 +7,7 @@ on:
       - 'tools/build-phaser-optin-page.cjs'
       - 'tests/phaser-main-entry.cjs'
       - 'tests/phaser-main-entry-browser.py'
+      - 'tests/phaser-owned-multi-browser.py'
       - 'src/dev-phaser-farm-launch.js'
       - 'src/dev-phaser-commit.js'
       - 'tests/phaser-owned-settlement.cjs'
@@ -127,6 +128,8 @@ jobs:
         run: python3 tests/phaser-duel-browser-smoke.py
       - name: Original playable game arena button opt-in and legacy fallback
         run: python3 tests/phaser-main-entry-browser.py
+      - name: Actual owned 2v2/3v3 Phaser readonly handoff (desktop/touch)
+        run: python3 tests/phaser-owned-multi-browser.py
       - name: Dev farm handoff and explicit settlement (desktop/touch; guarded backup)
         run: python3 tests/phaser-farm-handoff-browser.py
       - name: Desktop/touch isolated browser save denial and reload regression
