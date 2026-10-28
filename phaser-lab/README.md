@@ -126,3 +126,29 @@ Run `node tools/build-phaser-preview.cjs` after installing Phaser locally for
 an offline-capable safe bundle. `node --test tests/phaser-preview.cjs` checks
 the preview allowlist. Chromium smoke tests additionally verify offline
 navigations on CI.
+
+## Player roster preview in both Phaser scenes
+
+Use the original game's **Save export** to obtain a JSON file. In the battle
+lab, open it with the JSON picker and choose an eligible, alive, non-stored
+Digimon from **출전 디지몬**. The local Phaser simulation now copies that
+Digimon's name, HP, ATK/DEF/SPD and TP into the **temporary auto-sparring
+encounter**. The legacy TP/tactic functions continue to choose skills.
+**The damage constants (36/18) and turn timing are still just a demo.**
+The original save is never changed, and winning this exhibition gives no
+reward or permanent stat change.
+
+On `farm.html`, choose the same exported JSON to see the *active* Digimon
+laid out in small hexagonal cages with their name, HP and hunger displayed.
+The preview shows up to 30 farm Digimon (the existing game's storage Digimon
+are not considered active cages), and reports extra undisplayed creatures.
+Purchase, training, feeding and expansion controls are disabled in the
+read-only view; selecting hexes and panning/zooming still work. **초기화**
+returns to the separate simulation. This is a visual projection, **not**
+migration of the legacy game's actual cage layout or save format.
+
+The JSON file is parsed entirely in the user's browser. Only an allowlisted
+subset (name, vital stats, day, cups) is held in transient page memory.
+It is never uploaded to Pages or stored via localStorage, IndexedDB or
+service-worker cache. File size is limited to 3 MiB, and source data
+is validated before display.
