@@ -105,6 +105,7 @@
       this.drawStage();
       this.createMatch();
       this.mode='idle';
+      document.getElementById('battleReport').textContent='';
       this.accum=0;
       this.frameId=0;
       this.graphics=this.add.graphics().setDepth(7);
@@ -152,6 +153,8 @@
         }),
         cupPreview:()=>B.cupPreview(savePreview),
         importedSavePreview:()=>JSON.parse(JSON.stringify(savePreview)),
+        battleResultPreview:()=>this.lastBattleReport?
+          JSON.parse(JSON.stringify(this.lastBattleReport)):null,
         selectedRoster:()=>rosterChosen?{...rosterChosen}:null,
         trainingPreview:day=>B.train(day,trainingBonus,1),
         privatePackStatus:()=>{
@@ -184,6 +187,12 @@
         tactic:this.requestedTactic,
         seed:20261028
       });
+      this.lastBattleReport=null;
+      this.reportContext=selected?{
+        imported:JSON.parse(JSON.stringify(savePreview)),
+        teamIndices:allies.map(mon=>mon.index),
+        initialFighters:RT.snapshot(this.sim.fighters.filter(f=>f.side===0))
+      }:null;
     }
     drawStage(){
       const g=this.add.graphics();
@@ -397,6 +406,23 @@
           padding:{x:24,y:14}
         }).setOrigin(.5).setAlpha(0).setDepth(31);
         this.tweens.add({targets:banner,alpha:1,duration:360});
+        if(this.reportContext){
+          try{
+            const c=this.reportContext;
+            this.lastBattleReport=B.previewBattleResult(this.sim,c.imported,
+              c.teamIndices,c.initialFighters);
+            document.getElementById('battleReport').textContent=
+              '전투 결과 미리보기 (저장되지 않음): '+
+              this.lastBattleReport.changes.map(m=>
+                m.name+' [명단 '+(m.teamIndex+1)+'] HP '+m.hpBefore+'→'+m.hpAfter+
+                ', TP '+m.tpBefore+'→'+m.tpAfter).join(' / ')+
+              ' · 보상/승패 저장 미적용';
+          }catch(err){
+            this.lastBattleReport=null;
+            document.getElementById('battleReport').textContent=
+              '결과 미리보기 검증 실패: '+err.message+' · 세이브 변경 없음';
+          }
+        }
         say(win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
           '초 · 원본 세이브는 변경되지 않았어');
       }
