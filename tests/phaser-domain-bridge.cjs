@@ -72,7 +72,8 @@ test('real save export preview is read-only, strips untrusted data and uses real
   assert.equal(view.team[0].name,'가상 디지몬');
   assert.equal(view.team[0].tp,25);
   assert.equal(view.source,'read-only-save-preview');
-  assert.equal(view.team[0].hunger,undefined,'extra save fields are not retained');
+  assert.equal(view.team[0].hunger,33,'hunger is an explicitly allowed read-only preview field');
+  assert.equal(view.team[0].mood,undefined,'unlisted fields must not be retained');
   assert.equal(view.logs,undefined);
   assert.equal(JSON.stringify(save),before,'original save must remain intact');
   assert.equal(B.cupPreview(view).length,cups.CUPS.length);
