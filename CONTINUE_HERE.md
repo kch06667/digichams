@@ -1,3 +1,15 @@
+# 현재 재개 지점 — 2026-10-28 ROM 그래픽 분석
+
+- 브랜치 `analysis/rom-graphics-20261028`. 기존 main `aa6db16`에서 시작. `c974632`(디지몬 복원/GIF 대조), `d758de5`(배경/씬/공간 격자), 이후 BSA 애니메이션 체크포인트는 `git log -1` 확인.
+- 먼저 ROM_ANALYSIS_PROGRESS.md 최상단 → ROM_ANALYSIS/GRAPHICS_FORMATS.md → docs/audits/rom-graphics-v023.json 읽기. 전체 프로젝트/스프라이트 재조사 불필요.
+- 검증: 216종 8,640개 GIF 중 7,849 픽셀 시퀀스 일치, 791 차이. 그래픽 구조5,974파일, sprite-bank1,258개/24,602셀 렌더링, 배경194개, BSA19구조검증. NXR96/OPM75/ATR120/COL40/ESC30 별도 파싱. 합성테스트33/33.
+- 저장소 밖 `/workspace/scratch/digichams-private/graphics`에만 이미지와 상세 JSON. 다른 환경은 로컬 ROM 입력으로 도구를 재실행. 저장소에는 분석 도구·합성테스트·메타데이터 요약만 있음.
+- 게임 소스/세이브/기존 자산은 이번 분석에서 수정하지 않음. 다음 추천: 유니몬 #5_1은 ROM #5와 일치하므로 현재 #4 대체 연결을 작은 코드 수정으로 교체하고 두 HTML/내장 자산 일치 검사. 아직 자동 적용 안 됨.
+- 분석 후속: 팔레트 모션 791개 차이(런타임 팔레트 변경 미확인), badge61 4/8bpp 모순, 공유 배경4 참조, COL cm29 24칸 반례. 진화/능력치 숫자 테이블은 미복원.
+- 검사 `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`; 필요 패키지 Pillow. 게임 테스트는 소스 무변경으로 이번 단계에 반복하지 않았음.
+
+---
+
 # 2026-10-28 추가 체크포인트
 
 - 그래픽/배경/공간 데이터 분석 도구 작성. 최신 수치와 보류 항목은 ROM_ANALYSIS_PROGRESS.md 최상단 및 docs/audits/rom-graphics-v023.json.

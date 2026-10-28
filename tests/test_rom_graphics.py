@@ -178,6 +178,26 @@ class GraphicsTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             g.span(b'123', -1, 1)
 
+    def test_bsa_lookup_rows_are_frame_sequences_not_replacement_pairs(self):
+        raw = b'BSAR' + struct.pack('<IIIIIII', 2, 1, 3, 1, 13, 12, 12)
+        raw += struct.pack('<IIHHIHHHHHH', 2, 1, 1, 0, 2, 3, 4, 5, 6, 7, 8)
+        p = g.background_animation(raw)
+        self.assertEqual(p['duration_values'], (13, 12, 12))
+        self.assertEqual([f['entries'] for f in p['frames']], [(6, 3), (7, 4), (8, 5)])
+        self.assertEqual((p['map_offset'], p['lookup_offset']), (40, 48))
+        with self.assertRaises(ValueError):
+            g.background_animation(raw[:-2])
+
+    def test_bsa_lookup_reference_and_flip_flags(self):
+        raw = b'BSAR' + struct.pack('<IIIIII', 2, 1, 2, 1, 20, 20)
+        raw += struct.pack('<IIHIHH', 1, 1, 0, 1, 4, 0x804)
+        p = g.background_animation(raw)
+        self.assertEqual(p['frames'][1]['entries'], (0x804,))
+        broken = bytearray(raw)
+        struct.pack_into('<H', broken, 36, 1)
+        with self.assertRaises(ValueError):
+            g.background_animation(broken)
+
 
 if __name__ == '__main__':
     unittest.main()

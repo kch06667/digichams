@@ -20,3 +20,6 @@ UTF-16LE 디코딩 자체와 문자열 위치는 ROM_VERIFIED. 첫 216항목의 
 ATR: DATR + u32(version,width,height) + width*height u8; COL: u8(version,width,height)+u8 grid; ESC:u8 version,u16 width/height+u8 grid. 원문 값의 충돌/도주 의미는 INFERRED.
 NXR: NXSR, u32(version,record_count,resource_count), u32 길이+4바이트 정렬 ASCII 자산/레코드명, 36바이트 레코드(i32,i32,6*f32,u32). OPM: OPMD,v4,u8 길이+이름/padding,u32 count,16바이트(Hhhhff) 레코드. 필드명 후보/부호/오프셋 원문 보존. OPM low13bits 인덱스 범위와 highflags는 별개, flip 의미 미확정.
 COL distance_models는 추출 값으로 재계산한 가설/반례이며 원작 엔진 구현이라고 표시하지 않는다.
+
+## BSA 배경 애니메이션
+BSAR + u32(2,1,frame_count,1) + u32 duration_values[frame_count] + u32 width,height + u16 map_indices[width*height] + u32 lookup_rows + u16 lookup[lookup_rows][frame_count]. map_indices는 tile ID가 아니라 lookup 행 번호. lookup 값은 tile ID/플립 비트를 포함. 모든 19파일에서 크기/참조 범위 일치. 미리보기의60Hz/투명index0/레이어순서는 원작 실행 검증과 구분한다.

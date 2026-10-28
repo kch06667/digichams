@@ -1,3 +1,18 @@
+## 2026-10-28 최종 체크포인트 — BSA 추가 복원
+
+- BSA 배경 애니메이션 **19파일 모두 구조 및 타일 참조 범위 검증**. 17개는 2프레임, 2개는 3프레임. BSAR 헤더 → 시간값 → 격자의 lookup 행 번호 → 행별 프레임 타일 참조 표 구조.
+- `field/field_bm03_01_anim`의 용암 배경과 `training/field_cm09_01_anim`의 물/해안 그래픽을 프레임 PNG/APNG로 복원하고 시각 확인. 미리보기 시간은 60Hz 가정, 팔레트 index0 투명 가정; 실제 레이어 합성과 엔진 시간 단위는 미확정.
+- 전체 구조 파서 대상은 이제 **5,974파일**, 실패 0. 이것은 게임 규칙이나 전체 ROM 코드의 복원율을 뜻하지 않음. 앞 단계 sprite-bank 61개 / 배경 공유 참조 4개의 렌더링 예외는 계속 남아 있음.
+- 최종 합성 회귀 **33/33 통과**(database 6 + graphics 19 + scene 8). 게임 파일·세이브·기존 이미지 변경 없음.
+- 포맷 상세: `ROM_ANALYSIS/GRAPHICS_FORMATS.md`. 집계: `docs/audits/rom-graphics-v023.json`. 원본·추출 이미지·원문 데이터는 Git에 새로 추가하지 않음.
+- 다음은 유니몬의 검증된 기존 #5_1 연결 수정, 팔레트 변화 모션의 원작 실행 검증, badge61 색 심도/공유배경4 예외 또는 ARM9 참조 분석 중 한 단위를 선택.
+
+```sh
+python3 tools/rom_graphics.py --rom /path/game.nds --output-dir /outside/graphics --animated-background field/field_bm03_01_anim
+```
+
+이하 단계별 과거 기록이며 수치가 충돌하면 위 최종 체크포인트가 우선한다.
+
 ## 2026-10-28 추가 분석 완료 (이 항목이 아래 1차 수치보다 우선)
 
 - 전체 2D 그래픽 구조 **5,955파일 파싱, 0 구조 오류**. NANR의 0 tick 1건은 원문 그대로 보존하고 해당 시퀀스 APNG를 생성하지 않음 (`common/e003_giantmissile00`, 시퀀스 2/프레임 0). 의미는 미확정.

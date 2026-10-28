@@ -203,6 +203,39 @@ def tilemap(data, kind):
                 entries=entries)
 
 
+def background_animation(data):
+    if span(data, 0, 4) != b'BSAR':
+        raise ValueError('Unsupported BSA signature')
+    version, word1, count, word2 = unpack(data, 4, 'IIII')
+    if (version, word1, word2) != (2, 1, 1) or not 1 <= count <= 64:
+        raise ValueError('Unsupported BSA profile')
+    durations = unpack(data, 20, 'I' * count)
+    if not all(durations):
+        raise ValueError('Zero BSA timing semantics unsupported')
+    pos = 20 + 4 * count
+    w, h = unpack(data, pos, 'II')
+    pos += 8
+    if not (0 < w <= 512 and 0 < h <= 512):
+        raise ValueError('Invalid BSA dimensions')
+    map_offset = pos
+    indices = unpack(data, pos, 'H' * (w * h))
+    pos += w * h * 2
+    row_count, = unpack(data, pos, 'I')
+    pos += 4
+    table_offset = pos
+    if not 0 < row_count <= 65536 or pos + row_count * count * 2 != len(data):
+        raise ValueError('BSA lookup dimensions/payload mismatch')
+    lookup = unpack(data, pos, 'H' * (row_count * count))
+    if max(indices) >= row_count:
+        raise ValueError('BSA map reference outside lookup')
+    frames = [{'width_tiles': w, 'height_tiles': h, 'layout': 'rows',
+               'entries': tuple(lookup[index * count + frame] for index in indices)} for frame in range(count)]
+    return {'width_tiles': w, 'height_tiles': h, 'duration_values': durations,
+            'map_offset': map_offset, 'lookup_offset': table_offset, 'lookup_rows': row_count,
+            'map_indices': indices, 'lookup': lookup, 'frames': frames,
+            'confidence': {'layout': 'ROM_VERIFIED', 'runtime_timing_and_layering': 'INFERRED'}}
+
+
 def indexed_pixel(payload, index, bpp):
     byte = span(payload, index if bpp == 8 else index // 2, 1)[0]
     return byte if bpp == 8 else (byte >> (4 * (index % 2))) & 15
@@ -354,7 +387,8 @@ def export_sprite(rom, stem, output):
 def audit(rom, output, compare_web=False):
     parsers = {'.nclr': palette, '.ncbr': characters, '.ncgr': characters,
                '.ncer': cells, '.nanr': animations,
-               '.nscr': lambda b: tilemap(b, 'nscr'), '.nbs': lambda b: tilemap(b, 'nbs')}
+               '.nscr': lambda b: tilemap(b, 'nscr'), '.nbs': lambda b: tilemap(b, 'nbs'),
+               '.bsa': background_animation}
     counts, failures, rows = Counter(), [], []
     for path in sorted(rom.paths):
         ext = Path(path).suffix
@@ -362,7 +396,6 @@ def audit(rom, output, compare_web=False):
             continue
         try:
             parsed = parsers[ext](rom.read(path))
-            counts[ext] += 1
             row = {'source': rom.evidence(path)}
             if ext == '.nanr':
                 row.update(sequences=len(parsed['sequences']), frames=parsed['declared_frame_count'],
@@ -373,7 +406,16 @@ def audit(rom, output, compare_web=False):
                            vram_transfer=any(c['transfer'] is not None for c in parsed['cells']))
             elif ext in ('.nbs', '.nscr'):
                 row.update(width_tiles=parsed['width_tiles'], height_tiles=parsed['height_tiles'])
+            elif ext == '.bsa':
+                ch = characters(rom.read(path[:-4] + '.ncgr'))
+                tile_count = len(ch['payload']) // (ch['bpp'] * 8)
+                if max(entry & 1023 for entry in parsed['lookup']) >= tile_count:
+                    raise ValueError('BSA lookup references missing character tile')
+                row.update(width_tiles=parsed['width_tiles'], height_tiles=parsed['height_tiles'],
+                           frames=len(parsed['frames']), lookup_rows=parsed['lookup_rows'],
+                           duration_values=parsed['duration_values'], tile_references_in_range=True)
             rows.append(row)
+            counts[ext] += 1
         except (ValueError, struct.error) as error:
             failures.append({'path': path, 'error': str(error)})
     result = {'rom_sha256': rom.nds.sha256, 'parsed': dict(counts), 'failures': failures,
@@ -509,6 +551,7 @@ def main():
     parser.add_argument('--compare-web', action='store_true')
     parser.add_argument('--audit-backgrounds', action='store_true')
     parser.add_argument('--audit-sprites', action='store_true')
+    parser.add_argument('--animated-background', action='append', default=[])
     args = parser.parse_args()
     output = destination(args.output_dir)
     rom = GraphicsROM(args.rom)
@@ -520,6 +563,21 @@ def main():
         audit_sprite_banks(rom, output)
     for stem in args.sprite:
         print(json.dumps(export_sprite(rom, stem, output)))
+    for stem in args.animated_background:
+        bsa = background_animation(rom.read(stem + '.bsa'))
+        ch, pal = characters(rom.read(stem + '.ncgr')), palette(rom.read(stem + '.nclr'))
+        rendered = [render_background(ch, pal, frame, transparent=True) for frame in bsa['frames']]
+        target = output / stem.replace('/', '__')
+        target.mkdir(parents=True, exist_ok=True)
+        for i, im in enumerate(rendered):
+            im.save(target / f'background-frame-{i:02}.png')
+        rendered[0].save(target / 'background-animation.png', save_all=True, append_images=rendered[1:],
+                         duration=[v * 1000 / 60 for v in bsa['duration_values']], loop=0, disposal=0, blend=0)
+        metadata = {k: v for k, v in bsa.items() if k not in ('frames', 'lookup', 'map_indices')}
+        metadata.update(rom_sha256=rom.nds.sha256, sources=[rom.evidence(stem + ext) for ext in ('.bsa', '.ncgr', '.nclr')],
+                        note='Preview assumes 60Hz and palette index 0 transparency. Runtime layering/speed not verified.')
+        (target / 'background-metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
+        print(json.dumps({'stem': stem, 'frames': len(rendered), 'size': rendered[0].size, 'output': str(target)}))
     for stem in args.background:
         kind = 'nscr' if stem + '.nscr' in rom.paths else 'nbs'
         if stem.endswith(('.nscr', '.nbs')):

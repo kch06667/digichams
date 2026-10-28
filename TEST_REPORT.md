@@ -77,3 +77,7 @@
 - `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`: 31/31.
 - 실제 ROM 전체 구조 검사 5,955개 성공, 0 tick 원문과 미리보기 제외 검증. 1,258 bank/24,602셀 렌더링, badge 61개 색 심도 불일치 보류. 배경194성공/4공유참조보류.
 - NXR96/OPM75/ATR120/COL40/ESC30 전부 파싱 성공. COL 수학적 모델39파일일치/1예외 기록. 게임 테스트는 게임 파일 무변경으로 반복하지 않음.
+
+## 2026-10-28 최종 BSA 검증
+- 합성 `python3 -m unittest discover -s tests -p 'test_rom*.py' -v`: 33/33 통과. 새 BSA 2/3프레임 lookup, 플립 비트, 잘린 파일/범위 오류 검사 포함.
+- BSA 실제19파일 파싱/NCGR 참조 범위 통과, 전체 그래픽 구조5,974개 실패0. 대표2종 렌더링/시각 확인. 원작 실행 중 합성/재생속도 미검증.
