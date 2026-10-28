@@ -44,6 +44,33 @@
     return clamp(Math.floor(current + amount), 0, 9999);
   }
 
+  // The original arena picks exact pose IDs. Some user-imported species
+  // have only a subset of the animations, so choose the closest available
+  // action instead of showing an idle Digimon while it attacks or faints.
+  // This is rendering-only: it cannot change damage, AI, timing or saves.
+  function motionAction(f, actions) {
+    if (!f || !(actions instanceof Set) || actions.size === 0) return null;
+    const type = f.hp <= 0 ? 'ko' : f.act;
+    const desired = type === 'ko' ? 37 : type === 'victory' ? 30 :
+      Number.isInteger(f.pose) && f.pose >= 0 && f.pose <= 39
+        ? f.pose : null;
+    const alternatives = {
+      ko:[37,5,0], victory:[30,28,0],
+      hurt:[5,31,0], guard:[31,5,0],
+      attack:[7,8,9,10,0], special:[33,10,7,0],
+      walk:[2,3,0], run:[3,2,0], evade:[3,2,0],
+      idle:[0,2,3]
+    };
+    const candidates = [
+      ...(desired === null ? [] : [desired]),
+      ...(alternatives[type] || [0])
+    ];
+    for (const id of candidates) if (actions.has(id)) return id;
+    // A sparse manifest may still have one other valid motion: display
+    // that rather than replacing the species with procedural graphics.
+    return [...actions].sort((a,b)=>a-b)[0];
+  }
+
   function playableAction(manifest, action) {
     if (!validateManifest(manifest)) return null;
     const entry = manifest.actions[String(action)];
@@ -51,5 +78,5 @@
   }
 
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
-    knockbackForDamage, gainTrainingStat, playableAction });
+    knockbackForDamage, gainTrainingStat, playableAction, motionAction });
 });
