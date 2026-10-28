@@ -107,11 +107,29 @@
         if(!match||!Number.isSafeInteger(match.size)||
            healthy[0]!==lead||healthy.length<match.size)
           throw Error('대회 출전 인원이 부족해.');
+        // In the older checked-in v0.23 cup engine, only the first foe
+        // is defined; the ORIGINAL arena fills remaining slots using
+        // teamMembers(opponent, side=1, size). Reproduce that exact order.
+        const names=eval('allNames');
+        let foes=match.opponentTeam;
+        if(!Array.isArray(foes)||foes.length!==match.size){
+          const found=names.indexOf(match.opponent);
+          if(found<0)throw Error('원래 대회 상대를 찾을 수 없어.');
+          foes=[match.opponent];
+          for(let n=1;foes.length<match.size&&n<names.length;n++){
+            const name=names[(found+n+2)%names.length];
+            if(!foes.includes(name))foes.push(name);
+          }
+        }
+        if(foes.length!==match.size)
+          throw Error('기존 대회 상대 팀 구성이 부족해.');
+        const preparedMatch={...match,opponentTeam:foes.slice(),
+          trainer:match.trainer||'상대 테이머'};
         const ok=window.DCDevPhaserLaunch.launch({
           teamSize:match.size,leadIndex,
           tactic:live.battleTactic||document.getElementById('lbTactic')?.value||
             'balanced',
-          tournament:match
+          tournament:preparedMatch
         });
         cupNote.textContent=ok?
           '🏆 '+match.name+' · '+match.trainer+' 상대 · Phaser 전투 탭 실행 '+
