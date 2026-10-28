@@ -14,6 +14,9 @@ const modules=[
  'src/battle-owned-optin-ui.js'
 ];
 const source=modules.map(p=>fs.readFileSync(path.join(root,p),'utf8')).join('\n');
+const qa=process.argv.includes('--qa')
+ ? fs.readFileSync(path.join(root,'tests/fixtures/battle-owned-optin-qa.js'),'utf8')
+ : '';
 const marker='function settleMatch(won,aborted=false){if(settled)return;';
 const replacement=[
  'function settleMatch(won,aborted=false){if(settled)return;',
@@ -29,7 +32,7 @@ for(const name of names){
    throw Error(name+': original match settlement entry moved or duplicated');
  if(original.includes('OPTIONAL_BATTLE_SAVE_V1'))
    throw Error(name+': modified output used as source');
- const patched=original.replace(marker,source+'\n'+replacement);
+ const patched=original.replace(marker,source+'\n'+qa+'\n'+replacement);
  if(patched===original||!patched.includes('DCBattleOwnedOptin.commitFinished('))
    throw Error(name+': missing optional integration');
  fs.writeFileSync(path.join(target,name),patched);

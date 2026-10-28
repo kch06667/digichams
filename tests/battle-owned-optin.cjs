@@ -91,6 +91,36 @@ test('missing checkpoint, denied backup and denied save all prevent unsafe adopt
  assert.equal(saveDenied.saved,raw);
  assert.equal(JSON.stringify(state),raw);
 });
+test('actual defeated fighter KO-synced to zero HP settles exactly once',()=>{
+ const {state,args}=sample(),before=state.team[0];
+ // The original live arena continuously syncs HP/TP and can save HP=0
+ // before settleMatch runs. This is still an active pending owned battle.
+ before.hp=0;
+ args.fighters[0].hp=0;
+ args.won=false;
+ const raw=JSON.stringify(state),disk=storage(raw);
+ const finished=Optin.commitFinished(state,args,disk);
+ assert.equal(finished.state.pendingBattle,undefined);
+ assert.equal(finished.state.team[0].hp,0);
+ assert.equal(finished.state.losses,1);
+ assert.equal(finished.state.wins,0);
+ assert.equal(finished.state.team[0].evo.battles,1);
+ assert.equal(disk.count,1);
+ assert.equal(disk.saved,JSON.stringify(finished.state));
+ assert.equal(JSON.stringify(state),raw);
+ assert.throws(()=>Optin.commitFinished(state,args,disk),/synchronized/);
+});
+test('zero-HP saved participant cannot be revived by a mismatching final fighter',()=>{
+ const {state,args}=sample();
+ state.team[0].hp=0;
+ args.fighters[0].hp=10;
+ args.won=false;
+ const raw=JSON.stringify(state),disk=storage(raw);
+ assert.throws(()=>Optin.commitFinished(state,args,disk),/vitals differ/);
+ assert.equal(disk.saved,raw);
+ assert.equal(disk.count,0);
+ assert.equal(JSON.stringify(state),raw);
+});
 test('opt-in page generator leaves both original HTML files unchanged',()=>{
  const root=path.join(__dirname,'..');
  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'digicham-optin-'));
@@ -102,11 +132,28 @@ test('opt-in page generator leaves both original HTML files unchanged',()=>{
      const name=inputs[i];
      const html=fs.readFileSync(path.join(tmp,name),'utf8');
      assert.match(html,/OPTIONAL_BATTLE_SAVE_V1/);
+     assert.doesNotMatch(html,/__dcOwnedBattleQa/,'normal player build must never ship QA driver');
      assert.match(html,/dcOwnedSaveEnabled=false/);
      assert.match(html,/dcTryOwnedCommit\(!!won\);return;/);
      assert.match(html,/function settleMatch\(won,aborted=false\)/);
      assert.ok(Buffer.byteLength(html,'utf8')>original[i]);
      assert.equal(fs.statSync(path.join(root,name)).size,original[i]);
    }
+ }finally{fs.rmSync(tmp,{recursive:true,force:true});}
+});
+
+test('accelerated combat clock exists only when explicitly building with --qa',()=>{
+ const root=path.join(__dirname,'..');
+ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'digicham-ai-qa-'));
+ try{
+   const output=path.join(tmp,'qa');
+   cp.execFileSync(process.execPath,[
+     path.join(root,'tools/build-owned-battle-optin.cjs'),output,'--qa'
+   ],{timeout:60000});
+   const html=fs.readFileSync(path.join(output,'index.html'),'utf8');
+   assert.match(html,/window\.__dcOwnedBattleQa=/);
+   assert.match(html,/update\(\.048\)/);
+   assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8'),
+     /window\.__dcOwnedBattleQa=/);
  }finally{fs.rmSync(tmp,{recursive:true,force:true});}
 });
