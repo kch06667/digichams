@@ -37,6 +37,41 @@
   };
   const format=n=>Math.max(0,Math.round(n));
   const available=()=>B.eligibleRoster(savePreview);
+  let farmHandoffRequested=false;
+  // A single-use same-origin message channel. No URL-based roster or
+  // localStorage transfer; the independent Phaser scene remains read-only.
+  function prepareFarmHandoff(){
+    const token=new URLSearchParams(location.search).get('farmHandoff');
+    if(farmHandoffRequested || !/^[a-f0-9]{32}$/.test(token||'') ||
+        !window.opener || location.origin==='null')return;
+    farmHandoffRequested=true;
+    const parent=window.opener;
+    const handler=event=>{
+      if(event.origin!==location.origin || event.source!==parent ||
+          event.data?.type!=='dc-phaser-roster-v1' ||
+          event.data.token!==token)return;
+      window.removeEventListener('message',handler);
+      try {
+        const preview=B.inspectExport(event.data.payload);
+        const roster=B.eligibleRoster(preview);
+        if(!roster.length)throw Error('전투 가능한 디지몬이 없어.');
+        savePreview=preview;
+        rosterChosen={...roster[0]};
+        const select=document.getElementById('rosterChoice');
+        select.replaceChildren(new Option('기본 시연',''));
+        roster.forEach(m=>select.add(new Option(
+          m.name+' · HP '+m.hp+'/'+m.maxHp+' · 공격 '+m.atk,String(m.index))));
+        select.value=String(rosterChosen.index);
+        document.getElementById('squadSize').value='1';
+        say('사육장 명단 연결 완료 · '+rosterChosen.name+
+          ' 선택 · 1대1 자동 전투 시작 버튼을 눌러줘 · 저장 없음');
+      } catch(err) {
+        say('사육장 연습전 명단 검증 실패: '+err.message+' · 저장 없음');
+      }
+    };
+    window.addEventListener('message',handler);
+    parent.postMessage({type:'dc-phaser-ready-v1',token},location.origin);
+  }
 
   function mockTextures(scene){
     const colors=[0xffc666,0x92dbfc,0xeaa6ed,0x8bd0a1,0xe8aa92,0xb5bded];
@@ -219,6 +254,7 @@
         })
       };
       for(const id of buttons)document.getElementById(id).disabled=false;
+      prepareFarmHandoff();
       if(this.requestedMode==='battle')this.beginBattle();
       if(this.requestedMode==='train')this.beginTrain();
     }
