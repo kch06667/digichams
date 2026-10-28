@@ -366,3 +366,40 @@ python3 -m http.server 8000 --bind 127.0.0.1
   연결하지 않았다. 실제 사용 전 JSON 백업을 권장한다.
 - 검증: `node --test tests/phaser-owned-settlement.cjs` 및
   `python3 tests/phaser-farm-handoff-browser.py` (Chromium PC/터치).
+
+
+## 2026-10-29 — 원래 본게임 전투 시작 버튼에서 엔진 선택 (별도 시험판)
+
+기존 게임 전체를 포함한 루트 `index.html`을 수정하거나 배포판을 교체하지 않고,
+**정식 게임 화면/사육장/전투 모달**에서 엔진을 선택하는 시험 페이지를 생성한다.
+
+```powershell
+node tools/build-phaser-optin-page.cjs
+py tools/export-phaser-duel.py
+py -m http.server 8000
+```
+
+`http://127.0.0.1:8000/index.phaser.html?phaserBattle=1` 접속.
+기존 본게임에서 **내 디지몬 출전**(또는 라이브 전투 열기) → 전투 방식 **내 디지몬 출전** →
+팀 규모 **1대1** → **전투 화면: 기존 전투 (기본) / Phaser 전투 (시험)** 선택 →
+**⚔ 자동 전투 시작**을 누른다. Phaser 선택 시 실제 기존 전투 계산 코어가
+새 탭에 열리고 원래 전투 모달은 닫힌다. 기존 전투가 선택되면 이전과 정확히
+동일한 원래 전투 `onclick`이 실행된다.
+
+- 최초 선택은 항상 **기존 전투**. URL `phaserBattle=1` 없는 기존
+  `index.html` 및 `standalone.html`에는 선택 UI/로직을 추가하지 않는다.
+- Phaser는 현재 **내 디지몬 출전 1대1**만 가로챈다. 자유 시연, 2대2/3대3은
+  기존 전투 옵션을 선택해야 하며, 대회 `launchTournament`는 건드리지 않는다.
+- 실제 전투 완료 후 결과는 자동 저장하지 않는다. 원래 게임 탭에서
+  `전투 결과 저장 (개발용 · 백업 필수)`를 누른 경우에만 기존 정산 코어를 재사용한다.
+  HP·TP·경험치·승패·진화 등 정산, 저장 상태 및 백업 검증은 PR #42의 실험용 제한을 유지한다.
+- 원래 게임 파일 두 개는 그대로 보존한다. 생성되는 `index.phaser.html`은
+  Git 추적에서 제외되고 개인 사육 데이터나 ROM 그래픽을 포함해 업로드하지 않는다.
+  세이브 JSON은 별도로 백업 후 시험하길 권장한다.
+- 검증: `node --test tests/phaser-main-entry.cjs`;
+  `python3 tests/phaser-main-entry-browser.py`로 원래 전투 기본 경로와
+  Phaser 전환→전체 1대1→사용자 승인→저장/재시작을 PC와 터치에서 시험한다.
+
+**미구현:** 정식 배포판 기본 전투 교체, 2대2/3대3 Phaser 저장,
+대회전/상대 팀 정확한 연동, 원작 216종 애니메이션 완전성, 다른 탭과
+장시간 동시 조작 시나리오의 실기 테스트.
