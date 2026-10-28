@@ -116,6 +116,15 @@ def check_page(browser, mobile, base_url):
     finish=page.evaluate("DigiPhaserLab.matchSnapshot()")
     assert finish["finished"]
     assert finish["stats"]["hits"]>0
+    # Inspect phase cues collected from the real ORIGINAL AI during the
+    # accelerated simulation, not synthetic hand-authored skill events.
+    cues=page.evaluate("DigiPhaserLab.motionEvidence()")
+    assert cues["charge"] and cues["release"], cues
+    assert cues["specialHits"]>0 and cues["knockbackFrames"]>0, cues
+    assert page.evaluate("""() => DigiPhaserLabLogic.specialPhase(
+      {hp:50,act:'special',pose:33})""")=="charge"
+    assert page.evaluate("""() => DigiPhaserLabLogic.specialPhase(
+      {hp:50,act:'special',pose:10})""")=="release"
     # Verify sparse private sprite packs use relevant fallback motions, not
     # an idle/attack pose during KO. Also inspect actual rendered actor angles
     # after natural original-AI combat rather than mocking a Phaser sprite.
