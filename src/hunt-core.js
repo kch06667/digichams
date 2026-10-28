@@ -44,6 +44,32 @@
   if(e.hp===0)e.mode='stunned';
   return {ok:true,damage,stunned:e.mode==='stunned',hp:e.hp};
  }
+ // A temporary hunting session can be resumed from a JSON save.
+ // Validate instead of trusting imported JSON: only a live/tied/stunned hunt
+ // may be resumed. Captured/escaped sessions cannot grant a second Digimon.
+ function restoreSession(raw) {
+  if (!raw || raw.version!==1 || !raw.encounter || typeof raw.encounter!=='object')return null;
+  const e=raw.encounter;
+  if (typeof e.name!=='string'||!e.name||e.name.length>90||
+      typeof e.stage!=='string'||e.stage.length>40||
+      !['wild','tied','stunned'].includes(e.mode))return null;
+  const numeric=['x','y','vx','vy','maxHp','hp','time','bait','pulls','diff'];
+  if(numeric.some(k=>!Number.isFinite(e[k])))return null;
+  if(e.x<0||e.x>1||e.y<0||e.y>1||e.maxHp<=0||e.maxHp>1e5||
+     e.hp<0||e.hp>e.maxHp||e.time<0||e.time>300||
+     e.bait<0||e.bait>60||e.pulls<0||!Number.isInteger(e.pulls)||e.pulls>1000||
+     Math.abs(e.vx)>.3||Math.abs(e.vy)>.3||Math.abs(e.diff)>1e5||
+     typeof e.ropeSpent!=='boolean'||
+     (e.mode==='wild'&&e.ropeSpent)||
+     (e.mode!=='wild'&&!e.ropeSpent)||
+     (e.mode==='stunned'&&e.hp!==0)||
+     (e.mode!=='stunned'&&e.hp<=0)||
+     (e.mode==='wild'&&e.time<=0))return null;
+  const copy={name:e.name,stage:e.stage,diff:e.diff,mode:e.mode,
+   x:e.x,y:e.y,vx:e.vx,vy:e.vy,maxHp:e.maxHp,hp:e.hp,
+   time:e.time,ropeSpent:e.ropeSpent,pulls:e.pulls,bait:e.bait};
+  return {version:1,encounter:copy,arm:raw.arm===true&&e.mode==='wild'};
+ }
  function capture(e){if(!e||e.mode!=='stunned')return false;e.mode='captured';return true;}
- return Object.freeze({B,clamp,distance,inside,lasso,encounter,tick,bind,pull,capture});
+ return Object.freeze({B,clamp,distance,inside,lasso,encounter,tick,bind,pull,capture,restoreSession});
 });
