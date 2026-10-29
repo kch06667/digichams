@@ -7,6 +7,8 @@ on:
       - 'tests/test_play_local.py'
       - 'tests/pc-offline-phaser-soak-browser.py'
       - 'src/phaser-arena-entry-choice.js'
+      - 'src/pc-playability-guide.js'
+      - 'tests/pc-guided-ux-browser.py'
       - 'tools/phaser-production-entry.cjs'
       - 'tools/sync-phaser-production.py'
       - 'tests/phaser-production-default-browser.py'
@@ -94,6 +96,7 @@ jobs:
       - run: node --check phaser-lab/logic.js
       - run: node --check src/dev-phaser-farm-launch.js
       - run: node --check src/phaser-arena-entry-choice.js
+      - run: node --check src/pc-playability-guide.js
       - run: python3 tools/sync-phaser-production.py --check
       - name: Inspect official pinned Phaser distribution digest
         run: |
@@ -166,6 +169,8 @@ jobs:
         run: python3 tests/phaser-main-entry-browser.py
       - name: Production PC and mobile original game Phaser default / auto commit / legacy fallback
         run: python3 tests/phaser-production-default-browser.py
+      - name: PC player usability guide, original farm/hunt/championship tabs and save protection
+        run: python3 tests/pc-guided-ux-browser.py
       - name: PC real-game offline local engine, 3 battle cycles and 2-hour simulated farm soak
         run: python3 tests/pc-offline-phaser-soak-browser.py
       - name: Explicit beta-first Phaser and popup-blocked original fallback (desktop/touch)
