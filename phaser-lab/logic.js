@@ -63,6 +63,37 @@
     return clamp(55 + Math.max(0, Number(damage) || 0) * 1.8, 55, 140);
   }
 
+  // Read-only visual burst for an ACTUAL original-engine hit event.
+  // Direction uses the victim's measured two-axis knockback impulse; the
+  // attacker/target vector is only a fallback when impulse is zero.
+  // Do NOT infer a ROM effect resource ID from a Digimon name or technique.
+  function hitCue(event, victim, attacker) {
+    if (!event || event.type !== 'hit' || !Number.isFinite(event.x) ||
+        !Number.isFinite(event.y) || !Number.isFinite(event.damage) ||
+        event.damage <= 0) return null;
+    const special=event.special===true;
+    let dx=Number.isFinite(victim?.knockVX)?victim.knockVX:0;
+    let dy=Number.isFinite(victim?.knockVY)?victim.knockVY:0;
+    if(Math.hypot(dx,dy)<1 && victim && attacker &&
+        Number.isFinite(victim.x) && Number.isFinite(victim.y) &&
+        Number.isFinite(attacker.x) && Number.isFinite(attacker.y)){
+      dx=victim.x-attacker.x;dy=victim.y-attacker.y;
+    }
+    const magnitude=Math.hypot(dx,dy);
+    if(magnitude<.001){dx=1;dy=0;}
+    else{dx/=magnitude;dy/=magnitude;}
+    const color= special && typeof event.color==='string' &&
+      /^#[0-9a-f]{6}$/i.test(event.color)?
+      Number.parseInt(event.color.slice(1),16):
+      special?0xb4e4ff:0xffe5a2;
+    return Object.freeze({
+      x:event.x,y:event.y-29,dx,dy,special,color,
+      radius:clamp(12+event.damage*.55,13,special?36:25),
+      reach:clamp(15+event.damage*.95,16,special?53:36),
+      damage:event.damage,targetId:event.targetId??null
+    });
+  }
+
   function gainTrainingStat(current, amount) {
     if (!Number.isFinite(current) || !Number.isFinite(amount)) throw Error('Invalid training stat');
     return clamp(Math.floor(current + amount), 0, 9999);
@@ -144,5 +175,5 @@
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
     knockbackForDamage, gainTrainingStat, playableAction, motionAction,
     specialPhase, knockbackTilt, gifFrameTiming, validateLocalCatalog,
-    projectileShape });
+    projectileShape, hitCue });
 });
