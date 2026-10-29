@@ -641,7 +641,8 @@
     max-height:calc(100dvh - 100px);
   }
   body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
-    height:clamp(310px,calc(100dvh - 190px),820px);
+    /* Leave 22px for bottom shell spacing and the legacy footer. */
+    height:clamp(310px,calc(100dvh - 212px),820px);
   }
 
   /* Combat overlay still fills the window and remains keyboard-usable,
