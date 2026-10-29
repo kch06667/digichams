@@ -74,6 +74,7 @@
     if(!document.body.classList.contains('mode-nds'))return;
     document.getElementById('wideMode')?.click();
     refresh();
+    requestAnimationFrame(refresh);
   });
 
   function gameState(){
@@ -136,6 +137,15 @@
     return bad.length;
   }
   function refresh(){
+    // The source two-screen ↔ expanded-mode switch can reparent the
+    // original navigation without moving this optional read-only bar.
+    // Follow its currently visible tab row, otherwise the bar could
+    // remain inside a hidden old layout after the player expands.
+    const liveNav=[...document.querySelectorAll('nav.tabs')].find(
+      n=>n.getBoundingClientRect().width>0);
+    if(liveNav && (host.previousElementSibling!==liveNav ||
+                   host.parentElement!==liveNav.parentElement))
+      liveNav.insertAdjacentElement('afterend',host);
     if(!host.isConnected)return null;
     const tab=activeTab(),state=gameState();
     // The original DS two-screen mode deliberately keeps a 560px shell.
