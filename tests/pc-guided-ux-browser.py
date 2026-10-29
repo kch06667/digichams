@@ -117,6 +117,14 @@ def check_desktop(browser,url,entry):
         page.wait_for_function(
             "Boolean(document.querySelector('#dc-pc-visual-polish')?.sheet)",
             timeout=10000)
+        # The source game intentionally starts in a 560px NDS-style
+        # two-screen shell; its farm window is only 330px tall. Do NOT
+        # silently replace that player's display preference. Use the
+        # real original 'wideMode' button via the new discoverable PC CTA.
+        if page.evaluate("document.body.classList.contains('mode-nds')"):
+            page.locator("#dc-pc-guide-wide").click()
+        assert not page.evaluate("document.body.classList.contains('mode-nds')")
+        assert page.locator("#dc-pc-guide-wide").is_hidden()
         verify_pc_layout(page,"nursery",1440)
         assert page.locator("#dc-pc-guide-context").inner_text().startswith(
             "사육장"),page.locator("#dc-pc-guide-context").inner_text()
