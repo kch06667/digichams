@@ -5,10 +5,11 @@
 (() => {
   'use strict';
   const options=new URLSearchParams(location.search);
-  if(options.get('phaserBattle')!=='1')return;
-  // A beta-only, explicit rollout gate. Normal production pages and the
-  // generated test page without this flag retain the legacy default.
-  const preferred=options.get('phaserPreferred')==='1';
+  // The real game includes this script with the production flag. The
+  // generated developer page still requires the original explicit opt-in.
+  const production=document.currentScript?.dataset?.phaserProduction==='1';
+  if(!production&&options.get('phaserBattle')!=='1')return;
+  const preferred=production||options.get('phaserPreferred')==='1';
   const start=document.getElementById('lbStart');
   const mode=document.getElementById('lbMode');
   const team=document.getElementById('lbTeamSize');
@@ -28,14 +29,19 @@
     'background:#18384c;color:white;border:1px solid #73b7ce';
   select.add(new Option('기존 전투 (기본)','legacy'));
   select.add(new Option('Phaser 전투 (시험)','phaser'));
+  if(production){
+    select.options[0].text='기존 전투 (예비)';
+    select.options[1].text='Phaser 전투 (기본)';
+  }
   if(preferred)select.value='phaser';
   wrap.appendChild(select);
   start.parentNode.insertBefore(wrap,start);
   const note=document.createElement('span');
   note.id='dc-phaser-arena-note';
   note.style.cssText='display:block;width:100%;font-size:12px;color:#bbefdc';
-  note.textContent=preferred?
-    'Phaser 우선 시험 모드 · 실패 시 기존 전투로 되돌릴 수 있어. 저장은 종료 후 별도 승인.':
+  note.textContent=production?
+    'Phaser 실시간 자동전투가 기본 · 결과 자동 정산/백업 · 오류 시 기존 전투 선택 가능.':
+    preferred?'Phaser 우선 시험 모드 · 실패 시 기존 전투로 되돌릴 수 있어. 저장은 종료 후 별도 승인.':
     '기존 전투가 기본값. Phaser는 내 디지몬 1~3대전 · 종료 후 승인 시 백업·저장.';
   start.parentNode.insertBefore(note,start);
 
@@ -66,8 +72,9 @@
         // The legacy arena has NOT started. Close only its pre-battle modal;
         // Phaser runs the same original-autonomous AI on the separate tab.
         close.click();
-        note.textContent='Phaser '+size+'대'+size+
-          ' 실행 · 자동 저장 없음 · 전투 종료 후 사육장에서 승인 가능.';
+        note.textContent=production?
+          'Phaser '+size+'대'+size+' 진행 중 · 완료 후 자동 백업/정산':
+          'Phaser '+size+'대'+size+' 실행 · 자동 저장 없음 · 종료 후 승인 가능.';
       }else{
         select.value='legacy';
         note.textContent='Phaser 연결 실패 · 기존 전투를 선택했어. '+
@@ -96,13 +103,18 @@
       'background:#18384c;color:white;border:1px solid #73b7ce';
     cupEngine.add(new Option('기존 전투 (기본)','legacy'));
     cupEngine.add(new Option('Phaser 대회 전투 (시험)','phaser'));
+    if(production){
+      cupEngine.options[0].text='기존 대회 전투 (예비)';
+      cupEngine.options[1].text='Phaser 대회 전투 (기본)';
+    }
     if(preferred)cupEngine.value='phaser';
     choice.appendChild(cupEngine);
     const cupNote=document.createElement('p');
     cupNote.id='dc-phaser-cup-note';
     cupNote.style.cssText='font-size:12px;color:#bbefdc;margin:4px';
-    cupNote.textContent=preferred?
-      'Phaser 우선 시험 모드 · 기존 대회 규칙 유지 · 저장은 종료 후 별도 승인':
+    cupNote.textContent=production?
+      'Phaser 자동전투 기본 · 기존 대회 대진표/상금 유지 · 결과 자동 정산':
+      preferred?'Phaser 우선 시험 모드 · 기존 대회 규칙 유지 · 저장은 종료 후 별도 승인':
       '대회 대진표와 상금은 기존 규칙 유지 · '+
         'Phaser 저장은 종료 후 사용자 승인 시에만';
     const bracket=document.getElementById('championshipBracket');
