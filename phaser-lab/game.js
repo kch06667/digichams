@@ -4,6 +4,27 @@
  */
 (() => {
   'use strict';
+  const embeddedBattle=new URLSearchParams(location.search).get('embeddedBattle')==='1';
+  if(embeddedBattle){
+    // Production uses the full existing Phaser renderer within a same-page
+    // frame. Keep controls in the DOM for the existing engine but show only
+    // the canvas and read-only status in the compact battle view.
+    document.body.classList.add('dc-embedded-battle');
+    const style=document.createElement('style');
+    style.textContent=
+      'body.dc-embedded-battle{margin:0;padding:0;height:100dvh;overflow:hidden}'+
+      'body.dc-embedded-battle main{max-width:none;height:100dvh;display:flex;'+
+        'flex-direction:column;padding:4px;gap:4px}'+
+      'body.dc-embedded-battle main > :not(#game):not(#status):not(#battleReport)'+
+        '{display:none!important}'+
+      'body.dc-embedded-battle #game{width:100%;flex:1;min-height:0;'+
+        'height:auto;aspect-ratio:auto;margin:0}'+
+      'body.dc-embedded-battle #status{min-height:28px;margin:0;'+
+        'font-size:12px;overflow:hidden}'+
+      'body.dc-embedded-battle #battleReport{max-height:58px;'+
+        'overflow:auto;font-size:12px;margin:0!important}';
+    document.head.appendChild(style);
+  }
   const status=document.getElementById('status');
   const say=message=>{status.textContent=message;};
   const L=window.DigiPhaserLabLogic, B=window.DigiDomainBridge,
@@ -88,10 +109,11 @@
   // persistent-storage transfer; the independent Phaser scene remains read-only.
   function prepareFarmHandoff(){
     const token=new URLSearchParams(location.search).get('farmHandoff');
+    const parent=embeddedBattle && window.parent!==window?
+      window.parent:window.opener;
     if(farmHandoffRequested || !/^[a-f0-9]{32}$/.test(token||'') ||
-        !window.opener || location.origin==='null')return;
+        !parent || location.origin==='null')return;
     farmHandoffRequested=true;
-    const parent=window.opener;
     const handler=event=>{
       if(event.origin!==location.origin || event.source!==parent ||
           event.data?.type!=='dc-phaser-roster-v1' ||
@@ -149,9 +171,13 @@
         document.getElementById('tactic').disabled=true;
         say((choice.tournament?'🏆 '+choice.tournament.trainer+' 대회전 · ':'')+
           '사육장 명단 연결 완료 · 선봉 '+rosterChosen.name+
-          ' · '+choice.teamSize+'대'+choice.teamSize+' 자동 전투 · '+
-          (choice.teamSize===1?'완료 후 선택적 결과 저장 가능':
-            '다인전 결과 미리보기 전용 · 보상/세이브 변경 없음'));
+          ' · '+choice.teamSize+'대'+choice.teamSize+' 자동 전투');
+        if(embeddedBattle){
+          // The scene has finished create() before this async handoff.
+          // Begin the ORIGINAL real-time AI match without a second click.
+          Promise.resolve().then(()=>window.DigiPhaserLab?.battle())
+            .catch(error=>say('전투 시작 실패: '+error.message));
+        }
       } catch(err) {
         say('사육장 연습전 명단 검증 실패: '+err.message+' · 저장 없음');
       }
