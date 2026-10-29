@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "tests/full-game-journey-browser.py"
+      - "tests/pc-complete-phaser-journey-browser.py"
       - "docs/FULL_GAME_ACCEPTANCE_20261029.md"
       - "src/**"
       - "index.html"
@@ -27,3 +28,7 @@ jobs:
           python3 -m playwright install --with-deps chromium
       - name: Run one uninterrupted original game journey for PC and touch
         run: python3 tests/full-game-journey-browser.py
+      - name: Install pinned Phaser for real PC in-page 1.0 integration
+        run: npm install --ignore-scripts --no-save --no-package-lock phaser@3.90.0
+      - name: Real PC one-save capture-to-cup followed by Phaser and archive
+        run: python3 tests/pc-complete-phaser-journey-browser.py
