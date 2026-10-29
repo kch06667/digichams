@@ -18,6 +18,17 @@ class Quiet(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*args): pass
 
 
+def enter_wide_mode(page):
+    """Use the original NDS toggle only when wide mode is not already active."""
+    if page.evaluate("document.body.classList.contains('mode-nds')"):
+        # Production PC shell hides this legacy switch but its native handler
+        # still works; touch/legacy retains the visible interactive button.
+        if page.locator("#wideMode").is_visible():
+            enter_wide_mode(page)
+        else:
+            page.locator("#wideMode").evaluate("(el) => el.click()")
+    assert not page.evaluate("document.body.classList.contains('mode-nds')")
+
 def check(browser,base,entry,mobile):
     context=browser.new_context(
         viewport={"width":390,"height":844} if mobile else
@@ -49,7 +60,7 @@ def check(browser,base,entry,mobile):
           return {id:s.team[0].instanceId,wins:s.wins,
             losses:s.losses,paused:s.world.paused};
         }""")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
@@ -136,7 +147,7 @@ def check_fallback(browser,base):
     try:
         page.goto(base+"/index.html",wait_until="domcontentloaded",timeout=90000)
         page.locator("#dc-phaser-engine").wait_for(state="attached")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
@@ -181,7 +192,7 @@ def check_cancel(browser,base):
           return {id:s.team[0].instanceId,wins:s.wins,
             losses:s.losses,paused:s.world.paused};
         }""")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
@@ -235,7 +246,7 @@ def check_interrupted(browser,base,entry,mobile):
             instanceId:s.team[0].instanceId,
             backing:localStorage.getItem('dc_recreation_save')};
         }""")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
@@ -293,7 +304,7 @@ def check_newer_save_preserved(browser,base):
     try:
         page.goto(base+"/index.html",wait_until="domcontentloaded",timeout=90000)
         page.locator("#dc-phaser-engine").wait_for(state="attached")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
@@ -346,7 +357,7 @@ def check_storage_failures(browser,base,entry,mobile,kind):
     try:
         page.goto(base+"/"+entry,wait_until="domcontentloaded",timeout=90000)
         page.locator("#dc-phaser-engine").wait_for(state="attached")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
@@ -417,7 +428,7 @@ def check_failed_cancel_recovers_after_reload(browser,base):
           s.world.paused=false;save(false);
           return {id:s.team[0].instanceId,wins:s.wins,losses:s.losses};
         }""")
-        page.locator("#wideMode").click()
+        enter_wide_mode(page)
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
