@@ -83,6 +83,34 @@ def run(browser,base,entry,mobile):
     assert recovered_clock-hidden_clock<2,(recovered_clock,hidden_clock)
     page.evaluate('state.world.paused=true')
 
+    # Simulate an externally committed Phaser result while an old battle
+    # tab still has an in-flight transaction. Its pagehide must NOT
+    # overwrite the newer authoritative storage with stale pendingBattle.
+    settlement_guard=page.evaluate("""() => {
+      const key='dc_recreation_save';
+      const approved=JSON.parse(localStorage.getItem(key));
+      approved.food+=11;
+      const authoritative=JSON.stringify(approved);
+      localStorage.setItem(key,authoritative);
+      state.pendingBattle={id:'qa-stale-inflight'};
+      state.food=approved.food-3;
+      Object.defineProperty(document,'hidden',{configurable:true,
+        get:()=>true});
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('pagehide'));
+      const preserved=localStorage.getItem(key)===authoritative;
+      delete state.pendingBattle;
+      state.food=approved.food;
+      Object.defineProperty(document,'hidden',{configurable:true,
+        get:()=>false});
+      document.dispatchEvent(new Event('visibilitychange'));
+      save(false);
+      return {preserved,approvedFood:approved.food,
+        liveFood:state.food};
+    }""")
+    assert settlement_guard['preserved'],settlement_guard
+    assert settlement_guard['approvedFood']==settlement_guard['liveFood']
+
     # A second class of unfinished state, live hunting, must checkpoint the
     # encounter HP/time on visibilitychange (not only on pagehide).
     page.locator('[data-tab="hunt"]').click()
@@ -120,11 +148,13 @@ def run(browser,base,entry,mobile):
     # Verify a literal pagehide event flushes a late unsaved farm state
     # while the hunt owns the active browser tab.
     pagehide=page.evaluate("""() => {
+      const previous=state.food;
       state.food+=2;
       window.dispatchEvent(new Event('pagehide'));
-      return JSON.parse(localStorage.getItem('dc_recreation_save')).food;
+      return {previous,stored:JSON.parse(
+        localStorage.getItem('dc_recreation_save')).food};
     }""")
-    assert pagehide==pending['food']+2,(pagehide,pending)
+    assert pagehide['stored']==pagehide['previous']+2,pagehide
 
     page.reload(wait_until='domcontentloaded',timeout=90000)
     page.wait_for_function('Boolean(window.DCHexFarm && window.DCHuntUI)')
@@ -136,7 +166,7 @@ def run(browser,base,entry,mobile):
       time:DCHuntUI.encounter?.time,
       team:state.team.length,ropes:state.ropes
     })""")
-    assert restored['food']==pagehide,restored
+    assert restored['food']==pagehide['stored'],restored
     assert restored['day']==progress['day'],restored
     assert restored['name']==hunt['name'] and restored['hp']==hunt['hp'],restored
     assert abs(restored['time']-hunt['time'])<.3,restored
