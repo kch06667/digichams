@@ -45,6 +45,10 @@
       pending=null;
       apply.hidden=true;
       notice.textContent='백업 및 전투 정산 저장 완료 · 사육장 새로고침';
+      // This source tab still holds its OLD pre-settlement farm state.
+      // Farm pagehide/visibilitychange handlers must not overwrite the
+      // approved atomic save when location.reload() unloads this tab.
+      window.DCDevPhaserApprovedSave=true;
       // Existing game state is a lexical binding. Reload to adopt exactly
       // the verified persisted clone; never partially patch live objects.
       location.reload();

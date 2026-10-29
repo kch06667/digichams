@@ -1,0 +1,35 @@
+name: Original game Android-style background checkpoint regression
+on:
+  pull_request:
+    paths:
+      - "src/hex-farm-ui.js"
+      - "src/hunt-ui.js"
+      - "index.html"
+      - "standalone.html"
+      - "tests/mobile-suspend-browser.py"
+      - "docs/MOBILE_BACKGROUND_STABILITY_20261029.md"
+      - ".github/workflows/mobile-suspend-tests.yml"
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  original-game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify farm, hunt and evolution modules embed unchanged
+        run: |
+          python3 tools/sync-embedded-farm.py --check
+          python3 tools/sync-embedded-hunt.py --check
+          python3 tools/sync-embedded-evolution.py --check
+      - name: Install desktop and mobile-touch Chromium
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Accelerated farm + immediate suspend autosave + hunt reload
+        run: python3 tests/mobile-suspend-browser.py

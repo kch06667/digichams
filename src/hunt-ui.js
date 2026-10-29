@@ -160,7 +160,17 @@
  // Prevent stale JSON imports or resets from mutating an older local encounter.
  ui('reset').addEventListener('click',()=>queueMicrotask(()=>restore()));
  ui('hexArchiveFile')?.addEventListener('change',()=>{gesture=null;});
- window.addEventListener('pagehide',()=>{if(active())checkpoint();});
+ // Mobile app switching often fires visibilitychange without pagehide.
+ // Save the already-spent rope and current HP/time before Android may kill
+ // the WebView; a half-finished drag must not remain stuck on resume.
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+   gesture=null;
+   if(active())checkpoint();
+  }
+  lastTime=performance.now();
+ });
+ window.addEventListener('pagehide',()=>{gesture=null;if(active())checkpoint();});
  restore();requestAnimationFrame(frame);
  window.DCHuntUI={get encounter(){return encounter},start,bait,finishCapture,abandonHunt,restore,redrawHUD};
 })();

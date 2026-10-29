@@ -314,7 +314,28 @@ function frame(now){const dt=Math.max(0,Math.min(.15,(now-lastFrame)/1000));last
  if(persistClock>=6){save(false);persistClock=0;}}
  requestAnimationFrame(frame);}
 prepare();drawTiles();renderRoster();drawClock();refreshCageFacilities();drawStatus();requestAnimationFrame(()=>centerOn('core'));
-window.addEventListener('resize',()=>centerOn(selected));requestAnimationFrame(frame);
+// The Android WebView/app may suspend immediately after switching away.
+ // The existing 6s autosave is too late in that case. Flush the current
+ // original-game state synchronously when the page becomes hidden/unloads.
+ // This does NOT simulate any offline time or alter the current pause choice.
+ function flushOnSuspend(){
+  if(!knownState)return;
+  // An external Phaser battle/cup approval may have ALREADY committed a
+  // newer authoritative saved result while this old tab is unloading.
+  // Never let this stale page overwrite it with an in-flight battle.
+  if(window.DCDevPhaserApprovedSave===true||state.pendingBattle||
+     state.championship?.active?.awaiting)return;
+  try{save(false);persistClock=0;}
+  catch(_){/* Storage may be unavailable or full: never crash on suspend. */}
+ }
+ document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)flushOnSuspend();
+  // requestAnimationFrame pauses in the background: no phantom 150ms tick
+  // on reappearance, even if the browser slept for several hours.
+  lastFrame=performance.now();
+ });
+ window.addEventListener('pagehide',flushOnSuspend);
+ window.addEventListener('resize',()=>centerOn(selected));requestAnimationFrame(frame);
 window.DCHexFarm={get state(){return state},tick:(seconds)=>{core.advance(state,seconds,{xp:grantExperience,evolution:DCEvolution,lookup:speciesLookup});payDays();payWins();
  const n=state.farm.completed;if(n>knownCompleted){const gain=n-knownCompleted;knownCompleted=n;credit((20+(state.facilities.training?10:0))*gain,'자동 훈련 '+gain+'회 보상');}
  drawStatus();updateActors();render();save(false);},choose,core,exportSaveObject:getSaveData,importSaveObject:importSaveData};

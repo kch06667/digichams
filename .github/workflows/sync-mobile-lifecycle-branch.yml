@@ -1,0 +1,54 @@
+name: Sync mobile suspend safety into both playable game bundles
+on:
+  push:
+    branches: [feat/mobile-suspend-save-20261029]
+    paths:
+      - "src/hex-farm-ui.js"
+      - "src/hunt-ui.js"
+      - "tools/sync-embedded-farm.py"
+      - "tools/sync-embedded-hunt.py"
+      - "tests/mobile-suspend-browser.py"
+      - ".github/workflows/sync-mobile-lifecycle-branch.yml"
+  workflow_dispatch:
+concurrency:
+  group: mobile-lifecycle-sync-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Synchronize both canonical farm and hunt modules
+        run: |
+          python3 tools/sync-embedded-farm.py
+          python3 tools/sync-embedded-hunt.py
+          python3 tools/sync-embedded-farm.py --check
+          python3 tools/sync-embedded-hunt.py --check
+      - name: Original farm/hunt regression before committing
+        run: |
+          node --check src/hex-farm-ui.js
+          node --check src/hunt-ui.js
+          node --test tests/farm-life-safety.cjs tests/hunt-resume.cjs
+          node tests/farm-core.cjs
+      - name: Check in only original playable HTML changes
+        run: |
+          git add index.html standalone.html
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Sync immediate mobile background save and hunt gesture recovery into playable games"
+            # Other docs/tests may land while sync runs. Rebase our two
+            # generated HTML edits onto the current feature-branch HEAD.
+            git fetch origin "${GITHUB_REF_NAME}:refs/remotes/origin/${GITHUB_REF_NAME}"
+            git rebase "refs/remotes/origin/${GITHUB_REF_NAME}"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
