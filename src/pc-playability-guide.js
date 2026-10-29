@@ -25,6 +25,12 @@
   farmPanScript.src=new URL('pc-farm-pan.js',document.currentScript.src).href;
   document.head.appendChild(farmPanScript);
 
+  // Visual-only connected ranch pilot. All original region interactions and
+  // unlock/save values continue to live in the old farm UI and core.
+  const connectedRanchScript=document.createElement('script');
+  connectedRanchScript.src=new URL('pc-connected-ranch.js',document.currentScript.src).href;
+  document.head.appendChild(connectedRanchScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
