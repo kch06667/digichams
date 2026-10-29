@@ -8,6 +8,7 @@ on:
       - 'tests/pc-offline-phaser-soak-browser.py'
       - 'src/phaser-arena-entry-choice.js'
       - 'src/pc-playability-guide.js'
+      - 'src/pc-visual-polish.css'
       - 'tests/pc-guided-ux-browser.py'
       - 'tools/phaser-production-entry.cjs'
       - 'tools/sync-phaser-production.py'
