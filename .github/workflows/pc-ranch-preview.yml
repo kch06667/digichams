@@ -6,11 +6,13 @@ on:
       - feature/ranch-walkability-qa-20261030
       - feature/ranch-ground-paths-20261030
       - feature/ranch-actor-depth-20261030
+      - feature/ranch-facade-occlusion-20261030
     paths:
       - 'src/pc-continuous-ranch-preview.js'
       - 'src/pc-ranch-walkability.js'
       - 'src/pc-ranch-ground-paths.js'
       - 'src/pc-ranch-actor-depth.js'
+      - 'src/pc-ranch-facade-occlusion.js'
       - 'src/pc-continuous-ranch.css'
       - 'src/pc-playability-guide.js'
       - 'assets/farm/continuous_ranch_preview.svg'
@@ -23,6 +25,7 @@ on:
       - 'src/pc-ranch-walkability.js'
       - 'src/pc-ranch-ground-paths.js'
       - 'src/pc-ranch-actor-depth.js'
+      - 'src/pc-ranch-facade-occlusion.js'
       - 'src/pc-continuous-ranch.css'
       - 'assets/farm/continuous_ranch_preview.svg'
       - 'tests/pc-ranch-preview.cjs'
@@ -43,6 +46,7 @@ jobs:
           node --check src/pc-ranch-walkability.js
           node --check src/pc-ranch-ground-paths.js
           node --check src/pc-ranch-actor-depth.js
+          node --check src/pc-ranch-facade-occlusion.js
           node --check src/pc-playability-guide.js
           node --check tests/pc-ranch-preview.cjs
           node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs

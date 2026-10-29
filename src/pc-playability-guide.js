@@ -53,6 +53,13 @@
   ranchDepthScript.src=new URL('pc-ranch-actor-depth.js',document.currentScript.src).href;
   document.head.appendChild(ranchDepthScript);
 
+  // The original atlas facade needs its own world-Y occlusion depth.
+  // Runs only in PC connected terrain preview, never on mobile/NDS.
+  const ranchFacadeScript=document.createElement('script');
+  ranchFacadeScript.async=false;
+  ranchFacadeScript.src=new URL('pc-ranch-facade-occlusion.js',document.currentScript.src).href;
+  document.head.appendChild(ranchFacadeScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`

@@ -23,6 +23,7 @@
   function restore(){
     for(const actor of managed){
       actor.style.removeProperty('z-index');
+      actor.style.removeProperty('--dc-ground-shadow-width');
       actor.removeAttribute('data-dc-label-collapsed');
     }
     managed.clear();
@@ -47,6 +48,7 @@
     for(const el of managed){
       if(!current.has(el)){
         el.style.removeProperty('z-index');
+        el.style.removeProperty('--dc-ground-shadow-width');
         el.removeAttribute('data-dc-label-collapsed');
         managed.delete(el);
       }
@@ -57,6 +59,15 @@
       const z=100+Math.round(Math.max(0,Math.min(690,a.y)));
       const value=String(z);
       if(a.el.style.zIndex!==value)a.el.style.zIndex=value;
+      // Match the ground shadow to the real rendered sprite footprint.
+      // The existing max-width / max-height and original frame art stay intact.
+      const sprite=a.el.querySelector('img');
+      const pixels=sprite?.getBoundingClientRect().width||0;
+      if(pixels>0){
+        const footprint=Math.round(Math.max(18,Math.min(42,pixels*.68)))+'px';
+        if(a.el.style.getPropertyValue('--dc-ground-shadow-width')!==footprint)
+          a.el.style.setProperty('--dc-ground-shadow-width',footprint);
+      }
       managed.add(a.el);
     }
 
