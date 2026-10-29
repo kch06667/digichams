@@ -50,6 +50,29 @@ def check(browser,base,mobile):
     assert len(set(keys))==6,actors
     assert all("catalog%3Aspecies%2F" in key for key in keys),actors
     assert all(a["hasKoArt"] for a in actors),actors
+    # Actual original AI must land at least one real hit. Assert every
+    # visible impact cue is traceable to an RT.step eventHistory record,
+    # not a particle fabricated by Phaser or a merely started attack.
+    page.wait_for_function("""() =>
+      window.DigiPhaserLab?.hitEffectSamples()?.length>0
+    """,timeout=22000)
+    effect_trace=page.evaluate("""() => {
+      const scene=DigiPhaserLab.matchSnapshot();
+      return {cues:DigiPhaserLab.hitEffectSamples(),
+        hits:scene.eventHistory.filter(e=>e.type==='hit')};
+    }""")
+    assert effect_trace["hits"],effect_trace
+    assert 1<=len(effect_trace["cues"])<=24,effect_trace
+    for cue in effect_trace["cues"]:
+        assert any(h["targetId"]==cue["targetId"]
+                   and h["damage"]==cue["damage"]
+                   and abs(h["x"]-cue["x"])<.001
+                   and abs(h["y"]-29-cue["y"])<.001
+                   and abs(h["at"]-cue["at"])<.03
+                   for h in effect_trace["hits"]),(
+            "Impact sparkle without real original HP-damage event",cue)
+        assert abs((cue["dx"]**2+cue["dy"]**2)**.5-1)<.01,cue
+        assert 13<=cue["radius"]<=36 and 16<=cue["reach"]<=53,cue
     assert all(a["originY"]==1 for a in actors),(
         "Original GIFs must be anchored at the feet across poses",actors)
     snapshot=page.evaluate("DigiPhaserLab.matchSnapshot()")
