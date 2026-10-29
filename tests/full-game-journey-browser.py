@@ -156,9 +156,11 @@ def farm_and_goal(page,identity):
     page.locator('#evolutionRules [data-evo-target="아구몬"]').click()
     assert page.evaluate("current().evo.target")=='아구몬'
     assert '전투 0 / 3' in page.locator(
-        '#evolutionGoalDiagnostics .evoGuideRow').filter(has_text='아구몬').inner_text()
+        '#evolutionGoalDiagnostics .evoGuideRow').filter(
+        has_text='🎯 아구몬').first.inner_text()
     # Saved midway through the single user journey; reload must retain the
     # captured Digimon, its actual training and starter target.
+    page.locator('[data-tab="nursery"]').click()
     page.locator('#save').click()
     page.reload(wait_until='domcontentloaded',timeout=90000)
     page.wait_for_function("Boolean(window.DCHexFarm&&window.__journeyArena)")
