@@ -104,11 +104,11 @@ class GameFileHandler(http.server.SimpleHTTPRequestHandler):
         # Only the local PC server replaces the pinned external Phaser
         # reference. The public safe preview remains unchanged. No script
         # is fetched remotely by the browser after a verified local launch.
-        if path in ("/phaser-lab/index.html",
+        if path in ("/phaser-lab/","/phaser-lab/index.html",
                     "/phaser-lab/vendor/phaser.min.js"):
             root=Path(self.directory)
             try:
-                if path.endswith("/index.html"):
+                if path!="/phaser-lab/vendor/phaser.min.js":
                     html=(root/"phaser-lab"/"index.html").read_text(encoding="utf-8")
                     if html.count(PHASER_URL)!=1:
                         raise ValueError("Unexpected Phaser reference")
