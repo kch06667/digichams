@@ -202,6 +202,10 @@ def check_cancel(browser,base):
         assert recovered["wins"]==before["wins"],recovered
         assert recovered["losses"]==before["losses"],recovered
         assert not recovered["pending"],recovered
+        assert page.evaluate(
+            "localStorage.getItem('dc_phaser_park_recovery_v1')") is None
+        assert page.evaluate(
+            "sessionStorage.getItem('dc_phaser_tab_recovery_v1')") is None
         print("PASS touch in-page cancel restores original farm clock",flush=True)
     finally:
         ctx.close()
