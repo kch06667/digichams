@@ -232,6 +232,31 @@ def battles_and_championship(page,identity):
     assert final['starter']=='아구몬' and final['captured']==identity['prey'],final
     assert final['crowns']==1 and final['credits']==end['credits'],final
     assert final['wins']==end['wins'] and not final['pending'] and final['hunt'] is None,final
+    # Full original save archive should carry the *combined* history.
+    # Deliberately alter only live memory, then import the exported snapshot
+    # through the original rollback-safe UI API, not direct state replacement.
+    archive=page.evaluate("DCHexFarm.exportSaveObject()")
+    assert archive['format']=='digicham-save',archive
+    assert len(archive['state']['team'])==2,archive
+    assert archive['state']['championship']['crowns']['novice']==1,archive
+    state_before=page.evaluate("""() => ({
+      id:state.team[0].instanceId,atk:state.team[0].atk,
+      crowns:state.championship.crowns.novice,food:state.food})""")
+    page.evaluate("""() => {
+      state.food=0;state.team[0].atk=1;
+    }""")
+    page.evaluate("(saved)=>DCHexFarm.importSaveObject(saved)",archive)
+    imported=page.evaluate("""() => ({
+      id:state.team[0].instanceId,atk:state.team[0].atk,
+      crowns:state.championship.crowns.novice,food:state.food,
+      backedUp:!!localStorage.getItem('dc_save_backup_before_import_v0144')
+    })""")
+    assert imported=={**state_before,'backedUp':True},(imported,state_before)
+    page.reload(wait_until='domcontentloaded',timeout=90000)
+    assert page.evaluate("state.championship.crowns.novice")==1
+    assert page.evaluate("state.team.length")==2
+    assert page.evaluate("state.team[0].instanceId")==identity['starter']
+    final['archiveRoundtrip']=True
     return final
 
 def check(browser,origin,entry,mobile):
@@ -264,8 +289,11 @@ def main():
             browser=pw.chromium.launch(headless=True)
             try:
                 origin=f'http://127.0.0.1:{server.server_port}'
-                for entry,mobile in [('index.html',False),('standalone.html',True)]:
-                    check(browser,origin,entry,mobile)
+                # Both original entry points are verified independently
+                # on desktop and mobile-touch, not just the diagonal pair.
+                for entry in ('index.html','standalone.html'):
+                    for mobile in (False,True):
+                        check(browser,origin,entry,mobile)
             finally:browser.close()
     finally:
         server.shutdown();server.server_close();worker.join(timeout=3)
