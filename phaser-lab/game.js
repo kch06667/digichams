@@ -289,6 +289,9 @@
       this.particleColors=new Map();
       this.visuals=new Map();
       this.motionEvidence={charge:false,release:false,specialHits:0,knockbackFrames:0};
+      // Keep only a small read-only cue audit. No new hit/damage events
+      // are generated: each entry corresponds to an original RT.step hit.
+      this.hitEffectHistory=[];
       for(const actor of this.sim.fighters)this.addActor(actor);
       this.refreshActors();
       this.updateHud();
@@ -328,6 +331,7 @@
         },
         matchSnapshot:()=>RT.snapshot(this.sim),
         motionEvidence:()=>({...this.motionEvidence}),
+        hitEffectSamples:()=>this.hitEffectHistory.map(cue=>({...cue})),
         // Read-only test probe; contains frame timing numbers, never art bytes.
         animationFrameTiming:(source,id)=>{
           const a=this.anims.get('realtime-'+encodeURIComponent(source)+'-'+id);
@@ -645,10 +649,41 @@
       if(e.type==='hit'){
         this.soundImpact();
         this.cameras.main.shake(e.special?180:90,e.special?.010:.005);
-        const hit=this.add.circle(e.x,e.y-29,e.special?26:14,
-          e.special?0xf6ac77:0xffe5a2,.86).setDepth(13);
-        this.tweens.add({targets:hit,alpha:0,scale:2.7,duration:260,
-          onComplete:()=>hit.destroy()});
+        const victim=this.sim.fighters.find(f=>f.id===e.targetId);
+        const attacker=this.sim.fighters.find(f=>f.id===e.attackerId);
+        const cue=L.hitCue(e,victim,attacker);
+        if(cue){
+          this.hitEffectHistory.push({
+            ...cue,at:this.sim.elapsed,
+            // Visual evidence only. The original battle state is unchanged.
+            // Store no full player save or persistent instance identifiers.
+          });
+          if(this.hitEffectHistory.length>24)this.hitEffectHistory.shift();
+          const flash=this.add.graphics({x:cue.x,y:cue.y}).setDepth(13);
+          const perpendicular={x:-cue.dy,y:cue.dx};
+          // Knockback impulse comes from the original 2-D battle engine:
+          // the streak points in the direction of the real impact.
+          flash.lineStyle(cue.special?4:2,cue.color,.94);
+          flash.strokeCircle(0,0,cue.radius);
+          flash.lineStyle(cue.special?3:2,cue.color,.88);
+          for(let i=-2;i<=2;i++){
+            const spread=i/3;
+            const vx=cue.dx+perpendicular.x*spread;
+            const vy=cue.dy+perpendicular.y*spread;
+            const length=Math.hypot(vx,vy)||1;
+            const unitX=vx/length,unitY=vy/length;
+            const reach=cue.reach*(1-.1*Math.abs(i));
+            flash.lineBetween(unitX*(cue.radius*.55),
+              unitY*(cue.radius*.55),unitX*reach,unitY*reach);
+          }
+          if(cue.special){
+            flash.lineStyle(2,cue.color,.55);
+            flash.strokeCircle(0,0,cue.radius+8);
+          }
+          this.tweens.add({targets:flash,alpha:0,
+            scaleX:1.30,scaleY:1.30,duration:260,
+            onComplete:()=>flash.destroy()});
+        }
         const dmg=this.add.text(e.x,e.y-54,String(e.damage),{
           color:'#fff3bf',fontSize:e.special?'25px':'18px',
           fontFamily:'monospace',fontStyle:'bold'
