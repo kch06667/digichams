@@ -1,11 +1,14 @@
 name: PC shell visual smoke (PR 70)
 on:
   push:
-    branches: [ui/pc-shell-issue-69]
+    branches: [ui/pc-shell-issue-69, feature/connected-ranch-visual-20261030]
     paths:
       - 'src/pc-visual-polish.css'
       - 'src/pc-playability-guide.js'
       - 'src/pc-farm-pan.js'
+      - 'src/pc-connected-ranch.js'
+      - 'src/pc-connected-ranch.css'
+      - 'assets/farm/connected_ranch_field.svg'
       - 'tests/pc-shell-smoke.cjs'
       - '.github/workflows/pc-shell-smoke.yml'
   workflow_dispatch:
