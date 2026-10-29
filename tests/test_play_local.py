@@ -4,6 +4,8 @@ import json
 import tempfile
 import unittest
 import functools
+import hashlib
+import io
 import http.server
 import threading
 from contextlib import redirect_stdout
@@ -150,6 +152,70 @@ class LocalQuickstartTests(unittest.TestCase):
             with self.subTest(path=path),self.assertRaises(HTTPError) as error:
                 urlopen(base+path,timeout=3)
             self.assertEqual(error.exception.code,404)
+
+    def test_offline_phaser_cache_from_pinned_npm_is_reused_without_network(self):
+        engine=b"pinned-safe-synthetic-vendor"*11000
+        expected=hashlib.sha256(engine).hexdigest()
+        npm=self.root/"npm"/"phaser.min.js"
+        npm.parent.mkdir()
+        npm.write_bytes(engine)
+        with mock.patch.object(mod,"PHASER_SHA256",expected):
+            with mock.patch.object(mod.urllib.request,"urlopen",
+                                   side_effect=AssertionError("network was used")):
+                with redirect_stdout(StringIO()):
+                    path=mod.prepare_engine(self.root,npm,False)
+                    again=mod.prepare_engine(self.root,self.root/"not-here",False)
+            self.assertEqual(path,again)
+            self.assertEqual(path.read_bytes(),engine)
+            path.write_bytes(b"malicious")
+            with self.assertRaisesRegex(RuntimeError,"SHA-256"):
+                mod.prepare_engine(self.root,npm,False)
+            self.assertEqual(path.read_bytes(),b"malicious")
+
+    def test_offline_engine_first_acquisition_is_atomic_and_sha_checked(self):
+        engine=b"pinned-safe-synthetic-vendor"*11000
+        expected=hashlib.sha256(engine).hexdigest()
+        with mock.patch.object(mod,"PHASER_SHA256",expected):
+            with mock.patch.object(mod.urllib.request,"urlopen",
+                side_effect=lambda *args,**kwargs:io.BytesIO(engine)):
+                with redirect_stdout(StringIO()):
+                    result=mod.prepare_engine(
+                        self.root,self.root/"not-installed",True)
+            self.assertEqual(result.read_bytes(),engine)
+            self.assertFalse(list(result.parent.glob(".verified-phaser-*")))
+        with mock.patch.object(mod,"PHASER_SHA256","0"*64):
+            with self.assertRaisesRegex(RuntimeError,"SHA-256"):
+                mod.prepare_engine(self.root/"other",self.root/"none",
+                                   allow_download=False)
+
+    def test_game_server_serves_local_engine_and_removes_external_script(self):
+        (self.root/"phaser-lab"/"local-assets"/"vendor").mkdir(parents=True)
+        src=self.root/"phaser-lab"/"index.html"
+        src.write_text('<script defer src="'+mod.PHASER_URL+
+                       '"></script>',encoding="utf-8")
+        data=b"safe-pinned-fake-phaser"*12000
+        vendor=self.root/"phaser-lab"/"local-assets"/"vendor"/"phaser.min.js"
+        vendor.write_bytes(data)
+        handler=functools.partial(mod.GameFileHandler,directory=str(self.root))
+        with mock.patch.object(mod,"PHASER_SHA256",
+                               hashlib.sha256(data).hexdigest()):
+            server=http.server.ThreadingHTTPServer(("127.0.0.1",0),handler)
+            worker=threading.Thread(target=server.serve_forever,daemon=True)
+            worker.start()
+            try:
+                base=f"http://127.0.0.1:{server.server_port}"
+                with urlopen(base+"/phaser-lab/index.html?farmHandoff=a",timeout=3) as r:
+                    html=r.read().decode("utf-8")
+                self.assertNotIn("cdn.jsdelivr.net",html)
+                self.assertIn("./vendor/phaser.min.js",html)
+                with urlopen(base+"/phaser-lab/vendor/phaser.min.js",timeout=3) as r:
+                    self.assertEqual(r.read(),data)
+                vendor.write_bytes(b"corrupted")
+                with self.assertRaises(HTTPError) as err:
+                    urlopen(base+"/phaser-lab/vendor/phaser.min.js",timeout=3)
+                self.assertEqual(err.exception.code,503)
+            finally:
+                server.shutdown();server.server_close();worker.join(timeout=2)
 
     def test_windows_double_click_launcher_stays_private_and_uses_real_game(self):
         text=(ROOT/"PLAY_ON_PC.bat").read_text(encoding="utf-8")
