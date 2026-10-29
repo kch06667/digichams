@@ -101,6 +101,16 @@
     close.textContent='✕ 닫기';
     close.setAttribute('aria-label','조작 패널 닫기');
     rail.insertBefore(close,rail.firstChild);
+    // Preserve original controls and event handlers; move only their DOM
+    // nodes into the drawer, so the main farm view has no lower control strip.
+    const farmNavigation=farmPanel.querySelector('.farmNav');
+    const farmDetails=farmPanel.querySelector('#farmDetails');
+    const farmTools=document.createElement('section');
+    farmTools.id='dc-pc-farm-tools';
+    farmTools.setAttribute('aria-label','맵 탐색 및 시설 정보');
+    if(farmNavigation)farmTools.appendChild(farmNavigation);
+    if(farmDetails)farmTools.appendChild(farmDetails);
+    rail.insertBefore(farmTools,close.nextSibling);
     function setDrawer(open,returnFocus=false){
       drawerOpen=!!open;
       nursery.classList.toggle('dc-pc-drawer-open',drawerOpen);
