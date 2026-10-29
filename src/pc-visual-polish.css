@@ -8,6 +8,74 @@
     max-width:1480px;
     padding-inline:clamp(18px,2.1vw,32px);
   }
+  /* PC game shell: remove the web landing-page scaffolding while keeping
+   * the real game controls accessible. No DOM deletion / save changes. */
+  body:not(.mode-nds) { overflow-x:hidden; }
+  body:not(.mode-nds) .wrap {
+    max-width:none;
+    width:100%;
+    box-sizing:border-box;
+    padding:5px clamp(8px,1.2vw,18px) 8px;
+  }
+  body:not(.mode-nds) .wrap > header.top {
+    min-height:27px;
+    margin:0 0 4px;
+    padding:0 3px;
+    gap:6px;
+  }
+  body:not(.mode-nds) .wrap > header.top .brand {gap:0;}
+  body:not(.mode-nds) .wrap > header.top .brand .logo,
+  body:not(.mode-nds) .wrap > header.top .brand p {display:none;}
+  body:not(.mode-nds) .wrap > header.top h1 {
+    font-size:14px;
+    line-height:1.2;
+    margin:0;
+    color:#f1dba5;
+  }
+  body:not(.mode-nds) .wrap > header.top #dayPill {
+    font-size:11px;
+    padding:3px 8px;
+  }
+  body:not(.mode-nds) .wrap > .notice {display:none;}
+  body:not(.mode-nds) .wrap > .displaySwitcher {
+    margin:0 0 3px;
+    padding:0;
+    min-height:0;
+    gap:5px;
+    justify-content:flex-end;
+  }
+  body:not(.mode-nds) .wrap > .displaySwitcher .displaySwitcherLabel {display:none;}
+  body:not(.mode-nds) .wrap > .displaySwitcher button {
+    min-height:25px;
+    padding:3px 8px;
+    font-size:11px;
+  }
+  body:not(.mode-nds) nav.tabs {
+    gap:4px;
+    margin-bottom:4px;
+  }
+  body:not(.mode-nds) nav.tabs button {
+    min-height:32px;
+    padding:5px 6px;
+    font-size:12px;
+  }
+  body:not(.mode-nds) #dc-pc-guide {
+    display:none!important;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(430px,calc(100dvh - 125px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 245px),780px);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro {
+    padding-bottom:4px;
+    gap:4px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro h2 {font-size:15px;}
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro .tag {display:none;}
+
   /* The original navigation contains FIVE buttons, not four. A 4-column
    * desktop grid gave ROM its own stray row and pushed gameplay down. */
   nav.tabs {
