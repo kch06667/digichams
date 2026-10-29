@@ -296,7 +296,7 @@
         ' 기존 게임 전투 판정 · '+(this.loadedActions.size?
           ('개인 모션 '+this.loadedActions.size+'종 로드 · 미등록 종은 임시 그래픽'):
           '저작권 없는 임시 도형 그래픽')+
-        ' · 본게임 전투가 아님');
+        (embeddedBattle?' · 본게임 전투 준비 완료':' · 본게임 전투가 아님'));
       window.DigiPhaserLab={
         battle:()=>this.battle(),
         duel:()=>{
@@ -442,7 +442,8 @@
       const overlay=this.add.graphics().setDepth(18);
       overlay.fillStyle(0x102339,.92);overlay.fillRoundedRect(12,10,776,90,9);
       this.title=this.add.text(23,16,
-        '기존 게임의 실제 자동 전투 판정 · Phaser 화면',{
+        (embeddedBattle?'디지몬 챔피언십 · 실시간 자동 전투':
+          '기존 게임의 실제 자동 전투 판정 · Phaser 화면'),{
         color:'#f6eed0',fontSize:'18px',fontFamily:'sans-serif'
       }).setDepth(19);
       this.hud=this.add.text(23,44,'',{color:'#defff3',
@@ -450,7 +451,8 @@
       this.metrics=this.add.text(23,70,'',{color:'#c4dceb',
         fontFamily:'monospace',fontSize:'13px'}).setDepth(19);
       this.foot=this.add.text(400,429,
-        '기존 게임 전투 계산 재사용 · 그래픽은 별도 · 시연 결과는 저장되지 않음',
+        (embeddedBattle?'실시간 자동 전투 · 승패 및 보상은 종료 후 자동 정산':
+          '기존 게임 전투 계산 재사용 · 그래픽은 별도 · 시연 결과는 저장되지 않음'),
         {color:'#e0e6ed',fontSize:'13px'}).setOrigin(.5).setDepth(19);
     }
     addActor(f){
@@ -724,11 +726,13 @@
               else deliver();
             }
             document.getElementById('battleReport').textContent=
-              '전투 결과 미리보기 (저장되지 않음): '+
+              (embeddedBattle?'경기 종료 · 저장 검증 중: ':
+                '전투 결과 미리보기 (저장되지 않음): ')+
               this.lastBattleReport.changes.map(m=>
                 m.name+' [명단 '+(m.teamIndex+1)+'] HP '+m.hpBefore+'→'+m.hpAfter+
                 ', TP '+m.tpBefore+'→'+m.tpAfter).join(' / ')+
-              ' · 보상/승패 저장 미적용';
+              (embeddedBattle?' · 원본 사육장으로 자동 복귀':
+                ' · 보상/승패 저장 미적용');
           }catch(err){
             this.lastBattleReport=null;
             document.getElementById('battleReport').textContent=
@@ -743,8 +747,12 @@
     }
     beginBattle(){
       this.mode='battle';
-      say('원본 판정 시연 중 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
-        ' 자동 전투 · 원본 AI·피해·필살기 타이밍 적용 · 세이브 변경 없음');
+      say(embeddedBattle?
+        '내 디지몬 '+RT.alive(this.sim,0).length+' vs 상대 '+
+          RT.alive(this.sim,1).length+' · 자동 전투 진행 중':
+        '원본 판정 시연 중 · '+RT.alive(this.sim,0).length+':'+
+          RT.alive(this.sim,1).length+
+          ' 자동 전투 · 원본 AI·피해·필살기 타이밍 적용 · 세이브 변경 없음');
     }
     async battle(){
       const teamSize=Number(document.getElementById('squadSize').value);
