@@ -180,6 +180,9 @@ def battles_and_championship(page,identity):
         page.locator('#liveBattleLaunch').click()
         page.locator('#lbMode').select_option('owned')
         page.locator('#lbTeamSize').select_option('1')
+        # Production defaults to Phaser; this particular acceptance journey
+        # intentionally exercises the legacy inline settlement separately.
+        page.locator('#dc-phaser-engine').select_option('legacy')
         page.locator('#lbStart').click()
         result=defeat_opponents(page)
         assert result['before']['lead']==identity['starter'],result
@@ -200,6 +203,7 @@ def battles_and_championship(page,identity):
           credits:state.facilityCredits,crowns:state.championship.crowns.novice||0
         })""")
         assert before['round']==round_index,before
+        page.locator('#dc-phaser-cup-engine').select_option('legacy')
         page.locator('#championshipFight').click()
         result=defeat_opponents(page)
         assert result['before']['pending'],result
