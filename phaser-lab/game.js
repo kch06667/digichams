@@ -330,6 +330,13 @@
           return simSpeed;
         },
         matchSnapshot:()=>RT.snapshot(this.sim),
+        stageStatus:()=>({
+          version:this.stageVersion,
+          fighters:this.sim.fighters.length,
+          originalArt:[...this.visuals.values()].filter(v=>v.useArt).length,
+          fallback:[...this.visuals.values()].filter(v=>!v.useArt).length,
+          stageLabel:this.foot.text
+        }),
         motionEvidence:()=>({...this.motionEvidence}),
         hitEffectSamples:()=>this.hitEffectHistory.map(cue=>({...cue})),
         // Read-only test probe; contains frame timing numbers, never art bytes.
@@ -440,28 +447,62 @@
       }:null;
     }
     drawStage(){
-      const g=this.add.graphics();
-      g.fillStyle(0x294866,1);g.fillRect(0,0,800,450);
-      g.fillStyle(0x4e7773,1);g.fillEllipse(400,275,735,300);
-      g.lineStyle(2,0x9bc7bd,.45);g.strokeEllipse(400,275,730,290);
-      g.lineStyle(1,0xb2d5ce,.25);
-      for(let x=65;x<750;x+=66)g.lineBetween(x,138,x,385);
-      for(let y=155;y<390;y+=57)g.lineBetween(60,y,740,y);
-      const overlay=this.add.graphics().setDepth(18);
-      overlay.fillStyle(0x102339,.92);overlay.fillRoundedRect(12,10,776,90,9);
-      this.title=this.add.text(23,16,
+      // Original pixel-style scenery drawn at runtime: no NDS graphics.
+      const g=this.add.graphics().setDepth(-10);
+      const sky=[0x162e4b,0x1b3d5b,0x245170,0x32647b,0x467b7c];
+      for(let i=0;i<5;i++){
+        g.fillStyle(sky[i],1);g.fillRect(0,i*45,800,45);
+      }
+      g.fillStyle(0xc6e1d1,.75);g.fillRect(634,57,38,38);
+      g.fillStyle(0x426b78,1);
+      g.fillTriangle(0,168,140,90,291,168);
+      g.fillTriangle(186,168,342,105,522,168);
+      g.fillTriangle(450,168,626,98,800,168);
+      g.fillStyle(0x2b5359,1);
+      for(let x=0;x<800;x+=48){
+        const h=19+(x%5)*4;g.fillRect(x,159-h,41,h+23);
+      }
+      g.fillStyle(0x152e36,1);g.fillRect(0,143,800,48);
+      g.fillStyle(0x4f796b,1);g.fillRect(0,145,800,8);
+      for(let x=15;x<795;x+=31){
+        g.fillStyle(x%3?0x6a8b78:0x8fad8a,.62);
+        g.fillRect(x,156,15,9);
+      }
+      g.fillStyle(0x111f31,1);g.fillRect(0,167,800,283);
+      g.fillStyle(0x31564b,1);g.fillRect(18,170,764,234);
+      g.fillStyle(0x426b58,1);g.fillRect(29,177,742,218);
+      for(let y=180;y<392;y+=29){
+        g.lineStyle(1,0x83aa89,.25);g.lineBetween(30,y,770,y);
+      }
+      for(let x=43;x<760;x+=45){
+        g.lineStyle(1,0xb9c6a2,.18);g.lineBetween(x,178,x,393);
+      }
+      g.fillStyle(0x68bda4,.13);g.fillRect(36,180,330,207);
+      g.fillStyle(0xe9a28b,.12);g.fillRect(435,180,329,207);
+      g.lineStyle(2,0xe6d9a5,.50);g.lineBetween(400,176,400,395);
+      g.lineStyle(3,0xa8c2ad,.80);g.strokeRect(23,173,754,227);
+      g.fillStyle(0xb9a76f,1);g.fillRect(23,401,754,6);
+      const panel=this.add.graphics().setDepth(18);
+      panel.fillStyle(0x101e30,.96);panel.fillRect(10,8,780,98);
+      panel.fillStyle(0x9db6ab,1);panel.fillRect(10,8,780,3);
+      panel.fillStyle(0x456a74,1);panel.fillRect(10,103,780,3);
+      panel.fillStyle(0x284c5c,1);panel.fillRect(18,38,764,1);
+      panel.fillStyle(0x192d3e,1);panel.fillRect(0,409,800,41);
+      panel.fillStyle(0x9db6ab,1);panel.fillRect(0,409,800,2);
+      this.title=this.add.text(24,15,
         (embeddedBattle?'디지몬 챔피언십 · 실시간 자동 전투':
           '기존 게임의 실제 자동 전투 판정 · Phaser 화면'),{
-        color:'#f6eed0',fontSize:'18px',fontFamily:'sans-serif'
+        color:'#f9e8b3',fontSize:'17px',
+        fontFamily:'monospace',fontStyle:'bold'
       }).setDepth(19);
-      this.hud=this.add.text(23,44,'',{color:'#defff3',
+      this.hud=this.add.text(24,48,'',{color:'#d6f3db',
         fontFamily:'monospace',fontSize:'16px'}).setDepth(19);
-      this.metrics=this.add.text(23,70,'',{color:'#c4dceb',
-        fontFamily:'monospace',fontSize:'13px'}).setDepth(19);
-      this.foot=this.add.text(400,429,
-        (embeddedBattle?'실시간 자동 전투 · 승패 및 보상은 종료 후 자동 정산':
-          '기존 게임 전투 계산 재사용 · 그래픽은 별도 · 시연 결과는 저장되지 않음'),
-        {color:'#e0e6ed',fontSize:'13px'}).setOrigin(.5).setDepth(19);
+      this.metrics=this.add.text(24,79,'',{color:'#a8cad6',
+        fontFamily:'monospace',fontSize:'12px'}).setDepth(19);
+      this.foot=this.add.text(400,428,'',{
+        color:'#e8dfbd',fontFamily:'monospace',fontSize:'12px'
+      }).setOrigin(.5).setDepth(19);
+      this.stageVersion='retro-field-v1';
     }
     addActor(f){
       // A one-species atlas may NOT replace all other fighters with that art.
@@ -628,10 +669,15 @@
       const alive0=RT.alive(this.sim,0).length,alive1=RT.alive(this.sim,1).length;
       this.hud.setText('아군 '+alive0+'명   vs   상대 '+alive1+
         '명   ·   '+this.sim.elapsed.toFixed(1)+'초   ·   속도 '+simSpeed+'×');
-      this.metrics.setText('실시간 AI: 이동 '+Math.round(this.sim.stats.movement)+'px'+
-        ' · 공격 적중 '+this.sim.stats.hits+' · 회피 '+this.sim.stats.dodges+
+      this.metrics.setText('실시간 AI · 공격 적중 '+this.sim.stats.hits+
+        ' · 회피 '+this.sim.stats.dodges+
         ' · 필살기 '+this.sim.stats.specials+
         ' · 넉백 '+Math.round(this.sim.stats.knockback)+'px');
+      const actors=[...this.visuals.values()];
+      const original=actors.filter(v=>v.useArt).length;
+      this.foot.setText(original===actors.length?
+        '원본 GIF '+original+'/'+actors.length+'마리 · 전투 종료 후 '+(embeddedBattle?'자동 저장':'결과 미리보기'):
+        '원본 GIF '+original+'/'+actors.length+'마리 · 일부 임시 도형 · 로컬 그래픽 변환 필요');
     }
     soundImpact(){
       if(!soundEnabled)return;

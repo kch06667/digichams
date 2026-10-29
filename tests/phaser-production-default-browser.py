@@ -69,6 +69,16 @@ def check(browser,base,entry,mobile):
             battle?.fighters?.length===2 && battle.elapsed>0;
         }""",timeout=30000)
         assert overlay.bounding_box()["height"]>500
+        # The real production HTML uses the player-facing retro field,
+        # not the former demo oval. Its original-art count is transparent.
+        stage=page.evaluate("""() => {
+          const frame=document.getElementById('dc-phaser-arena-frame');
+          return frame?.contentWindow?.DigiPhaserLab?.stageStatus();
+        }""")
+        assert stage["version"]=="retro-field-v1",stage
+        assert stage["fighters"]==2,stage
+        assert stage["originalArt"]>=1,stage
+        assert stage["originalArt"]+stage["fallback"]==2,stage
         assert page.evaluate("eval('state').world.paused")
         assert page.locator("#dc-phaser-farm-cancel").is_visible()
         # No user click inside the Phaser lab: the validated in-page
