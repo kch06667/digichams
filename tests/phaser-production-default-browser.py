@@ -24,7 +24,7 @@ def enter_wide_mode(page):
         # Production PC shell hides this legacy switch but its native handler
         # still works; touch/legacy retains the visible interactive button.
         if page.locator("#wideMode").is_visible():
-            enter_wide_mode(page)
+            page.locator("#wideMode").click()
         else:
             page.locator("#wideMode").evaluate("(el) => el.click()")
     assert not page.evaluate("document.body.classList.contains('mode-nds')")

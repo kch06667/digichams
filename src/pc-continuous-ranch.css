@@ -132,3 +132,107 @@
     #dc-ranch-view-switch {flex-wrap:wrap;}
   }
 }
+
+/* PR74: Reduce misleading invisible facility hit areas in the continuous
+ * field preview. Keep every original data-hex ID, center coordinate and
+ * its standard button/click/keyboard behavior. Facility art is still a
+ * 220x226 crop of the original atlas, centered on the same world point. */
+@media (min-width:900px) and (pointer:fine) {
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile {
+    width:154px;
+    height:86px;
+    overflow:visible;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.unlocked:not(.core)::before {
+    inset:auto;
+    left:50%;
+    top:50%;
+    width:220px;
+    height:226px;
+    transform:translate(-50%,-50%);
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile .hexInner {
+    padding:4px;
+    gap:4px;
+    justify-content:center;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile .hexInner strong {
+    padding:5px 7px;
+    border-radius:9px;
+    font-size:12px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile .hexInner small {
+    max-width:135px;
+    border-radius:6px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked {
+    width:134px;
+    height:75px;
+    background:#173c35dc !important;
+    border:1px solid #91b78c !important;
+    border-radius:10px;
+    box-shadow:0 2px 10px #10261c8c;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked .hexInner {
+    opacity:1;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked .hexInner b {
+    display:none;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked .hexInner small::before {
+    content:"🔒 ";
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.core {
+    width:158px;
+    height:57px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.core .hexInner {
+    padding:3px 4px;
+    gap:0;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.core .hexInner b,
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.core .hexInner small {
+    display:none;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.selected .hexInner {
+    border:2px solid transparent;
+    border-radius:9px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.selected .hexInner strong {
+    border:2px solid #ffe29b;
+    color:#fff0b6;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel #dc-ranch-walkable-toggle {
+    flex:0 0 auto;
+    min-height:37px;
+    padding:6px 10px;
+    border:1px solid #a5dbad;
+    border-radius:7px;
+    background:#1f544b;
+    color:#e6fff0;
+    font:700 12px/1.35 system-ui,sans-serif;
+    cursor:pointer;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel #dc-ranch-walkable-toggle[aria-pressed="true"] {
+    background:#397258;
+    border-color:#b6ffd4;
+  }
+  #dc-ranch-walkable-toggle {display:none;}
+  body.dc-ranch-continuous:not(.mode-nds) #dc-ranch-walkable-toggle {
+    display:inline-block;
+  }
+  #farmPanel .farmWorld #dc-ranch-walkable-mask {
+    display:none;
+    position:absolute;
+    top:0;
+    left:0;
+    width:920px;
+    height:690px;
+    z-index:4;
+    pointer-events:none;
+    image-rendering:pixelated;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel.dc-ranch-show-walkable .farmWorld #dc-ranch-walkable-mask {
+    display:block;
+  }
+}
