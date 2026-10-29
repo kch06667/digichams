@@ -45,8 +45,9 @@ def run(browser,base):
         }""")
         before_heap=None
         counts=[]
-        page.locator("#wideMode").click()
         for i in range(3):
+            if not page.locator("#liveBattleLaunch").is_visible():
+                page.locator("#wideMode").click()
             page.locator("#liveBattleLaunch").click()
             page.locator("#lbMode").select_option("owned")
             page.locator("#lbTeamSize").select_option("1")
