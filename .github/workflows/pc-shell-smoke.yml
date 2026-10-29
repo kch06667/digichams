@@ -5,6 +5,7 @@ on:
     paths:
       - 'src/pc-visual-polish.css'
       - 'src/pc-playability-guide.js'
+      - 'src/pc-farm-pan.js'
       - 'tests/pc-shell-smoke.cjs'
       - '.github/workflows/pc-shell-smoke.yml'
   workflow_dispatch:
