@@ -25,6 +25,11 @@
   farmPanScript.src=new URL('pc-farm-pan.js',document.currentScript.src).href;
   document.head.appendChild(farmPanScript);
 
+  // Separate opt-in terrain paint experiment. No save, AI or ROM changes.
+  const continuousScript=document.createElement('script');
+  continuousScript.src=new URL('pc-continuous-ranch-preview.js',document.currentScript.src).href;
+  document.head.appendChild(continuousScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
