@@ -60,6 +60,7 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(document.querySelector('#dc-continuous-ranch-css')?.sheet));
       await page.waitForFunction(()=>Boolean(window.DCRanchWalkability),{timeout:12000});
       await page.waitForFunction(()=>Boolean(window.DCRanchGroundPaths),{timeout:12000});
+      await page.waitForFunction(()=>Boolean(window.DCRanchActorDepth),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
       assert.deepEqual(original.worldSize,{width:920,height:690});
@@ -180,6 +181,72 @@ async function measure(page){
         'hidden drawer still keeps the original facility details updated');
       assert.equal((await measure(page)).save,original.save,
         'facility selection must not touch gameplay state');
+      // Visual-depth QA: Y determines front-to-back sprite stacking. In a
+      // cluster only redundant nameplates collapse; sprites are never hidden.
+      await page.evaluate(()=>{
+        const world=document.getElementById('farmWorld');
+        const make=(id,x,y,active)=>{
+          const el=document.createElement('button');
+          el.id=id;
+          el.type='button';
+          el.className='hexActor'+(active?' active':'');
+          el.style.left=x+'px';el.style.top=y+'px';
+          const img=document.createElement('img');
+          const label=document.createElement('span');
+          label.textContent=id;
+          el.append(img,label);
+          world.appendChild(el);
+        };
+        make('dc-test-depth-a',410,310,true);
+        make('dc-test-depth-b',422,326,false);
+        DCRanchActorDepth.refresh();
+      });
+      let depth=await page.evaluate(()=>{
+        const a=document.getElementById('dc-test-depth-a');
+        const b=document.getElementById('dc-test-depth-b');
+        return {za:Number(a.style.zIndex),zb:Number(b.style.zIndex),
+          hiddenA:a.dataset.dcLabelCollapsed,
+          hiddenB:b.dataset.dcLabelCollapsed,
+          imageA:getComputedStyle(a).visibility,
+          imageB:getComputedStyle(b).visibility,
+          labelB:getComputedStyle(b.querySelector('span')).visibility};
+      });
+      assert.ok(depth.zb>depth.za,'lower-on-screen actor must draw in front');
+      assert.equal(depth.hiddenA,'false','selected Digimon name must win overlap');
+      assert.equal(depth.hiddenB,'true','secondary overlapping name should collapse');
+      assert.equal(depth.imageA,'visible');
+      assert.equal(depth.imageB,'visible','actors must never disappear');
+      assert.equal(depth.labelB,'hidden');
+      await page.locator('#dc-test-depth-b').hover({force:true});
+      assert.equal(await page.locator('#dc-test-depth-b span').evaluate(
+        e=>getComputedStyle(e).visibility),'visible',
+        'a hidden name must reappear on hover');
+      await page.evaluate(()=>{
+        const a=document.getElementById('dc-test-depth-a');
+        const b=document.getElementById('dc-test-depth-b');
+        a.classList.remove('active');
+        b.classList.add('active');
+        DCRanchActorDepth.refresh();
+      });
+      depth=await page.evaluate(()=>({
+        a:document.getElementById('dc-test-depth-a').dataset.dcLabelCollapsed,
+        b:document.getElementById('dc-test-depth-b').dataset.dcLabelCollapsed
+      }));
+      assert.equal(depth.a,'true');
+      assert.equal(depth.b,'false','new selected name must take priority');
+      await page.evaluate(()=>{
+        const b=document.getElementById('dc-test-depth-b');
+        b.style.left='700px';b.style.top='520px';
+        DCRanchActorDepth.refresh();
+      });
+      assert.equal(await page.locator('#dc-test-depth-a').getAttribute(
+        'data-dc-label-collapsed'),'false',
+        'names should reappear after moving apart');
+      assert.equal(await page.locator('#dc-test-depth-b').getAttribute(
+        'data-dc-label-collapsed'),'false');
+      assert.equal((await measure(page)).save,original.save,
+        'sprite depth and nameplate layout must not change saves');
+
       const response=await page.request.get(base+'/assets/farm/continuous_ranch_preview.svg');
       assert.equal(response.status(),200,'preview terrain asset must load');
       const svg=await response.text();
@@ -189,6 +256,18 @@ async function measure(page){
       await page.locator('#dc-ranch-preview-toggle').click();
       const reverted=await measure(page);
       assert.ok(reverted.background.includes('hex_farm_v0232.webp'));
+      await page.evaluate(()=>DCRanchActorDepth.refresh());
+      for(const id of ['dc-test-depth-a','dc-test-depth-b']){
+        const actor=page.locator('#'+id);
+        assert.equal(await actor.evaluate(e=>e.style.zIndex),'',
+          'original hex view must restore legacy actor layering');
+        assert.equal(await actor.getAttribute('data-dc-label-collapsed'),null,
+          'original map must keep all legacy nameplates');
+      }
+      await page.evaluate(()=>{
+        document.getElementById('dc-test-depth-a')?.remove();
+        document.getElementById('dc-test-depth-b')?.remove();
+      });
       assert.equal(await page.locator('#dc-ranch-ground-paths').isVisible(),false,
         'original hex map must hide the new path layer');
       await page.waitForFunction(()=>window.DCRanchWalkability?.visible===false);
@@ -212,6 +291,8 @@ async function measure(page){
       'walkability inspector must not load in touch mode');
     assert.equal(await page.evaluate(()=>!!window.DCRanchGroundPaths),false,
       'terrain-route painter must not load on mobile/touch');
+    assert.equal(await page.evaluate(()=>!!window.DCRanchActorDepth),false,
+      'desktop actor depth polish must not load on mobile/touch');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{
