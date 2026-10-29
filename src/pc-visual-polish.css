@@ -595,6 +595,17 @@
     height:clamp(350px,calc(100dvh - 190px),820px);
   }
 
+  /* Desktop layout audit: leave room for the farm navigation/actions beneath
+   * the map. Prior 190px offset pushed controls below 768px/1080px screens. */
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(350px,calc(100dvh - 115px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(290px,calc(100dvh - 265px),740px);
+    min-height:290px;
+  }
+
   /* Combat overlay still fills the window and remains keyboard-usable,
    * while keeping the arena framed on extra-wide desktops. */
   #dc-phaser-overlay {
