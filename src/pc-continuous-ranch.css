@@ -236,3 +236,61 @@
     display:block;
   }
 }
+
+/* PR75: the visible dirt paths are now generated from DCFarm.HEX_CENTERS
+ * and state.facilities. No static winding trail, no route state mutation. */
+@media (min-width:900px) and (pointer:fine) {
+  #farmPanel .farmWorld #dc-ranch-ground-paths {
+    display:none;
+    position:absolute;
+    inset:0;
+    width:920px;
+    height:690px;
+    z-index:0;
+    pointer-events:none;
+    overflow:visible;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .farmWorld #dc-ranch-ground-paths {
+    display:block;
+  }
+
+  /* Grounded Digimon sprites: a subtle foot shadow rather than a glowing
+   * blue halo. The source animation frames, position and hit targets stay
+   * identical, including for the selected Digimon. */
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor {
+    isolation:isolate;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor::before {
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:7px;
+    width:36px;
+    height:10px;
+    transform:translateX(-50%);
+    border-radius:50%;
+    background:rgba(27,61,38,.36);
+    filter:blur(2px);
+    z-index:-1;
+    pointer-events:none;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor img {
+    image-rendering:pixelated;
+    filter:drop-shadow(0 2px 2px rgba(17,38,27,.6));
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor span {
+    background:rgba(24,53,41,.9);
+    border:1px solid #98b88188;
+    color:#f4fae8;
+    font-size:11px;
+    text-shadow:0 1px 1px #152b20;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor.active span {
+    background:#5a4c2c;
+    border-color:#f3d594;
+    color:#ffefbd;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.unlocked:not(.core)::before {
+    filter:drop-shadow(0 4px 3px rgba(24,58,38,.26));
+  }
+}
