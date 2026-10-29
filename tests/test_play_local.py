@@ -211,6 +211,10 @@ class LocalQuickstartTests(unittest.TestCase):
                     html=r.read().decode("utf-8")
                 self.assertNotIn("cdn.jsdelivr.net",html)
                 self.assertIn("./vendor/phaser.min.js",html)
+                with urlopen(base+"/phaser-lab/?embeddedBattle=1",timeout=3) as r:
+                    frame=r.read().decode("utf-8")
+                self.assertNotIn("cdn.jsdelivr.net",frame)
+                self.assertIn("./vendor/phaser.min.js",frame)
                 with urlopen(base+"/phaser-lab/vendor/phaser.min.js",timeout=3) as r:
                     self.assertEqual(r.read(),data)
                 vendor.write_bytes(b"corrupted")
