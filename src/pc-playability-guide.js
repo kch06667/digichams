@@ -19,6 +19,12 @@
   skin.href=new URL('pc-visual-polish.css',document.currentScript.src).href;
   document.head.appendChild(skin);
 
+  // First ranch camera slice: desktop mouse drag only. Original farm model,
+  // map click handlers, sprites, zoom and saves are not rewritten here.
+  const farmPanScript=document.createElement('script');
+  farmPanScript.src=new URL('pc-farm-pan.js',document.currentScript.src).href;
+  document.head.appendChild(farmPanScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
@@ -76,6 +82,71 @@
     refresh();
     requestAnimationFrame(refresh);
   });
+
+  // PC-only contextual control drawer. The original controls stay mounted,
+  // preserving their event handlers and the current game/save state.
+  const nursery=document.getElementById('nursery');
+  const farmPanel=document.getElementById('farmPanel');
+  const rail=nursery?.querySelector(':scope > .layout');
+  let drawerOpen=false;
+  let lastDrawerFocus=null;
+  if(nursery && farmPanel && rail){
+    const toggle=document.createElement('button');
+    toggle.type='button';
+    toggle.id='dc-pc-drawer-toggle';
+    toggle.textContent='☰ 디지몬 · 시설 관리';
+    toggle.setAttribute('aria-controls','dc-pc-control-drawer');
+    toggle.setAttribute('aria-expanded','false');
+    farmPanel.insertBefore(toggle,farmPanel.firstChild);
+    rail.id='dc-pc-control-drawer';
+    rail.setAttribute('role','region');
+    rail.setAttribute('aria-label','디지몬 및 사육장 조작');
+    const close=document.createElement('button');
+    close.id='dc-pc-drawer-close';
+    close.type='button';
+    close.textContent='✕ 닫기';
+    close.setAttribute('aria-label','조작 패널 닫기');
+    rail.insertBefore(close,rail.firstChild);
+    // Preserve original controls and event handlers; move only their DOM
+    // nodes into the drawer, so the main farm view has no lower control strip.
+    const farmNavigation=farmPanel.querySelector('.farmNav');
+    const farmDetails=farmPanel.querySelector('#farmDetails');
+    const farmTools=document.createElement('section');
+    farmTools.id='dc-pc-farm-tools';
+    farmTools.setAttribute('aria-label','맵 탐색 및 시설 정보');
+    if(farmNavigation)farmTools.appendChild(farmNavigation);
+    if(farmDetails)farmTools.appendChild(farmDetails);
+    rail.insertBefore(farmTools,close.nextSibling);
+    function setDrawer(open,returnFocus=false){
+      drawerOpen=!!open;
+      nursery.classList.toggle('dc-pc-drawer-open',drawerOpen);
+      toggle.setAttribute('aria-expanded',String(drawerOpen));
+      if(!drawerOpen && returnFocus) (lastDrawerFocus||toggle).focus({preventScroll:true});
+      if(drawerOpen) {lastDrawerFocus=document.activeElement;close.focus({preventScroll:true});}
+    }
+    toggle.addEventListener('click',()=>setDrawer(!drawerOpen,true));
+    close.addEventListener('click',()=>setDrawer(false,true));
+    // Selecting an existing actor/facility on the game map reveals controls.
+    // Do not intercept or cancel the original click event.
+    farmPanel.addEventListener('click',event=>{
+      if(event.target.closest('#dc-pc-drawer-toggle'))return;
+      if(event.target.closest('.hexActor, [data-facility-id], .farmFacility, .farmRoom')){
+        if(!document.body.classList.contains('mode-nds'))setDrawer(true);
+      }
+    });
+    document.addEventListener('keydown',event=>{
+      if(event.key==='Escape' && drawerOpen && !inGameModal()){
+        setDrawer(false,true);event.preventDefault();
+      }
+    });
+    nav.addEventListener('click',event=>{
+      if(event.target.closest('[data-tab]'))setDrawer(false);
+    });
+    window.DCPCDrawer=Object.freeze({
+      open:()=>setDrawer(true),close:()=>setDrawer(false),
+      get isOpen(){return drawerOpen;}
+    });
+  }
 
   function gameState(){
     try { return eval('state'); } catch(_) {return null;}
@@ -194,6 +265,12 @@
     if(!document.hidden)refresh();
   },1600);
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});
+  // PC is the primary target. The legacy HTML initially boots into the
+  // narrow NDS layout, otherwise the farm drawer seems to be missing.
+  // Use the game's own mode button; users can switch back manually.
+  if (document.body.classList.contains('mode-nds')) {
+    document.getElementById('wideMode')?.click();
+  }
   refresh();
   window.DCPCGuide=Object.freeze({snapshot:()=>refresh()});
 })();
