@@ -1,0 +1,154 @@
+/* Desktop-only connected-ranch ART PREVIEW.
+ * No position, terrain collision, unlocked state, evolution or save changes.
+ * The 920x690 natural ground replaces only the painted image. The canonical
+ * 7-zone geometry stays in src/farm-core.js and src/hex-farm-ui.js.
+ */
+@media (min-width:900px) and (pointer:fine) {
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .farmWorld {
+    background-color:#5e9255;
+    background-image:url("../assets/farm/connected_ranch_field.svg") !important;
+    background-position:0 0;
+    background-size:920px 690px;
+    background-repeat:no-repeat;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexPath {
+    display:none;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile {
+    clip-path:none;
+    width:220px;
+    height:226px;
+    border:0 !important;
+    border-radius:0;
+    box-shadow:none;
+    background:transparent !important;
+    filter:none !important;
+    opacity:1;
+    overflow:visible;
+    isolation:isolate;
+    transition:none;
+  }
+  /* Reuse authentic v0.23.2 facility painting, WITHOUT the glowing hex rims.
+   * Each cropped tile samples the exact original world coordinate. */
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile[data-hex="training"] {--farm-x:460px;--farm-y:128px}
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile[data-hex="garden"] {--farm-x:270px;--farm-y:234px}
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile[data-hex="track"] {--farm-x:650px;--farm-y:234px}
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile[data-hex="rest"] {--farm-x:270px;--farm-y:446px}
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile[data-hex="clinic"] {--farm-x:650px;--farm-y:446px}
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile[data-hex="forest"] {--farm-x:460px;--farm-y:552px}
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.unlocked:not(.core)::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    background-image:url("../assets/farm/hex_farm_v0232.webp");
+    background-position:calc(110px - var(--farm-x)) calc(113px - var(--farm-y));
+    background-size:920px 690px;
+    background-repeat:no-repeat;
+    -webkit-mask-image:radial-gradient(ellipse 80% 79% at 50% 50%,#000 0 48%,#000b 62%,transparent 81%);
+    mask-image:radial-gradient(ellipse 80% 79% at 50% 50%,#000 0 48%,#000b 62%,transparent 81%);
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile .hexInner {
+    position:relative;
+    z-index:1;
+    width:100%;
+    height:100%;
+    box-sizing:border-box;
+    clip-path:none;
+    border:0 !important;
+    background:transparent;
+    padding:0 5px 14px;
+    gap:3px;
+    justify-content:flex-end;
+    pointer-events:none;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile .hexInner strong {
+    font-size:12px;
+    background:#163c35ed;
+    color:#f2ffdd;
+    border:1px solid #97bd7e;
+    border-radius:6px;
+    box-shadow:0 2px 5px #1235268c;
+    padding:4px 9px;
+    text-shadow:0 1px 2px #0a2417;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.unlocked .hexInner small {
+    display:none;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile:focus-visible .hexInner strong,
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.selected .hexInner strong {
+    border-color:#ffe397;
+    box-shadow:0 0 0 2px #ffe3978c,0 3px 8px #10221b;
+    color:#ffeaa4;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile:hover .hexInner strong {
+    background:#286347;
+  }
+  /* Closed zones are selectable/unlockable markers, not existing buildings. */
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.locked {
+    width:134px;
+    height:73px;
+    border:1px solid #9dae8b !important;
+    border-radius:10px;
+    background:#193b35d9 !important;
+    box-shadow:0 3px 9px #173f3399;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.locked .hexInner {
+    justify-content:center;
+    padding:3px;
+    gap:2px;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.locked .hexInner b {
+    display:none;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.locked .hexInner strong {
+    font-size:11px;
+    color:#f0e2bd;
+    border:0;
+    background:none;
+    box-shadow:none;
+    padding:1px 3px;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.locked .hexInner small {
+    display:block;
+    font-size:10px;
+    background:none;
+    padding:0;
+    color:#c2d4ba;
+  }
+  /* Central shared pasture remains open; shrink its selector to a small tag. */
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.core {
+    width:153px;
+    height:54px;
+    transform:translate(-50%,18px);
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.core .hexInner {
+    justify-content:center;
+    padding:3px;
+  }
+  body:not(.mode-nds) #farmPanel.dc-connected-ranch .hexTile.core .hexInner strong {
+    border-radius:20px;
+    background:#2e644bbf;
+    white-space:nowrap;
+  }
+  body:not(.mode-nds) #farmPanel #dc-pc-ranch-toggle {
+    float:left;
+    position:sticky;
+    top:4px;
+    z-index:4;
+    margin:0 9px 7px 0;
+    min-height:40px;
+    padding:6px 11px;
+    border:2px solid #acd18e;
+    border-radius:6px;
+    background:#255c43;
+    color:#f3ffe0;
+    cursor:pointer;
+  }
+  body:not(.mode-nds) #farmPanel #dc-pc-ranch-toggle:focus-visible {
+    outline:3px solid #ffdc88;
+    outline-offset:2px;
+  }
+  body.mode-nds #farmPanel #dc-pc-ranch-toggle {display:none !important;}
+}
