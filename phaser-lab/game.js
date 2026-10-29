@@ -268,7 +268,10 @@
               start:0,end:cfg.frames-1
             }).map((frame,i)=>({...frame,duration:timing.extraMs[i]}));
             this.anims.create({key:animation,frames,frameRate:timing.frameRate,
-              repeat:[0,2,3,14,32].includes(idx)?-1:0});
+              // Action 30 is the user's verified victory motion. Keep it alive
+              // for the short post-match celebration instead of freezing
+              // on the final GIF frame. Attack/hit/KO motions do not loop.
+              repeat:[0,2,3,14,30,32].includes(idx)?-1:0});
           }
         }
         if(actions.size)this.loadedActions.set(source.species,{
@@ -391,6 +394,9 @@
           return {id:f.id,name:f.name,privateArt:!!v?.useArt,
             textureKey:v?.sprite.texture.key||null,
             action:v?.pose||null,angle:v?.sprite.angle||0,
+            originY:v?.sprite.originY??null,
+            footY:v?.sprite.y??null,
+            displayHeight:v?.sprite.displayHeight??null,
             phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37),
             // During scene.restart(), Phaser may already have disposed an
@@ -454,6 +460,10 @@
       const atlas=useArt?(art.actions.has(0)?0:[...art.actions][0]):null;
       const texture=useArt?key(art.source,atlas):'practice-'+f.side+'-'+f.slot+'-0';
       const sprite=this.add.sprite(f.x,f.y-31,texture).setDepth(4);
+      // The source GIFs use different cell heights (e.g. 24px idle,
+      // 32px hit, 16px KO). Anchor private art at the FEET so switching
+      // a 1-frame hit/KO never bounces the monster above the ground.
+      if(useArt)sprite.setOrigin(.5,1);
       const cfg=useArt?art.manifest.actions[String(atlas)]:null;
       const scale=useArt?Math.min(64/cfg.frameWidth,69/cfg.frameHeight,2.4):.90;
       sprite.setScale(scale);
@@ -500,7 +510,8 @@
         const faintFallback=f.hp<=0&&
           (!v.useArt||!v.art.actions.has(37));
         v.sprite.x=f.x;
-        v.sprite.y=f.y-(faintFallback?14:34)+bob;
+        v.sprite.y=v.useArt?f.y-2+bob:
+          f.y-(faintFallback?14:34)+bob;
         // When the sprite pack lacks the KO animation, show an actual
         // collapsed fighter instead of a standing idle sprite. Keep
         // original KO artwork upright: its own frames supply the motion.
@@ -692,7 +703,12 @@
               // original farm tab, where exact launch-time instance IDs
               // and the latest persisted save are independently checked.
               // Phaser never applies a save or awards experience itself.
-              peer.parent.postMessage({
+              // The original win action 30 is animated. The previous
+              // production bridge immediately removed the Phaser frame at
+              // finish, before one victory GIF could complete. Let the
+              // renderer show the actual winning action for 1.1 seconds,
+              // then deliver exactly the same verified terminal packet.
+              const resultMessage={
                 type:'dc-phaser-finished-v1',token:peer.token,
                 packet:{preview:this.lastBattleReport,
                   initial:RT.snapshot(c.initialFighters),
@@ -701,8 +717,11 @@
                   final:{finished:this.sim.finished,
                     winner:this.sim.winner,elapsed:this.sim.elapsed,
                     fighters:RT.snapshot(this.sim.fighters)}}
-              },location.origin);
+              };
               farmHandoffPeer=null; // never send the same result twice
+              const deliver=()=>peer.parent.postMessage(resultMessage,location.origin);
+              if(embeddedBattle)this.time.delayedCall(1100,deliver);
+              else deliver();
             }
             document.getElementById('battleReport').textContent=
               '전투 결과 미리보기 (저장되지 않음): '+
@@ -716,7 +735,9 @@
               '결과 미리보기 검증 실패: '+err.message+' · 세이브 변경 없음';
           }
         }
-        say(win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
+        say(embeddedBattle?
+          win+' 승리! · 원본 승리 모션 30번 재생 · 전투 결과 저장 중…':
+          win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
           '초 · 사육장 탭에서 선택적으로 정산 가능 · 자동 저장 없음');
       }
     }
