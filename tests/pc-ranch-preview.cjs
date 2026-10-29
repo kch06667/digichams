@@ -58,6 +58,7 @@ async function measure(page){
         await page.addScriptTag({url:base+'/src/pc-playability-guide.js'});
       await page.waitForFunction(()=>Boolean(window.DCContinuousRanchPreview),{timeout:12000});
       await page.waitForFunction(()=>Boolean(document.querySelector('#dc-continuous-ranch-css')?.sheet));
+      await page.waitForFunction(()=>Boolean(window.DCRanchWalkability),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
       assert.deepEqual(original.worldSize,{width:920,height:690});
@@ -74,6 +75,52 @@ async function measure(page){
       assert.equal(scene.foodCount,original.foodCount);
       assert.equal(scene.save,original.save,'terrain preview must not modify the gameplay state');
       assert.ok(scene.documentWidth<=width+4,'unexpected sideways page scroll: '+scene.documentWidth);
+      const clickAreas=await page.locator('#farmPanel .hexTile').evaluateAll(
+        tiles=>tiles.map(tile=>({
+          id:tile.dataset.hex,
+          width:tile.getBoundingClientRect().width,
+          height:tile.getBoundingClientRect().height
+        })));
+      for(const area of clickAreas){
+        assert.ok(area.width<=160 && area.height<=90,
+          'preview tile must not block invisible 220x226 ground: '+JSON.stringify(area));
+      }
+      const inspector=page.locator('#dc-ranch-walkable-toggle');
+      assert.equal(await inspector.count(),1,'truth overlay control must load');
+      assert.equal(await inspector.getAttribute('aria-pressed'),'false');
+      assert.ok(await inspector.isVisible());
+      assert.equal(await page.locator('#dc-ranch-walkable-mask').isVisible(),false);
+      await inspector.click();
+      assert.equal(await inspector.getAttribute('aria-pressed'),'true');
+      const passability=await page.evaluate(()=>{
+        const overlay=window.DCRanchWalkability;
+        const canvas=document.getElementById('dc-ranch-walkable-mask');
+        const ctx=canvas.getContext('2d');
+        return {
+          size:[canvas.width,canvas.height],
+          samples:overlay.sampleCount,
+          centerPassable:overlay.walkableAt(460,340),
+          unopenedTrainingPassable:overlay.walkableAt(460,128),
+          centerAlpha:ctx.getImageData(460,340,1,1).data[3],
+          unopenedTrainingAlpha:ctx.getImageData(460,128,1,1).data[3]
+        };
+      });
+      assert.deepEqual(passability.size,[920,690]);
+      assert.ok(passability.samples>50,'walkability inspector sampled no ground');
+      assert.equal(passability.centerPassable,true);
+      assert.equal(passability.unopenedTrainingPassable,false);
+      assert.ok(passability.centerAlpha>0,
+        'walkable shared pasture must be tinted by the actual movement mask');
+      assert.equal(passability.unopenedTrainingAlpha,0,
+        'locked training plot must not appear walkable');
+      assert.equal((await measure(page)).save,original.save,
+        'walking overlay must not touch gameplay or save state');
+      // The original button's click behavior must survive shrinking the
+      // formerly invisible 220x226 hex bounding box.
+      await page.locator('[data-hex="training"]').click();
+      assert.ok((await page.locator('#farmDetails').innerText()).includes('특별 훈련장'));
+      assert.equal((await measure(page)).save,original.save,
+        'facility selection must not touch gameplay state');
       const response=await page.request.get(base+'/assets/farm/continuous_ranch_preview.svg');
       assert.equal(response.status(),200,'preview terrain asset must load');
       const svg=await response.text();
@@ -81,6 +128,9 @@ async function measure(page){
       await page.locator('#dc-ranch-preview-toggle').click();
       const reverted=await measure(page);
       assert.ok(reverted.background.includes('hex_farm_v0232.webp'));
+      await page.waitForFunction(()=>window.DCRanchWalkability?.visible===false);
+      assert.equal(await page.locator('#dc-ranch-walkable-toggle').isVisible(),false,
+        'inspector must disappear with the preview');
       assert.equal(reverted.save,original.save,'reverting preview must preserve gameplay state');
       assert.equal(errors.length,0,JSON.stringify(errors));
       console.log('PASS PC continuous-ranch preview',width,height,
@@ -95,6 +145,8 @@ async function measure(page){
     assert.equal(await page.locator('#dc-ranch-preview-toggle').count(),0,
       'preview must not modify touch/mobile UI');
     assert.equal(await page.evaluate(()=>!!window.DCContinuousRanchPreview),false);
+    assert.equal(await page.evaluate(()=>!!window.DCRanchWalkability),false,
+      'walkability inspector must not load in touch mode');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{
