@@ -27,20 +27,20 @@ def check(browser,entry,mobile):
  page.locator("#hexCageBuy").click()
  assert page.evaluate("DCCages.owned(state,'miniVolcano')") is True
  page.locator("#hexCageGoalEnabled").check()
- page.locator("#hexCageGoalValue").fill("8")
+ page.locator("#hexCageGoalValue").fill("40")
  page.locator("#hexCageTrain").click()
  first=page.evaluate("""() => {
   const id=document.getElementById('hexMon').value;
   return DCFarm.trainingStatus(state,id);
  }""")
- assert first["cageId"]=="miniVolcano" and first["goal"]==8,first
- assert "목표 8" in page.locator("#hexTrainingDetails").inner_text()
+ assert first["cageId"]=="miniVolcano" and first["goal"]==40,first
+ assert "목표 40" in page.locator("#hexTrainingDetails").inner_text()
  assert not page.locator("#hexTrainingMeter").is_hidden()
  page.evaluate("""() => {state.world.paused=false;DCHexFarm.tick(19);state.world.paused=true;}""")
  middle=page.evaluate("""() => DCFarm.trainingStatus(state,
   document.getElementById('hexMon').value)""")
  assert middle["measure"]=="ap" and middle["current"]>=2,middle
- assert middle["remaining"]==max(0,8-middle["current"])
+ assert middle["remaining"]==max(0,40-middle["current"])
  assert "남음" in page.locator("#hexTrainingDetails").inner_text()
  # Drive the existing fatigue/HP threshold, NOT a fake training result.
  page.evaluate("""() => {
@@ -53,7 +53,7 @@ def check(browser,entry,mobile):
  resting=page.evaluate("""() => DCFarm.trainingStatus(state,
   document.getElementById('hexMon').value)""")
  assert resting["restResume"] is True,resting
- assert resting["goal"]==8 and resting["cageId"]=="miniVolcano",resting
+ assert resting["goal"]==40 and resting["cageId"]=="miniVolcano",resting
  assert "자동 휴식" in page.locator("#hexTrainingDetails").inner_text()
  assert "HP 80%" in page.locator("#hexTrainingNext").inner_text()
  # JSON export/import follows the real game's save migration and renderer.
@@ -62,7 +62,7 @@ def check(browser,entry,mobile):
  page.evaluate("DCHexFarm.tick(.01)")
  post=page.evaluate("""() => DCFarm.trainingStatus(state,
   document.getElementById('hexMon').value)""")
- assert post["restResume"] is True and post["goal"]==8,post
+ assert post["restResume"] is True and post["goal"]==40,post
  page.evaluate("""() => {
   const id=document.getElementById('hexMon').value,m=state.team.find(x=>x.instanceId===id);
   const a=state.farm.actors[id];
@@ -72,13 +72,13 @@ def check(browser,entry,mobile):
  }""")
  resumed=page.evaluate("""() => DCFarm.trainingStatus(state,
   document.getElementById('hexMon').value)""")
- assert resumed["restResume"] is False and resumed["goal"]==8,resumed
+ assert resumed["restResume"] is False and resumed["goal"]==40,resumed
  assert resumed["cageId"]=="miniVolcano" and resumed["kind"]=="cage",resumed
  # An already-met AP goal must not erase the resumed, active original order.
  before=page.evaluate("""() => {
   const id=document.getElementById('hexMon').value;
   const m=state.team.find(x=>x.instanceId===id);
-  m.evo.ap.dragon=9;
+  m.evo.ap.dragon=41;
   return JSON.stringify(state.farm.actors[id]);
  }""")
  page.locator("#hexCageTrain").click()
