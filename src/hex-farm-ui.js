@@ -55,6 +55,49 @@ $('farmViewport').setAttribute('aria-label','육각형 사육장 지도, 좌우 
 const controls=document.createElement('div');controls.className='hexControls';controls.innerHTML=`<div class="hexClock"><strong id="hexTime">DAY 1 · 00:00</strong><span id="hexSeason" aria-label="현재 계절">🌱 봄</span><button type="button" id="hexPause">⏸ 일시정지</button><label for="hexSpeed">속도</label><select id="hexSpeed"><option value="1">1배</option><option value="2">2배</option><option value="4">4배</option></select></div><div class="hexOrders"><label for="hexMon">명령 대상</label><select id="hexMon"></select><button type="button" data-hex-command="attack">⚔ 공격 훈련</button><button type="button" data-hex-command="defense">🛡 방어 훈련</button><button type="button" data-hex-command="speed">💨 속도 훈련</button><button type="button" data-hex-command="rest">💤 휴식</button><button type="button" id="hexDrop">🍖 바닥에 먹이 놓기</button><button type="button" data-hex-command="stop">■ 중지</button><button type="button" id="hexFollow">📍 디지몬 따라가기</button><label class="hexAutoToggle"><input type="checkbox" id="hexAutoRest" checked> 체력 부족 시 자동 휴식 후 훈련 복귀</label></div><div class="hexTargetControls"><label class="hexAutoToggle"><input type="checkbox" id="hexGoalEnabled"> 목표 능력치까지 훈련하고 자동 중지</label><label for="hexGoalValue">목표 수치 <input id="hexGoalValue" type="number" min="1" max="999" step="1" value="20" inputmode="numeric"></label><span>공격·방어·속도 훈련 명령에만 적용 (진화 보장 아님)</span></div><section class="hexCageBox"><strong>🏞 원작 훈련 시설 · 숨겨진 종족 AP</strong><div class="hexCageActions"><label for="hexCageSelect">시설 선택</label><select id="hexCageSelect"></select><button type="button" id="hexCageBuy">🔨 시설 구입</button><button type="button" id="hexCageTrain">🏋 종족 AP 훈련</button></div><label class="hexAutoToggle"><input type="checkbox" id="hexCageGoalEnabled"> AP 목표를 달성하면 자동 중지</label><label for="hexCageGoalValue">AP 목표 <input type="number" min="1" max="999" step="1" id="hexCageGoalValue" value="20" inputmode="numeric"></label><p id="hexCageInfo" class="hexCageInfo"></p><p id="hexCageValue" class="hexCageInfo"></p><span class="hexCageNote">원작 공략 기반 시설 효과 · AP 수치/비용/해금 조건은 임시 조정값 · 별도 건물 그래픽은 추후 구현</span></section><div class="hexCareControls"><strong>🩹 건강 관리</strong><button type="button" id="hexBandage">🩹 붕대 30 Bit</button><button type="button" id="hexMedicine">💊 약 50 Bit</button><span id="hexCareInfo">부상·질병 없음</span></div><p class="hexNote" id="hexStatus">중앙 사육장에서 명령을 선택해 봐. 시설 능력치/시간은 확장판 임시 밸런스야.</p>`;
 $('farmScrollFrame')?.after(controls); // No existing wrapper is assumed; fallback below.
 if(!controls.isConnected)$('farmPanel').querySelector('.farmScrollFrame').after(controls);
+// Read-only training status: nothing is added to the game save.
+const trainingPanel=document.createElement('section');trainingPanel.className='hexTrainingProgress';
+trainingPanel.innerHTML='<strong id="hexTrainingTitle">🏋 선택한 디지몬의 훈련 상태</strong>'+
+ '<p id="hexTrainingDetails">훈련 대기 중</p>'+
+ '<progress id="hexTrainingMeter" max="100" value="0" aria-label="훈련 목표 달성률"></progress>'+
+ '<p id="hexTrainingNext">훈련을 선택하면 목표 진행률을 확인할 수 있어.</p>';
+controls.querySelector('.hexCageBox').after(trainingPanel);
+function showTrainingProgress(){
+ const p=core.trainingStatus(state,$('hexMon').value);
+ const title=$('hexTrainingTitle'),details=$('hexTrainingDetails');
+ const bar=$('hexTrainingMeter'),next=$('hexTrainingNext');
+ if(!p){
+  title.textContent='🏋 훈련 상태 · 선택된 디지몬 없음';
+  details.textContent='사육장 디지몬을 선택해 줘.';
+  bar.hidden=true;next.textContent='';return;
+ }
+ const label=p.facility||(p.kind==='attack'?'공격':p.kind==='defense'?'방어':
+  p.kind==='speed'?'속도':p.kind==='rest'?'휴식':'자동생활');
+ title.textContent='🏋 '+p.name+' · '+label;
+ if(p.restResume){
+  details.textContent='💤 자동 휴식 중 · 이전 '+label+' 훈련 재개 대기';
+  next.textContent='HP '+Math.ceil(p.hp)+'/'+p.maxHp+
+   ' · 피로 '+Math.floor(p.fatigue)+
+   ' · HP 80% 이상, 피로 30 이하가 되면 자동 복귀';
+ }else if(p.kind==='idle'||!['attack','defense','speed','cage'].includes(p.kind)){
+  details.textContent=p.kind==='rest'?'💤 휴식 중':p.kind==='eat'?'🍖 먹는 중':
+   '대기 중 · 훈련 명령을 선택해 줘.';
+  next.textContent=p.kind==='rest'?'휴식 완료 후 대기로 돌아가.':
+   '시설을 선택하면 해당 종족 AP와 목표 진행률을 볼 수 있어.';
+ }else{
+  details.textContent=label+' '+(p.mode==='waiting'?'시설 대기 중':
+   p.mode==='moving'?'이동 중':p.mode==='acting'?'훈련 중':'대기')+
+   ' · '+(p.measure==='ap'?'종족 AP ':'능력치 ')+(p.current??0)+
+   (p.goal!==null?' / 목표 '+p.goal+' · 남음 '+p.remaining:
+    ' · 목표 미설정(자동 반복)');
+  next.textContent=p.cycleSeconds!==null?
+   '현재 훈련 주기 약 '+p.cycleSeconds.toFixed(1)+'초 남음 · '+
+   (p.autoRest?'체력 부족 시 자동 휴식·복귀':'자동 휴식 사용 안 함'):
+   (p.autoRest?'체력 부족 시 자동 휴식·복귀':'자동 휴식 사용 안 함');
+ }
+ bar.hidden=p.goal===null;
+ if(p.goal!==null)bar.value=p.percent;
+}
 function refreshCageFacilities(){
  cages.ensure(state);
  const list=$('hexCageSelect'),last=list.value;
@@ -70,7 +113,9 @@ function updateCageInfo(){
  const owned=cages.owned(state,c.id);
  $('hexCageBuy').disabled=owned||c.needs.length>0||!c.affordable;
  $('hexCageBuy').textContent=owned?'✅ 건설 완료':'🔨 '+format(c.cost)+' Bit에 구입';
- $('hexCageTrain').disabled=!owned;
+ const selected=state.team.find(x=>x.instanceId===$('hexMon').value);
+ $('hexCageTrain').disabled=!owned||!selected||selected.lost||selected.egg||
+  selected.location==='storage'||!!state.pendingBattle;
  $('hexCageInfo').textContent=c.label+': '+c.description+' · '+(owned?'사용 가능':c.needs.length?c.needs.join(' · '):'구매 가능');
  const amount=m?.evo?.ap?.[apKey]||0;
  const elem=m?.evo?.resist||{};
@@ -82,7 +127,11 @@ $('hexCageBuy').onclick=()=>{const c=$('hexCageSelect').value;if(!cages.buy(stat
 $('hexCageTrain').onclick=()=>{const c=$('hexCageSelect').value,m=$('hexMon').value;const options={cage:c};
  if($('hexCageGoalEnabled').checked){const goal=Number($('hexCageGoalValue').value);
   if(!Number.isInteger(goal)||goal<1||goal>999)return toast('AP 목표는 1~999로 입력해 줘.');options.apTarget=goal;}
- if(!core.command(state,m,'cage',options))return toast('시설을 건설하고 디지몬을 선택해 줘.');
+ const mon=state.team.find(x=>x.instanceId===m);
+ const family=Object.keys(cages.MAP[c]?.ap||{})[0];
+ if(options.apTarget&&Number(mon?.evo?.ap?.[family]||0)>=options.apTarget)
+  return toast('이미 AP 목표를 달성했어. 진행 중인 훈련은 유지돼.');
+ if(!core.command(state,m,'cage',options))return toast('시설 해금·디지몬 상태 또는 목표 수치를 확인해 줘.');
  drawStatus();save(false);toast('선택한 시설로 이동해 종족 AP 훈련을 시작해.');};
 // Portable JSON saves contain game state only, never ROM/sprite resources.
 const archive=document.createElement('div');archive.className='hexArchive';
@@ -160,10 +209,26 @@ function renderRoster(){const names=state.team.filter(m=>m.location!=='storage')
  if(names.some(m=>m.instanceId===value))select.value=value;else if(state.team[state.selected])select.value=state.team[state.selected].instanceId;
  for(const [id,node] of actors){if(!names.some(m=>m.instanceId===id)){node.remove();actors.delete(id);}}
  for(const m of names){if(actors.has(m.instanceId))continue;const node=document.createElement('button');node.className='hexActor';node.type='button';node.title=m.name+' 선택';node.innerHTML='<img alt=""><span></span><i class="hexEmote" aria-hidden="true"></i>';node.querySelector('span').textContent=m.name;node.addEventListener('click',()=>{select.value=m.instanceId;state.selected=state.team.findIndex(a=>a.instanceId===m.instanceId);render();drawStatus();});$('farmWorld').appendChild(node);actors.set(m.instanceId,node);}}
-$('hexMon').onchange=()=>{const actor=state.farm.actors[$('hexMon').value];$('hexGoalEnabled').checked=!!actor?.target;if(actor?.target)$('hexGoalValue').value=actor.target.value;state.selected=state.team.findIndex(m=>m.instanceId===$('hexMon').value);render();save(false);drawStatus();updateCageInfo();};
+$('hexMon').onchange=()=>{const actor=state.farm.actors[$('hexMon').value];
+ const physical=actor?.target?.stat?actor.target:
+  actor?.resume&&actor.resume!=='cage'&&actor.resumeOptions?.target?
+   {value:actor.resumeOptions.target}:null;
+ const ap=actor?.target?.ap?actor.target:
+  actor?.resume==='cage'&&actor.resumeOptions?.apTarget?
+   {value:actor.resumeOptions.apTarget}:null;
+ $('hexGoalEnabled').checked=!!physical;
+ if(physical)$('hexGoalValue').value=physical.value;
+ $('hexCageGoalEnabled').checked=!!ap;
+ if(ap)$('hexCageGoalValue').value=ap.value;
+ state.selected=state.team.findIndex(m=>m.instanceId===$('hexMon').value);
+ render();save(false);drawStatus();};
 $('hexAutoRest').onchange=()=>{const ar=state.farm.actors[$('hexMon').value];if(!ar)return;ar.autoRest=$('hexAutoRest').checked;save(false);drawStatus();};
 controls.addEventListener('click',e=>{const btn=e.target.closest('[data-hex-command]');if(btn){const id=$('hexMon').value;const kind=btn.dataset.hexCommand;const options={};if(['attack','defense','speed'].includes(kind)&&$('hexGoalEnabled').checked){const target=Number($('hexGoalValue').value);if(!Number.isInteger(target)||target<1||target>999)return toast('목표 수치는 1~999로 입력해 줘.');options.target=target;}
- if(!core.command(state,id,kind,options))return toast('선택한 디지몬에게 명령을 내릴 수 없어.');drawStatus();save(false);}
+ const mon=state.team.find(m=>m.instanceId===id),key={attack:'atk',defense:'def',speed:'spd'}[kind];
+ if(options.target&&mon&&mon[key]>=options.target)
+  return toast('이미 능력치 목표를 달성했어. 기존 훈련은 유지돼.');
+ if(!core.command(state,id,kind,options))return toast('디지몬 상태와 목표 수치를 확인해 줘.');
+ drawStatus();save(false);}
  if(e.target.closest('#hexDrop'))toggleFoodPlacement();});
 $('hexBandage').onclick=()=>treatSelected('injury');
 $('hexMedicine').onclick=()=>treatSelected('sickness');
@@ -179,7 +244,7 @@ function drawStatus(){const mon=state.team.find(m=>m.instanceId===$('hexMon').va
  $('hexStatus').textContent=`${mon.name}: ${activity}${a?.goal?' · '+(a.goal.kind==='cage'?(cages.MAP[a.goal.cage]?.label||'종족 훈련'):(kind[a.goal.kind]||''))+' · '+({core:'중앙',training:'특별훈련장',track:'주행장',forest:'숲',rest:'휴식 구역'}[a.goal.zone]||'중앙') : ''}${a?.target?' · 목표 '+(a.target.stat||a.target.ap)+' '+a.target.value:''} | HP ${Math.ceil(mon.hp)}/${mon.maxHp} · 배고픔 ${Math.floor(mon.hunger)}/100 · 피로 ${Math.floor(mon.fatigue)} · 훈련 ${mon.training}`;
  care.ensureMon(mon);$('hexCareInfo').textContent=(mon.care.injured?'🩹 부상 ':'')+(mon.care.sick?'🤒 질병 ':'')+(!mon.care.injured&&!mon.care.sick?'건강':'')+' · 육성 패널티 '+(mon.evo?.penalties||0);
  $('hexBandage').disabled=!mon.care.injured;$('hexMedicine').disabled=!mon.care.sick;
- updateCageInfo();}
+ updateCageInfo();showTrainingProgress();}
 function updateActors(){
  renderRoster();
  const monset=new Map(state.team.map(m=>[m.instanceId,m]));
