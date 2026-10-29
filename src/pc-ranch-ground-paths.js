@@ -30,7 +30,8 @@
   function enabledZones(){
     const facilities=currentState()?.facilities||{};
     // Facility names/positions are a read-only mirror of canonical data.
-    return validZones.filter(id=>facilities[id]===true);
+    // The original farm core uses truthiness for imported/legacy unlocks.
+    return validZones.filter(id=>!!facilities[id]);
   }
   function makePath(d,stroke,width,opacity){
     const p=document.createElementNS(ns,'path');
