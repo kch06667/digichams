@@ -646,6 +646,41 @@ function satisfied(m,r){const e=ensureMon(m).evo;
  (!r.ap||Object.entries(r.ap).every(([k,v])=>safeInt(e.ap[k])>=v));
 }
 function candidates(m,available){return rulesFor(m).map(r=>({to:r.to,available:!!available?.(r.to),ready:satisfied(m,r),requirements:r}));}
+// Read-only diagnostics for all 477 confirmed guide-sourced evolution routes.
+// Never call ensureMon here: asking the UI to show requirements must not mutate
+// an old save, award AP, choose a target, or change evolution priorities.
+function routeProgress(m,available){
+ if(!m||typeof m.name!=='string')return [];
+ const e=m.evo||{}, ap=e.ap||{};
+ const battles=safeInt(e.battles), wins=safeInt(e.wins);
+ const winFraction=battles?Math.min(1,wins/battles):0;
+ const reverts=safeInt(e.eggReverts), penalties=safeInt(e.penalties);
+ const days=safeInt(e.stageDays);
+ const check=(kind,key,have,need)=>({
+  kind,key,have,need,missing:Math.max(0,need-have),
+  met:have>=need
+ });
+ return rulesFor(m).map(r=>{
+  const conditions=[];
+  if(r.battles)conditions.push(check('battles',null,battles,r.battles));
+  if(r.wins)conditions.push(check('winRate',null,winFraction,r.wins));
+  if(r.eggReverts)conditions.push(check('eggReverts',null,reverts,r.eggReverts));
+  if(r.penalties)conditions.push(check('penalties',null,penalties,r.penalties));
+  if(r.time)conditions.push(check('stageDays',null,days,BALANCE.timeEvolutionDays));
+  for(const [family,need] of Object.entries(r.ap||{}))
+   conditions.push(check('ap',family,safeInt(ap[family]),need));
+  const known=typeof available==='function'?!!available(r.to):true;
+  return {to:r.to,available:known,ready:known&&conditions.every(c=>c.met),
+   selected:e.target===r.to,
+   missing:conditions.filter(c=>!c.met),
+   conditions,source:r.source||null};
+ });
+}
+function lineage(name){
+ if(typeof name!=='string'||!name||name.length>90)return {from:[],to:[]};
+ return {from:incoming(name).map(r=>r.from),
+  to:(KNOWN[name]||[]).map(r=>r.to)};
+}
 function log(g,message){if(!Array.isArray(g.logs))g.logs=[];g.logs.unshift(`[DAY ${g.day||1}] ${message}`);g.logs=g.logs.slice(0,60);}
 function transform(g,m,target,lookUp){const base=lookUp?.(target);if(!base)return false;const old=m.name;const e=ensureMon(m).evo;
  e.history.push({from:old,to:target,day:g.day||1,battles:e.battles});e.history=e.history.slice(-25);
@@ -725,12 +760,10 @@ function advanceDays(g,days,lookUp){ensure(g);let events=0;const n=Math.max(0,Ma
 function describe(m,available){ensureMon(m);const e=m.evo;
  return {battles:e.battles,wins:e.wins,winRate:Math.floor(winRate(m)*100),eggReverts:e.eggReverts,stageDays:e.stageDays,limit:BALANCE.stageDays[m.stage]||null,ap:{...e.ap},resist:{...e.resist},target:e.target||null,candidates:candidates(m,available)};
 }
-const api={KNOWN,BALANCE,ensureMon,ensure,winRate,rulesFor,incoming,chooseTarget,candidates,describe,maybeEvolve,recordBattle,train,hatch,advanceDays,eggRevert,EMPTY_AP};
+const api={KNOWN,BALANCE,ensureMon,ensure,winRate,rulesFor,incoming,lineage,routeProgress,chooseTarget,candidates,describe,maybeEvolve,recordBattle,train,hatch,advanceDays,eggRevert,EMPTY_AP};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 root.DCEvolution=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
-
-
 </script>
 <script>
 const SPECIES=[{name:'코로몬',stage:'유년기 II',emoji:'🟠',hp:50,atk:7,def:5,spd:7,diff:18,next:'아구몬'},{name:'아구몬',stage:'성장기',emoji:'🦖',hp:72,atk:13,def:9,spd:10,diff:35,next:'그레이몬'},{name:'아르마몬',stage:'성장기',emoji:'🛡️',hp:74,atk:12,def:13,spd:8,diff:32},{name:'그레이몬',stage:'성숙기',emoji:'🐲',hp:110,atk:20,def:15,spd:12,diff:55,next:'메탈그레이몬'},{name:'파타몬',stage:'성장기',emoji:'🐹',hp:66,atk:10,def:8,spd:14,diff:27,next:'엔젤몬'},{name:'가부몬',stage:'성장기',emoji:'🐺',hp:70,atk:12,def:11,spd:12,diff:30,next:'가루몬'},{name:'쿠네몬',stage:'성장기',emoji:'🐛',hp:68,atk:11,def:8,spd:13,diff:26,next:'스팅몬'},{name:'고부리몬',stage:'성장기',emoji:'👹',hp:58,atk:11,def:7,spd:8,diff:22},{name:'쿠와가몬',stage:'성숙기',emoji:'🪲',hp:92,atk:18,def:13,spd:11,diff:48},{name:'파르몬',stage:'성장기',emoji:'🌱',hp:62,atk:9,def:9,spd:9,diff:25},{name:'가루몬',stage:'성숙기',emoji:'🐺',hp:96,atk:18,def:13,spd:17,diff:50},{name:'엔젤몬',stage:'성숙기',emoji:'🪽',hp:88,atk:17,def:12,spd:16,diff:47},{name:'메탈그레이몬',stage:'완전체',emoji:'🤖',hp:150,atk:27,def:22,spd:15,diff:75}];
@@ -2601,4 +2634,108 @@ window.DCHexFarm={get state(){return state},tick:(seconds)=>{core.advance(state,
  $('hexArchiveFile')?.addEventListener('change',()=>queueMicrotask(()=>renderChampionship()));
  renderChampionship();
 })();
-</script></body></html>
+</script><style id="evolution-guide-style-v1">
+/* Read-only evolution route diagnostics; optimized for mobile and large catalogs. */
+#evolutionGoalDiagnostics,#evolutionCatalogLineage{border:1px solid #456475;border-radius:10px;padding:10px 12px;margin:10px 0;background:#112635;color:#d5ede8;min-width:0}
+#evolutionGoalDiagnostics strong,#evolutionCatalogLineage strong{font-size:13px;color:#f4dfab}
+#evolutionGoalDiagnostics p,#evolutionCatalogLineage p{font-size:12px;line-height:1.55;margin:5px 0;overflow-wrap:anywhere}
+#evolutionGoalDiagnostics .evoGuideList{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin-top:9px}
+#evolutionGoalDiagnostics .evoGuideRow{padding:8px;border:1px solid #3c5664;border-radius:8px;background:#142c3a;min-width:0}
+#evolutionGoalDiagnostics .evoGuideReady{color:#a8e2af}
+#evolutionGoalDiagnostics .evoGuideMissing{color:#d5dce6}
+#evolutionGoalDiagnostics .evoGuideNote,#evolutionCatalogLineage .evoGuideNote{font-size:11px;color:#a6cad2}
+@media(max-width:500px){#evolutionGoalDiagnostics,#evolutionCatalogLineage{padding:9px}#evolutionGoalDiagnostics .evoGuideList{grid-template-columns:1fr}}
+</style>
+<script id="evolution-guide-ui-v1">
+/* Evolution 477-route diagnostics and read-only lineage, original game's
+ * existing target-selection and catalog interfaces remain authoritative.
+ * No new save data, no sprite bytes, and no evolution decisions here.
+ */
+(function(root){'use strict';
+ const evo=root.DCEvolution;
+ const rules=document.getElementById('evolutionRules');
+ const catalog=document.getElementById('catalogDetail');
+ if(!evo?.routeProgress||!evo?.lineage||!rules||!catalog)return;
+ const labels={battles:'전투',winRate:'승률',eggReverts:'환생',
+  penalties:'육성 패널티',stageDays:'성장 경과'};
+ const family={dragon:'용족',beast:'짐승',bird:'조류',water:'수중',
+  insect:'곤충·식물',machine:'기계',darkness:'암흑',holy:'신성',
+  data:'데이터',virus:'바이러스',vaccine:'백신'};
+ const diagnostics=document.createElement('section');
+ diagnostics.id='evolutionGoalDiagnostics';
+ diagnostics.className='evoGuide';
+ diagnostics.setAttribute('aria-label','진화 조건 상세 진행');
+ rules.insertAdjacentElement('afterend',diagnostics);
+ const genealogy=document.createElement('section');
+ genealogy.id='evolutionCatalogLineage';
+ genealogy.className='evoGuide';
+ genealogy.setAttribute('aria-label','도감 진화 연결 관계');
+ catalog.insertAdjacentElement('afterend',genealogy);
+ function conditionLabel(c){
+  const name=c.kind==='ap'?(family[c.key]||c.key)+' AP':labels[c.kind]||c.kind;
+  if(c.kind==='winRate'){
+   const value=Math.round(c.have*100),need=Math.round(c.need*100);
+   return name+' '+value+'% / '+need+'%'+(c.met?' ✓':' (부족 '+Math.max(0,need-value)+'%p)');
+  }
+  return name+' '+c.have+' / '+c.need+(c.met?' ✓':' (부족 '+c.missing+')');
+ }
+ function addText(parent,tag,str,className){
+  const element=document.createElement(tag);
+  if(className)element.className=className;
+  element.textContent=str;parent.appendChild(element);return element;
+ }
+ function renderGoals(){
+  const m=typeof root.current==='function'?root.current():null;
+  if(!m)return;
+  const rows=evo.routeProgress(m,n=>typeof root.speciesLookup==='function'&&!!root.speciesLookup(n));
+  diagnostics.replaceChildren();
+  addText(diagnostics,'strong','🧭 진화 목표 조건 분석 · '+m.name);
+  const target=m.evo?.target;
+  addText(diagnostics,'p',target?'🎯 '+target+' 목표 고정 · 다른 진화 분기는 보류 중':
+   '자동 진화 선택 중 · 목표를 지정하면 다른 분기는 보류돼.', 'evoGuideHint');
+  if(!rows.length){addText(diagnostics,'p','확인된 다음 진화 경로가 없어.');return;}
+  const list=document.createElement('div');list.className='evoGuideList';
+  for(const row of rows){
+   const item=document.createElement('div');item.className='evoGuideRow';
+   const text=(row.selected?'🎯 ':'')+row.to+' · '+
+    (!row.available?'도감 대상 데이터 없음':row.ready?'진화 조건 충족':
+     '조건 '+row.conditions.filter(c=>c.met).length+'/'+row.conditions.length+' 충족');
+   addText(item,'strong',text);
+   addText(item,'p',row.conditions.length?
+    row.conditions.map(conditionLabel).join(' · '):
+    '추가 조건 없음',row.ready?'evoGuideReady':'evoGuideMissing');
+   list.appendChild(item);
+  }
+  diagnostics.appendChild(list);
+  addText(diagnostics,'p','전투·AP·환생·경과일의 필요 수치는 현재 진화표 기준이며, '+
+   '일부 AP 획득량과 성장일·분기 우선순위는 ROM 미검증 임시값이야.','evoGuideNote');
+ }
+ function renderLineage(){
+  const title=catalog.querySelector('h3');
+  const name=title?.textContent?.trim();
+  genealogy.replaceChildren();
+  if(!name){genealogy.hidden=true;return;}
+  genealogy.hidden=false;
+  const path=evo.lineage(name);
+  addText(genealogy,'strong','🌳 '+name+' 진화 연결 관계');
+  addText(genealogy,'p','진화 전: '+(path.from.join(' · ')||'확인된 이전 단계 없음'));
+  addText(genealogy,'p','진화 후: '+(path.to.join(' · ')||'확인된 다음 단계 없음'));
+  addText(genealogy,'p','전체 216종 · 공략 자료 기반 477개 진화 경로 · '+
+   '현재 육성 중인 디지몬의 진화 목표 선택은 위 진화 후보 화면에서 가능.','evoGuideNote');
+ }
+ // Observe only the game's authoritative rendered content, not our siblings.
+ // A MutationObserver on the entire page would be too expensive for the farm.
+ let queuedGoals=false,queuedLineage=false;
+ new MutationObserver(()=>{
+  if(queuedGoals)return;queuedGoals=true;
+  queueMicrotask(()=>{queuedGoals=false;renderGoals();});
+ }).observe(rules,{childList:true});
+ new MutationObserver(()=>{
+  if(queuedLineage)return;queuedLineage=true;
+  queueMicrotask(()=>{queuedLineage=false;renderLineage();});
+ }).observe(catalog,{childList:true,subtree:true,characterData:true});
+ renderGoals();renderLineage();
+ root.DCEvolutionGuide={refresh:renderGoals,refreshLineage:renderLineage};
+})(typeof globalThis!=='undefined'?globalThis:this);
+</script>
+</body></html>
