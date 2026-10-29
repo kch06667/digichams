@@ -455,32 +455,32 @@
       }
       g.fillStyle(0xc6e1d1,.75);g.fillRect(634,57,38,38);
       g.fillStyle(0x426b78,1);
-      g.fillTriangle(0,193,140,90,291,193);
-      g.fillTriangle(186,193,342,105,522,193);
-      g.fillTriangle(450,193,626,98,800,193);
+      g.fillTriangle(0,168,140,90,291,168);
+      g.fillTriangle(186,168,342,105,522,168);
+      g.fillTriangle(450,168,626,98,800,168);
       g.fillStyle(0x2b5359,1);
       for(let x=0;x<800;x+=48){
-        const h=19+(x%5)*4;g.fillRect(x,189-h,41,h+23);
+        const h=19+(x%5)*4;g.fillRect(x,159-h,41,h+23);
       }
-      g.fillStyle(0x152e36,1);g.fillRect(0,191,800,53);
-      g.fillStyle(0x4f796b,1);g.fillRect(0,197,800,8);
+      g.fillStyle(0x152e36,1);g.fillRect(0,143,800,48);
+      g.fillStyle(0x4f796b,1);g.fillRect(0,145,800,8);
       for(let x=15;x<795;x+=31){
         g.fillStyle(x%3?0x6a8b78:0x8fad8a,.62);
-        g.fillRect(x,212,15,9);
+        g.fillRect(x,156,15,9);
       }
-      g.fillStyle(0x111f31,1);g.fillRect(0,244,800,206);
-      g.fillStyle(0x31564b,1);g.fillRect(18,249,764,155);
-      g.fillStyle(0x426b58,1);g.fillRect(29,258,742,137);
-      for(let y=265;y<392;y+=29){
+      g.fillStyle(0x111f31,1);g.fillRect(0,167,800,283);
+      g.fillStyle(0x31564b,1);g.fillRect(18,170,764,234);
+      g.fillStyle(0x426b58,1);g.fillRect(29,177,742,218);
+      for(let y=180;y<392;y+=29){
         g.lineStyle(1,0x83aa89,.25);g.lineBetween(30,y,770,y);
       }
       for(let x=43;x<760;x+=45){
-        g.lineStyle(1,0xb9c6a2,.18);g.lineBetween(x,259,x,393);
+        g.lineStyle(1,0xb9c6a2,.18);g.lineBetween(x,178,x,393);
       }
-      g.fillStyle(0x68bda4,.13);g.fillRect(36,261,330,126);
-      g.fillStyle(0xe9a28b,.12);g.fillRect(435,261,329,126);
-      g.lineStyle(2,0xe6d9a5,.50);g.lineBetween(400,257,400,395);
-      g.lineStyle(3,0xa8c2ad,.80);g.strokeRect(23,253,754,147);
+      g.fillStyle(0x68bda4,.13);g.fillRect(36,180,330,207);
+      g.fillStyle(0xe9a28b,.12);g.fillRect(435,180,329,207);
+      g.lineStyle(2,0xe6d9a5,.50);g.lineBetween(400,176,400,395);
+      g.lineStyle(3,0xa8c2ad,.80);g.strokeRect(23,173,754,227);
       g.fillStyle(0xb9a76f,1);g.fillRect(23,401,754,6);
       const panel=this.add.graphics().setDepth(18);
       panel.fillStyle(0x101e30,.96);panel.fillRect(10,8,780,98);
