@@ -48,7 +48,7 @@ class GameFileHandler(http.server.SimpleHTTPRequestHandler):
 
 
 
-def missing_art(entries, local_root=LOCAL):
+def missing_art(entries, local_root=None):
     """List species with missing/incomplete local motion sheets in index order.
 
     Use ONLY the local catalog's indexed species folder, never arbitrary
@@ -60,7 +60,7 @@ def missing_art(entries, local_root=LOCAL):
     names=[entry["name"] for entry in entries]
     if len(set(names))!=216:
         raise ValueError("ambiguous local species names")
-    local_root=Path(local_root)
+    local_root=Path(local_root if local_root is not None else LOCAL)
     index=local_root/"catalog.json"
     if not index.is_file():
         return names
@@ -110,7 +110,7 @@ def missing_art(entries, local_root=LOCAL):
     return missing
 
 
-def catalog_ready(entries, local_root=LOCAL):
+def catalog_ready(entries, local_root=None):
     """Backward-compatible all-species readiness check (read-only)."""
     try:
         return not missing_art(entries,local_root)
