@@ -30,5 +30,10 @@ jobs:
         run: python3 tests/full-game-journey-browser.py
       - name: Install pinned Phaser for real PC in-page 1.0 integration
         run: npm install --ignore-scripts --no-save --no-package-lock phaser@3.90.0
+      - name: Prepare original Agumon and Gabumon GIFs privately for real PC match
+        run: |
+          python3 -m pip install 'Pillow>=10,<13'
+          python3 tools/export-phaser-roster.py --species 아구몬 --species 가부몬
+          test -s phaser-lab/local-assets/catalog.json
       - name: Real PC one-save capture-to-cup followed by Phaser and archive
         run: python3 tests/pc-complete-phaser-journey-browser.py
