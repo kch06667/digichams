@@ -54,7 +54,7 @@ def verify_pc_layout(page,section,viewport):
       return {
         section,width:innerWidth,documentWidth:document.documentElement.scrollWidth,
         cssReady:!!document.querySelector('#dc-pc-visual-polish')?.sheet,
-        buttons,nav:grid=getComputedStyle(document.querySelector('nav.tabs')).gridTemplateColumns,
+        buttons,nav:getComputedStyle(document.querySelector('nav.tabs')).gridTemplateColumns,
         viewport:box('#farmPanel .farmViewport'),
         map:box('#farmPanel .farmWorld'),
         mapBackground:computed('#farmPanel .farmWorld')?.backgroundImage||'',
