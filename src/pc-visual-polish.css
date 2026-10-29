@@ -139,6 +139,62 @@
   #farmPanel .hexCageInfo,
   #farmPanel .hexTrainingProgress p {font-size:13px;line-height:1.5;}
 
+  /* Issue #69: PC nursery has a map stage and a compact control rail.
+   * Existing buttons/IDs/events remain untouched. The rail scrolls locally,
+   * instead of requiring the player to travel down the entire document. */
+  #nursery.section.active {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(280px,310px);
+    align-items:start;
+    gap:12px;
+  }
+  #nursery.active > #farmPanel {
+    grid-column:1;
+    grid-row:1;
+    min-width:0;
+    margin-bottom:0;
+  }
+  #nursery.active > .layout {
+    grid-column:2;
+    grid-row:1;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+    max-height:calc(100dvh - 172px);
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    padding-right:4px;
+  }
+  #nursery.active > .layout > .panel {
+    min-width:0;
+    width:100%;
+    box-sizing:border-box;
+    margin:0;
+  }
+  #nursery.active > #legacyRoomDetails {
+    grid-column:1/-1;
+    grid-row:2;
+  }
+  #nursery.active > #farmPanel .farmIntro p,
+  #nursery.active > #farmPanel .farmLegend {display:none;}
+  #nursery.active > #farmPanel .farmEconomy {flex-wrap:wrap;gap:5px;margin:7px 0;}
+  #nursery.active > #farmPanel .farmChip {padding:5px 8px;font-size:12px;}
+  #nursery.active > #farmPanel .farmViewport {
+    height:clamp(300px,calc(100dvh - 360px),555px);
+  }
+  #nursery.active > #farmPanel .farmNav {
+    justify-content:flex-start;
+    margin:7px 0 4px;
+    gap:5px;
+  }
+  #nursery.active > #farmPanel .farmNav .farmHint {font-size:11px;}
+  @media (min-width:900px) and (max-width:1080px) {
+    #nursery.section.active {grid-template-columns:minmax(0,1fr) 280px;gap:8px;}
+    #nursery.active > #farmPanel .farmViewport {height:clamp(270px,calc(100dvh - 380px),490px);}
+  }
+
   /* Original capture gesture lives inside huntStage. Widen its first
    * column without changing canvas coordinates or rope mechanics. */
   #hunt>.layout {
