@@ -151,6 +151,14 @@ class LocalQuickstartTests(unittest.TestCase):
                 urlopen(base+path,timeout=3)
             self.assertEqual(error.exception.code,404)
 
+    def test_windows_double_click_launcher_stays_private_and_uses_real_game(self):
+        text=(ROOT/"PLAY_ON_PC.bat").read_text(encoding="utf-8")
+        self.assertIn('cd /d "%~dp0"',text)
+        self.assertIn('py -3 tools\\play_local.py',text)
+        self.assertNotIn('--lan',text)
+        self.assertNotIn('--skip-art',text)
+        self.assertNotIn('format c:',text.lower())
+
     def test_invalid_port_refused_before_network_or_art_access(self):
         with self.assertRaises(SystemExit) as error:
             mod.main(["--port","0","--skip-art","--no-browser"])
