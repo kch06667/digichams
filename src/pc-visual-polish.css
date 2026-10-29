@@ -606,6 +606,44 @@
     min-height:290px;
   }
 
+  /* Map controls now live in the slide-out drawer. Keep the gameplay
+   * viewport full-sized and prevent legacy debug panels extending the page. */
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmLegend {display:none;}
+  body:not(.mode-nds) #nursery.active > #legacyRoomDetails {display:none;}
+  body:not(.mode-nds) #dc-pc-farm-tools {
+    display:grid;
+    gap:8px;
+    padding:10px;
+    border:1px solid #ad9868;
+    border-radius:7px;
+    background:#183c51;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmNav {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;
+    margin:0;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmNav button {
+    padding:5px;
+    min-height:35px;
+    font-size:11px;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmHint {
+    grid-column:1/-1;
+    font-size:11px;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmDetails {
+    font-size:12px;
+    line-height:1.5;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    max-height:calc(100dvh - 100px);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(310px,calc(100dvh - 190px),820px);
+  }
+
   /* Combat overlay still fills the window and remains keyboard-usable,
    * while keeping the arena framed on extra-wide desktops. */
   #dc-phaser-overlay {
