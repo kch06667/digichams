@@ -97,6 +97,7 @@ const server=http.createServer((req,res)=>{
       });
       const item={resolution:width+'x'+height,...metrics,errors};
       report.push(item);
+      console.log('PC shell measured',JSON.stringify(item));
       assert.equal(metrics.modeNds,false,'PC should open expanded mode');
       assert.equal(metrics.switcherVisible,false,'NDS mode switcher should be hidden');
       assert.ok(metrics.pageHorizontalOverflow<=2,'unexpected horizontal page scroll');
