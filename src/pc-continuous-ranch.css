@@ -294,3 +294,34 @@
     filter:drop-shadow(0 4px 3px rgba(24,58,38,.26));
   }
 }
+
+/* PR76: visual depth sorting and readable actor labels in crowded pastures.
+ * Read-only scene presentation; source sprite geometry and click targets stay
+ * unchanged. Hide only redundant overlapping names, never Digimon sprites. */
+@media (min-width:900px) and (pointer:fine) {
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor {
+    /* The actor-depth helper sets a stable z-index from world Y. */
+    will-change:auto;
+    outline-offset:3px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor::before {
+    /* The final flex child is a nameplate; feet are above it. */
+    bottom:21px;
+    width:30px;
+    height:8px;
+    background:rgba(18,48,28,.38);
+    filter:blur(2.5px);
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor[data-dc-label-collapsed="true"] span {
+    visibility:hidden;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor[data-dc-label-collapsed="true"]:hover span,
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor[data-dc-label-collapsed="true"]:focus-visible span,
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor.active span {
+    visibility:visible;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor:focus-visible {
+    outline:2px solid #ffe59a;
+    border-radius:5px;
+  }
+}
