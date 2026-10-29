@@ -81,7 +81,7 @@ def verify_pc_layout(page,section,viewport):
     assert len(result["buttons"])==5,result
     assert max(x["top"] for x in result["buttons"]) - min(
         x["top"] for x in result["buttons"])<3,result
-    assert min(x["height"] for x in result["buttons"])>=43,result
+    # Compact PC shell uses 34px game tabs rather than the previous 45px web tabs.\n    assert min(x["height"] for x in result["buttons"])>=32,result
     assert min(x["width"] for x in result["buttons"])>=80,result
     if section=="nursery":
         assert result["viewport"]["height"]>=375,result
