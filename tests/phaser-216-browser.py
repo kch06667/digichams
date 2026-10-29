@@ -50,6 +50,13 @@ def check(browser,base,mobile):
     assert len(set(keys))==6,actors
     assert all("catalog%3Aspecies%2F" in key for key in keys),actors
     assert all(a["hasKoArt"] for a in actors),actors
+    assert all(a["originY"]==1 for a in actors),(
+        "Original GIFs must be anchored at the feet across poses",actors)
+    snapshot=page.evaluate("DigiPhaserLab.matchSnapshot()")
+    for fighter,visual in zip(snapshot["fighters"],actors):
+        assert abs(visual["footY"]-(fighter["y"]-2))<5,(
+            "Art changed its ground line across GIF cell heights",
+            fighter,visual)
     stats=page.evaluate("DigiPhaserLab.localCatalogStatus()")
     assert stats["residentCount"]==6 and set(stats["residentSpecies"])==set(NAMES)
     # At most 6*13 local battle spritesheets; never all 216*13.
@@ -60,6 +67,15 @@ def check(browser,base,mobile):
     assert page.evaluate("DigiPhaserLab.qaFinishCombat()")
     finished=page.evaluate("DigiPhaserLab.matchSnapshot()")
     assert finished["finished"] and finished["winner"] in (0,1),finished
+    celebration=page.evaluate("DigiPhaserLab.renderedArt()")
+    for f,art in zip(finished["fighters"],celebration):
+        if f["side"]==finished["winner"] and f["hp"]>0:
+            assert art["action"]=="victory:30",(
+                "Winner must display owner's verified action 30",f,art)
+        if f["hp"]<=0:
+            assert art["action"]=="ko:37",(
+                "KO must override previous attack pose",f,art)
+        assert art["originY"]==1 and art["privateArt"],art
     # Restart with only two fighters. Existing converted pack cache reused
     # without re-reading all 216 manifests or creating a new art identity.
     page.locator("#squadSize").select_option("1")
