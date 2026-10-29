@@ -8,6 +8,15 @@
   // The real game includes this script with the production flag. The
   // generated developer page still requires the original explicit opt-in.
   const production=document.currentScript?.dataset?.phaserProduction==='1';
+  // Load the standalone, read-only PC guide only on the actual player
+  // entry. No HTML regeneration, save mutation or mobile UI changes.
+  if(production&&matchMedia('(min-width: 900px) and (pointer: fine)').matches){
+    const url=new URL('pc-playability-guide.js',document.currentScript.src);
+    const guide=document.createElement('script');
+    guide.src=url.href;
+    guide.async=true;
+    document.head.appendChild(guide);
+  }
   if(!production&&options.get('phaserBattle')!=='1')return;
   const preferred=production||options.get('phaserPreferred')==='1';
   const start=document.getElementById('lbStart');
