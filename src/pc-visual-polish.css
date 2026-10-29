@@ -150,7 +150,7 @@
   #hunt>.layout>article.panel:first-child {
     background:linear-gradient(155deg,#173a3c,#102b34 78%,#112333);
   }
-  #huntStage {
+  #hunt #huntStage {
     aspect-ratio:600/335;
     min-height:300px;
     max-height:435px;
@@ -158,7 +158,7 @@
     border-radius:15px;
     box-shadow:0 9px 22px #021c1fa3;
   }
-  #huntInstructions {
+  #hunt #huntInstructions {
     padding:10px 13px;
     min-height:48px;
     color:#effae8;
@@ -169,33 +169,33 @@
     line-height:1.55;
     overflow-wrap:anywhere;
   }
-  #huntStatus {
+  #hunt #huntStatus {
     font-size:13px;
     color:#d1eadd;
     line-height:1.5;
   }
-  #huntActionBar {
+  #hunt #huntActionBar {
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:9px;
     margin-block:12px;
   }
-  #huntActionBar button {
+  #hunt #huntActionBar button {
     min-height:47px;
     min-width:0;
     padding:9px 10px;
     font-size:14px;
     font-weight:650;
   }
-  #huntActionBar button:disabled {opacity:.53;}
-  #huntHud {gap:10px;}
-  #huntHud>div {
+  #hunt #huntActionBar button:disabled {opacity:.53;}
+  #hunt #huntHud {gap:10px;}
+  #hunt #huntHud>div {
     padding:12px 8px;
     background:#153831;
     border:1px solid #548278;
     font-size:13px;
   }
-  #huntHud b {
+  #hunt #huntHud b {
     font-size:16px;
     font-variant-numeric:tabular-nums;
   }
@@ -278,7 +278,7 @@
   @media (min-width:900px) and (max-width:1120px) {
     .wrap {padding-inline:16px;}
     #hunt>.layout {grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);}
-    #huntStage {min-height:265px;}
+    #hunt #huntStage {min-height:265px;}
     #farmPanel .hexControls {padding:12px;}
     #dc-pc-guide .dc-pc-links {flex-wrap:wrap;}
   }
