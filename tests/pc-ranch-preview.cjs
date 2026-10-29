@@ -109,6 +109,15 @@ async function measure(page){
       const trainingPath=await page.locator(
         '#dc-ranch-ground-paths g[data-zone="training"] path').first().getAttribute('d');
       assert.equal(trainingPath,'M460 340 L460 128');
+      // Old/imported saves may encode unlocked as 1 rather than true.
+      // The real DCFarm.walkable uses truthiness, so the painted path must too.
+      await page.evaluate(()=>{
+        eval('state').facilities.training=1;
+        DCRanchGroundPaths.refresh();
+      });
+      assert.equal(await page.locator(
+        '#dc-ranch-ground-paths g[data-zone="training"]').count(),1,
+        'truthy legacy unlock must still draw its actual route');
       await page.evaluate(saved=>{
         const s=eval('state');
         s.facilities=saved;
