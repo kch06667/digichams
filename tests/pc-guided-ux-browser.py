@@ -117,7 +117,9 @@ def check_desktop(browser,url,entry):
         page.goto(url+"/"+entry,wait_until="domcontentloaded",timeout=90000)
         page.locator("#dc-phaser-engine").wait_for(state="attached",timeout=30000)
         guide=page.locator("#dc-pc-guide")
-        guide.wait_for(state="visible",timeout=10000)
+        guide.wait_for(state="attached",timeout=10000)
+        assert guide.is_hidden(), "PC game shell intentionally hides legacy guide"
+        page.locator('#dc-pc-drawer-toggle').wait_for(state='visible',timeout=10000)
         page.wait_for_function(
             "Boolean(document.querySelector('#dc-pc-visual-polish')?.sheet)",
             timeout=10000)
@@ -126,9 +128,9 @@ def check_desktop(browser,url,entry):
         # silently replace that player's display preference. Use the
         # real original 'wideMode' button via the new discoverable PC CTA.
         if page.evaluate("document.body.classList.contains('mode-nds')"):
-            page.locator("#dc-pc-guide-wide").click()
+            page.locator("#wideMode").evaluate("(el) => el.click()")
         page.wait_for_function("""() =>
-          document.querySelector('#dc-pc-guide-jump')
+          document.querySelector('nav.tabs button[data-tab="nursery"]')
             ?.getBoundingClientRect().width>30""",timeout=12000)
         assert not page.evaluate("document.body.classList.contains('mode-nds')")
         assert page.locator("#dc-pc-guide-wide").is_hidden()
@@ -152,23 +154,9 @@ def check_desktop(browser,url,entry):
         verify_pc_layout(page,"hunt",1440)
         status=page.locator("#dc-pc-guide-context").inner_text()
         assert "포획" in status and "로프" in status,status
-        if not page.locator("#dc-pc-guide-jump").is_visible():
-            debug=page.evaluate("""() => {
-              const keys=['#dc-pc-guide','#dc-pc-guide-jump',
-                          '#dc-pc-guide-context','.dc-pc-links',
-                          'nav.tabs','#wideMode'];
-              return Object.fromEntries(keys.map(key=>{
-                const n=document.querySelector(key);
-                const r=n?.getBoundingClientRect(),st=n&&getComputedStyle(n);
-                return [key,{outer:n?.outerHTML?.slice(0,220),
-                  hidden:n?.hidden,display:st?.display,visibility:st?.visibility,
-                  opacity:st?.opacity,width:r?.width,height:r?.height,
-                  left:r?.left,top:r?.top}];
-              }));
-            }""")
-            raise AssertionError("PC expanded jump button is hidden: "+
-                                 repr(debug))
-        page.locator("#dc-pc-guide-jump").click()
+        # In the remaster the native tab is the visible control.
+        assert page.locator('nav.tabs [data-tab="hunt"]').is_visible()
+        page.locator('#huntStage').scroll_into_view_if_needed()
         assert page.locator("#huntStage").count()==1
         assert page.locator('[data-dc-pc-tab="hunt"]').get_attribute(
             "aria-current")=="page"
@@ -181,7 +169,7 @@ def check_desktop(browser,url,entry):
         verify_pc_layout(page,"battle",1440)
         assert "승" in page.locator("#dc-pc-guide-context").inner_text()
         assert "대회" in page.locator("#dc-pc-guide-jump").inner_text()
-        page.locator("#dc-pc-guide-jump").click()
+        page.locator('#championshipPanel').scroll_into_view_if_needed()
         assert page.locator("#championshipPanel").count()==1
 
         page.keyboard.press("Alt+1")
@@ -190,9 +178,10 @@ def check_desktop(browser,url,entry):
         # reachable and with no body-wide horizontal overflow.
         page.set_viewport_size({"width":1024,"height":768})
         verify_pc_layout(page,"nursery",1024)
-        page.locator("#dc-pc-guide-help summary").click()
-        assert page.locator("#dc-pc-guide-help").get_attribute("open") is not None
-        assert "Alt+1" in page.locator("#dc-pc-guide-help").inner_text()
+        page.locator('#dc-pc-drawer-toggle').click()
+        page.locator('#dc-pc-drawer-close').wait_for(state='visible')
+        page.locator('#dc-pc-drawer-close').click()
+        assert "Alt+1" in page.locator("#dc-pc-guide-help").text_content()
 
         # In a focused editor, a hotkey must NOT switch screen or
         # cause unintended training/capture or overwrite player input.
