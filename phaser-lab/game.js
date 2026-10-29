@@ -268,7 +268,10 @@
               start:0,end:cfg.frames-1
             }).map((frame,i)=>({...frame,duration:timing.extraMs[i]}));
             this.anims.create({key:animation,frames,frameRate:timing.frameRate,
-              repeat:[0,2,3,14,32].includes(idx)?-1:0});
+              // Action 30 is the user's verified victory motion. Keep it alive
+              // for the short post-match celebration instead of freezing
+              // on the final GIF frame. Attack/hit/KO motions do not loop.
+              repeat:[0,2,3,14,30,32].includes(idx)?-1:0});
           }
         }
         if(actions.size)this.loadedActions.set(source.species,{
@@ -293,7 +296,7 @@
         ' 기존 게임 전투 판정 · '+(this.loadedActions.size?
           ('개인 모션 '+this.loadedActions.size+'종 로드 · 미등록 종은 임시 그래픽'):
           '저작권 없는 임시 도형 그래픽')+
-        ' · 본게임 전투가 아님');
+        (embeddedBattle?' · 본게임 전투 준비 완료':' · 본게임 전투가 아님'));
       window.DigiPhaserLab={
         battle:()=>this.battle(),
         duel:()=>{
@@ -391,6 +394,13 @@
           return {id:f.id,name:f.name,privateArt:!!v?.useArt,
             textureKey:v?.sprite.texture.key||null,
             action:v?.pose||null,angle:v?.sprite.angle||0,
+            originY:v?.sprite.originY??null,
+            footY:v?.sprite.y??null,
+            // Phaser scene.restart() may dispose sprite.frame before
+            // the next scene is created. Never touch the height getter
+            // until its texture source is still alive.
+            displayHeight:v?.sprite?.frame?.source?
+              v.sprite.displayHeight:null,
             phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37),
             // During scene.restart(), Phaser may already have disposed an
@@ -436,7 +446,8 @@
       const overlay=this.add.graphics().setDepth(18);
       overlay.fillStyle(0x102339,.92);overlay.fillRoundedRect(12,10,776,90,9);
       this.title=this.add.text(23,16,
-        '기존 게임의 실제 자동 전투 판정 · Phaser 화면',{
+        (embeddedBattle?'디지몬 챔피언십 · 실시간 자동 전투':
+          '기존 게임의 실제 자동 전투 판정 · Phaser 화면'),{
         color:'#f6eed0',fontSize:'18px',fontFamily:'sans-serif'
       }).setDepth(19);
       this.hud=this.add.text(23,44,'',{color:'#defff3',
@@ -444,7 +455,8 @@
       this.metrics=this.add.text(23,70,'',{color:'#c4dceb',
         fontFamily:'monospace',fontSize:'13px'}).setDepth(19);
       this.foot=this.add.text(400,429,
-        '기존 게임 전투 계산 재사용 · 그래픽은 별도 · 시연 결과는 저장되지 않음',
+        (embeddedBattle?'실시간 자동 전투 · 승패 및 보상은 종료 후 자동 정산':
+          '기존 게임 전투 계산 재사용 · 그래픽은 별도 · 시연 결과는 저장되지 않음'),
         {color:'#e0e6ed',fontSize:'13px'}).setOrigin(.5).setDepth(19);
     }
     addActor(f){
@@ -454,6 +466,10 @@
       const atlas=useArt?(art.actions.has(0)?0:[...art.actions][0]):null;
       const texture=useArt?key(art.source,atlas):'practice-'+f.side+'-'+f.slot+'-0';
       const sprite=this.add.sprite(f.x,f.y-31,texture).setDepth(4);
+      // The source GIFs use different cell heights (e.g. 24px idle,
+      // 32px hit, 16px KO). Anchor private art at the FEET so switching
+      // a 1-frame hit/KO never bounces the monster above the ground.
+      if(useArt)sprite.setOrigin(.5,1);
       const cfg=useArt?art.manifest.actions[String(atlas)]:null;
       const scale=useArt?Math.min(64/cfg.frameWidth,69/cfg.frameHeight,2.4):.90;
       sprite.setScale(scale);
@@ -500,7 +516,8 @@
         const faintFallback=f.hp<=0&&
           (!v.useArt||!v.art.actions.has(37));
         v.sprite.x=f.x;
-        v.sprite.y=f.y-(faintFallback?14:34)+bob;
+        v.sprite.y=v.useArt?f.y-2+bob:
+          f.y-(faintFallback?14:34)+bob;
         // When the sprite pack lacks the KO animation, show an actual
         // collapsed fighter instead of a standing idle sprite. Keep
         // original KO artwork upright: its own frames supply the motion.
@@ -692,7 +709,12 @@
               // original farm tab, where exact launch-time instance IDs
               // and the latest persisted save are independently checked.
               // Phaser never applies a save or awards experience itself.
-              peer.parent.postMessage({
+              // The original win action 30 is animated. The previous
+              // production bridge immediately removed the Phaser frame at
+              // finish, before one victory GIF could complete. Let the
+              // renderer show the actual winning action for 1.1 seconds,
+              // then deliver exactly the same verified terminal packet.
+              const resultMessage={
                 type:'dc-phaser-finished-v1',token:peer.token,
                 packet:{preview:this.lastBattleReport,
                   initial:RT.snapshot(c.initialFighters),
@@ -701,29 +723,40 @@
                   final:{finished:this.sim.finished,
                     winner:this.sim.winner,elapsed:this.sim.elapsed,
                     fighters:RT.snapshot(this.sim.fighters)}}
-              },location.origin);
+              };
               farmHandoffPeer=null; // never send the same result twice
+              const deliver=()=>peer.parent.postMessage(resultMessage,location.origin);
+              if(embeddedBattle)this.time.delayedCall(1100,deliver);
+              else deliver();
             }
             document.getElementById('battleReport').textContent=
-              '전투 결과 미리보기 (저장되지 않음): '+
+              (embeddedBattle?'경기 종료 · 저장 검증 중: ':
+                '전투 결과 미리보기 (저장되지 않음): ')+
               this.lastBattleReport.changes.map(m=>
                 m.name+' [명단 '+(m.teamIndex+1)+'] HP '+m.hpBefore+'→'+m.hpAfter+
                 ', TP '+m.tpBefore+'→'+m.tpAfter).join(' / ')+
-              ' · 보상/승패 저장 미적용';
+              (embeddedBattle?' · 원본 사육장으로 자동 복귀':
+                ' · 보상/승패 저장 미적용');
           }catch(err){
             this.lastBattleReport=null;
             document.getElementById('battleReport').textContent=
               '결과 미리보기 검증 실패: '+err.message+' · 세이브 변경 없음';
           }
         }
-        say(win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
+        say(embeddedBattle?
+          win+' 승리! · 원본 승리 모션 30번 재생 · 전투 결과 저장 중…':
+          win+' 승리 · 실시간 자동 전투 종료 · '+e.elapsed.toFixed(1)+
           '초 · 사육장 탭에서 선택적으로 정산 가능 · 자동 저장 없음');
       }
     }
     beginBattle(){
       this.mode='battle';
-      say('원본 판정 시연 중 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
-        ' 자동 전투 · 원본 AI·피해·필살기 타이밍 적용 · 세이브 변경 없음');
+      say(embeddedBattle?
+        '내 디지몬 '+RT.alive(this.sim,0).length+' vs 상대 '+
+          RT.alive(this.sim,1).length+' · 자동 전투 진행 중':
+        '원본 판정 시연 중 · '+RT.alive(this.sim,0).length+':'+
+          RT.alive(this.sim,1).length+
+          ' 자동 전투 · 원본 AI·피해·필살기 타이밍 적용 · 세이브 변경 없음');
     }
     async battle(){
       const teamSize=Number(document.getElementById('squadSize').value);

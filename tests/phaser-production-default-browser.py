@@ -73,8 +73,22 @@ def check(browser,base,entry,mobile):
         assert page.locator("#dc-phaser-farm-cancel").is_visible()
         # No user click inside the Phaser lab: the validated in-page
         # handoff automatically starts the existing autonomous battle.
-        assert arena.locator("body").evaluate(
-            "(body)=>window.DigiPhaserLab.qaFinishCombat()")
+        # Observe one real victory pose BEFORE the iframe can be closed
+        # by the production result auto-commit. The same synchronous task
+        # exercises the original real-time AI finish, not a forced winner.
+        victory=page.evaluate("""() => {
+          const frame=document.getElementById('dc-phaser-arena-frame');
+          const lab=frame?.contentWindow?.DigiPhaserLab;
+          if(!lab?.qaFinishCombat())throw Error('Battle did not end');
+          const end=lab.matchSnapshot(),art=lab.renderedArt();
+          return {winner:end.winner,actors:art,fighters:end.fighters,
+            overlayVisible:!!document.querySelector('#dc-phaser-overlay')};
+        }""")
+        assert victory["overlayVisible"],"Victory animation was removed instantly"
+        assert any(
+            art["action"]=="victory:30" and art["privateArt"] and
+            f["side"]==victory["winner"] and f["hp"]>0
+            for f,art in zip(victory["fighters"],victory["actors"])),victory
         # Production must AUTO-APPLY after the same guarded cloned-state
         # backup/commit used in developer mode, without approval click.
         page.wait_for_function("""(before) => {
