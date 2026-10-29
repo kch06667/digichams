@@ -202,9 +202,132 @@ def check_cancel(browser,base):
         assert recovered["wins"]==before["wins"],recovered
         assert recovered["losses"]==before["losses"],recovered
         assert not recovered["pending"],recovered
+        assert page.evaluate(
+            "localStorage.getItem('dc_phaser_park_recovery_v1')") is None
+        assert page.evaluate(
+            "sessionStorage.getItem('dc_phaser_tab_recovery_v1')") is None
         print("PASS touch in-page cancel restores original farm clock",flush=True)
     finally:
         ctx.close()
+
+
+
+def check_interrupted(browser,base,entry,mobile):
+    """Crash-style same-tab reload is NOT a result; restore paused farm only."""
+    ctx=browser.new_context(
+        viewport={"width":390,"height":844} if mobile else
+                 {"width":1280,"height":800},
+        is_mobile=mobile,has_touch=mobile)
+    if VENDOR.is_file():
+        ctx.route(CDN,lambda route:route.fulfill(
+            path=str(VENDOR),content_type="application/javascript"))
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda e:errors.append(str(e)))
+    try:
+        page.goto(base+"/"+entry,wait_until="domcontentloaded",timeout=90000)
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        baseline=page.evaluate("""() => {
+          const s=eval('state');
+          s.world.paused=false;
+          save(false);
+          return {paused:s.world.paused,wins:s.wins,losses:s.losses,
+            instanceId:s.team[0].instanceId,
+            backing:localStorage.getItem('dc_recreation_save')};
+        }""")
+        page.locator("#wideMode").click()
+        page.locator("#liveBattleLaunch").click()
+        page.locator("#lbMode").select_option("owned")
+        page.locator("#lbTeamSize").select_option("1")
+        page.locator("#lbStart").click()
+        page.locator("#dc-phaser-overlay").wait_for(state="visible")
+        mark=page.evaluate("""() => {
+          const record=JSON.parse(localStorage.getItem(
+            'dc_phaser_park_recovery_v1'));
+          return {record,saved:localStorage.getItem('dc_recreation_save'),
+            session:sessionStorage.getItem('dc_phaser_tab_recovery_v1')};
+        }""")
+        assert mark["record"] and mark["record"]["paused"] is False,mark
+        assert mark["record"]["saved"]==mark["saved"],mark
+        assert mark["session"]==mark["record"]["token"],mark
+        assert page.evaluate("eval('state').world.paused")
+        # The browser reload has NO validated terminal packet. The
+        # persisted paused pre-fight checkpoint must be repaired instead
+        # of silently awarding a result or leaving farm time frozen.
+        page.reload(wait_until="domcontentloaded",timeout=90000)
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        result=page.evaluate("""() => ({
+          saved:JSON.parse(localStorage.getItem('dc_recreation_save')),
+          live:eval('state'),
+          marker:localStorage.getItem('dc_phaser_park_recovery_v1'),
+          tab:sessionStorage.getItem('dc_phaser_tab_recovery_v1'),
+          status:document.getElementById('dc-phaser-farm-status').textContent
+        })""")
+        assert result["marker"] is None and result["tab"] is None,result
+        assert result["saved"]["world"]["paused"]==baseline["paused"],result
+        assert result["live"]["world"]["paused"]==baseline["paused"],result
+        assert result["saved"]["wins"]==baseline["wins"],result
+        assert result["saved"]["losses"]==baseline["losses"],result
+        assert result["saved"]["team"][0]["instanceId"]==baseline["instanceId"],result
+        assert not result["saved"].get("pendingBattle"),result
+        assert "중단" in result["status"] and "복구" in result["status"],result
+        assert page.locator("#dc-phaser-overlay").count()==0
+        assert len(ctx.pages)==1
+        assert not errors,errors
+        print("PASS real",entry,"touch" if mobile else "desktop",
+              "interrupted Phaser reload restores farm clock with no reward",
+              flush=True)
+    finally:
+        ctx.close()
+
+
+
+
+def check_newer_save_preserved(browser,base):
+    """Manual recovery from a different tab must reject newer save bytes."""
+    ctx=browser.new_context(viewport={"width":1280,"height":800})
+    if VENDOR.is_file():
+        ctx.route(CDN,lambda route:route.fulfill(
+            path=str(VENDOR),content_type="application/javascript"))
+    page=ctx.new_page()
+    try:
+        page.goto(base+"/index.html",wait_until="domcontentloaded",timeout=90000)
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        page.locator("#wideMode").click()
+        page.locator("#liveBattleLaunch").click()
+        page.locator("#lbMode").select_option("owned")
+        page.locator("#lbTeamSize").select_option("1")
+        page.locator("#lbStart").click()
+        page.locator("#dc-phaser-overlay").wait_for(state="visible")
+        other=ctx.new_page()
+        other.goto(base+"/index.html",wait_until="domcontentloaded",timeout=90000)
+        other.locator("#dc-phaser-engine").wait_for(state="attached")
+        assert other.locator("#dc-phaser-recover-interrupted").is_visible()
+        before=other.evaluate("""() => {
+          const s=JSON.parse(localStorage.getItem('dc_recreation_save'));
+          const lease=JSON.parse(localStorage.getItem(
+            'dc_phaser_park_recovery_v1'));
+          s.points=(s.points||0)+27; // genuinely newer, never silently overwritten
+          localStorage.setItem('dc_recreation_save',JSON.stringify(s));
+          lease.created=Date.now()-181000;
+          localStorage.setItem('dc_phaser_park_recovery_v1',
+            JSON.stringify(lease));
+          return JSON.stringify(s);
+        }""")
+        other.locator("#dc-phaser-recover-interrupted").click()
+        after=other.evaluate("""() => ({
+          saved:localStorage.getItem('dc_recreation_save'),
+          marker:localStorage.getItem('dc_phaser_park_recovery_v1'),
+          status:document.getElementById('dc-phaser-farm-status').textContent
+        })""")
+        assert after["saved"]==before,after
+        assert after["marker"] is None,after
+        assert "최신" in after["status"],after
+        print("PASS newer save from other tab never overwritten by stale recovery",
+              flush=True)
+    finally:
+        ctx.close()
+
 
 
 def main():
@@ -223,6 +346,9 @@ def main():
                 check(browser,root,"standalone.html",True)
                 check_fallback(browser,root)
                 check_cancel(browser,root)
+                check_interrupted(browser,root,"index.html",False)
+                check_interrupted(browser,root,"standalone.html",True)
+                check_newer_save_preserved(browser,root)
             finally:browser.close()
     finally:
         srv.shutdown();srv.server_close();thread.join(timeout=3)

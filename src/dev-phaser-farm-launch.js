@@ -37,6 +37,8 @@
     'padding:10px;border:2px solid #f5d68b;background:#62481f;' +
     'color:white;font:600 13px sans-serif;border-radius:9px';
   let pending=null,activeSession=null;
+  const PARK_KEY='dc_phaser_park_recovery_v1';
+  const TAB_KEY='dc_phaser_tab_recovery_v1';
   // The real PC/mobile game hosts Phaser in a same-page dialog. Developer
   // bridge and optional QA pages retain their old popup + manual approval.
   function openEmbedded(url){
@@ -77,6 +79,90 @@
     else try{session?.popup?.close();}catch(_){}
   }
   const KEY='dc_recreation_save';
+  // A crash/reload can happen after the *paused* pre-fight save but before
+  // any terminal packet arrives. This lease records the exact bytes that
+  // may be restored. It cannot authorize battle settlement or rewards.
+  function readParkMarker(){
+    try {
+      const raw=localStorage.getItem(PARK_KEY);
+      if(!raw)return null;
+      const item=JSON.parse(raw);
+      return item?.version===1 && /^[a-f0-9]{32}$/.test(item.token) &&
+        typeof item.paused==='boolean' &&
+        typeof item.saved==='string' && item.saved.length>0 &&
+        Number.isFinite(item.created)?item:null;
+    }catch(_){return null;}
+  }
+  function clearParkMarker(token){
+    const record=readParkMarker();
+    if(record?.token===token)localStorage.removeItem(PARK_KEY);
+    try {
+      if(sessionStorage.getItem(TAB_KEY)===token)
+        sessionStorage.removeItem(TAB_KEY);
+    }catch(_){}
+  }
+  function rememberPark(token,park){
+    const record={version:1,token,paused:park.paused,
+      saved:park.saved,created:Date.now()};
+    // Never overwrite another tab's in-progress active lease. A failed
+    // recovery-store write cancels the fight instead of leaving it paused.
+    if(localStorage.getItem(PARK_KEY))throw Error(
+      '중단된 이전 전투 기록이 있어. 기존 세이브 복구를 먼저 확인해 줘.');
+    localStorage.setItem(PARK_KEY,JSON.stringify(record));
+    try{sessionStorage.setItem(TAB_KEY,token);}
+    catch(err){clearParkMarker(token);throw err;}
+  }
+  const restore=document.createElement('button');
+  restore.id='dc-phaser-recover-interrupted';
+  restore.type='button';restore.hidden=true;
+  restore.textContent='중단된 전투 복구 · 사육장 시간 되돌리기';
+  restore.style.cssText='position:fixed;right:12px;bottom:120px;' +
+    'z-index:10001;min-height:44px;padding:9px;border-radius:9px;' +
+    'background:#715525;color:#fff;font:600 13px sans-serif';
+  function restoreInterrupted(explicit=false){
+    if(!production||activeSession)return false;
+    const record=readParkMarker();
+    if(!record)return false;
+    const sameTab=(()=>{
+      try{return sessionStorage.getItem(TAB_KEY)===record.token;}
+      catch(_){return false;}
+    })();
+    // An unrelated tab must never auto-abort a live battle. Its recovery
+    // requires an explicit click after longer than the maximum natural
+    // autonomous fight's real wall-clock duration.
+    if(!sameTab&&(!explicit||Date.now()-record.created<180000)){
+      restore.hidden=false;
+      notice.textContent='이전 전투 기록이 있어. 다른 탭에서 진행 중일 수 있어. '+
+        '진행 중인 전투가 없다면 3분 후 복구할 수 있어.';
+      return false;
+    }
+    const saved=localStorage.getItem(KEY);
+    if(saved!==record.saved){
+      clearParkMarker(record.token);
+      restore.hidden=true;
+      notice.textContent='저장 데이터가 전투 시작 시점과 달라 복구하지 않았어. '+
+        '더 최신 세이브를 보존했어.';
+      return false;
+    }
+    try{
+      const live=eval('state');
+      const disk=JSON.parse(saved);
+      if(!disk?.world||disk.world.paused!==true||
+         live?.world?.paused!==true||live.pendingBattle)
+        throw Error('기존 게임 상태와 저장 기록이 달라.');
+      live.world.paused=record.paused;
+      eval('save(false)');
+      clearParkMarker(record.token);
+      restore.hidden=true;
+      notice.textContent='중단된 Phaser 전투를 정산하지 않고 사육장 시간을 복구했어.';
+      return true;
+    }catch(err){
+      notice.textContent='전투 중단 복구 보류: '+err.message+
+        ' · 저장 기록은 덮어쓰지 않았어.';
+      return false;
+    }
+  }
+  restore.addEventListener('click',()=>restoreInterrupted(true));
   const cancel=document.createElement('button');
   cancel.type='button';cancel.id='dc-phaser-farm-cancel';cancel.hidden=true;
   cancel.textContent='Phaser 전투 취소 · 기존 화면 복귀';
@@ -88,17 +174,19 @@
   function releasePark(session) {
     if(!session?.park)return;
     const live=eval('state');
-    live.world.paused=session.park.paused;
     if(localStorage.getItem(KEY)===session.park.saved){
+      live.world.paused=session.park.paused;
       eval('save(false)');
     }else{
       notice.textContent='다른 탭에서 저장이 변경됐어. 새로고침 후 확인해 줘.';
     }
+    clearParkMarker(session.token);
     session.park=null;
   }
   cancel.addEventListener('click',()=>{
     if(!activeSession)return;
     const session=activeSession;activeSession=null;
+    session.cleanup?.();
     closeSession(session);
     releasePark(session);cancel.hidden=true;
     notice.textContent='Phaser 전투 취소 · 기본 게임으로 복귀';
@@ -243,8 +331,12 @@
         if(saved!==JSON.stringify(live))
           throw Error('전투 전 세이브 검증 실패');
         park={paused,saved};
+        rememberPark(token,park);
       }catch(err){
         live.world.paused=paused;
+        // A failed marker write must not strand a persisted paused state.
+        try{eval('save(false)');}catch(_){}
+        clearParkMarker(token);
         closeSession(view);
         notice.textContent='Phaser 전투 시작 취소: '+err.message;
         return false;
@@ -299,6 +391,7 @@
           eval('save(false)');
           DCDevPhaserCommit.persist(live,launchRecord,packet,token,
             eval('speciesLookup'),localStorage);
+          clearParkMarker(token);
           session.park=null;
           closeSession(session);
           notice.textContent='Phaser 결과 자동 정산·백업 완료';
@@ -320,12 +413,18 @@
     };
     window.addEventListener('message',onReady);
     window.addEventListener('message',onFinished);
+    activeSession.cleanup=()=>{
+      window.removeEventListener('message',onReady);
+      window.removeEventListener('message',onFinished);
+      done=true;
+    };
     setTimeout(() => {
-      if (!done) {
+      if (!done&&activeSession?.token===token) {
         window.removeEventListener('message',onReady);
         window.removeEventListener('message',onFinished);
         if(activeSession?.token===token){
           const session=activeSession;activeSession=null;
+          session.cleanup?.();
           closeSession(session);
           releasePark(session);cancel.hidden=true;
           if(production){
@@ -344,6 +443,7 @@
   // The production-layout opt-in entry calls this from the original arena's
   // real lbStart click. It is inert unless an explicit opt-in URL was used.
   window.DCDevPhaserLaunch=Object.freeze({launch});
-  if(arenaChoice)document.body.append(notice,apply,cancel);
-  else document.body.append(button,notice,apply,cancel);
+  if(arenaChoice)document.body.append(notice,apply,cancel,restore);
+  else document.body.append(button,notice,apply,cancel,restore);
+  if(production)restoreInterrupted(false);
 })();

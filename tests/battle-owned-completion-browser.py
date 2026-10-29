@@ -60,7 +60,10 @@ def check(browser,host,mobile):
                            timeout=8000)
     before=page.evaluate("window.__dcOwnedBattleQa.snapshot()")
     assert before["pendingId"], before
-    assert len(before["fighters"])==2 and before["elapsed"]==0
+    # The live original arena can advance a render/tick between the
+    # started flag and Playwright's next evaluate. Verify a fresh 1v1,
+    # not an impossible exactly-zero wall-clock snapshot.
+    assert len(before["fighters"])==2 and 0<=before["elapsed"]<3,before
     before_saved=page.evaluate(
       "() => JSON.parse(localStorage.getItem('dc_recreation_save'))")
     assert before_saved["pendingBattle"]["id"]==before["pendingId"]
