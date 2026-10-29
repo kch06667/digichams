@@ -59,6 +59,7 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(window.DCContinuousRanchPreview),{timeout:12000});
       await page.waitForFunction(()=>Boolean(document.querySelector('#dc-continuous-ranch-css')?.sheet));
       await page.waitForFunction(()=>Boolean(window.DCRanchWalkability),{timeout:12000});
+      await page.waitForFunction(()=>Boolean(window.DCRanchGroundPaths),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
       assert.deepEqual(original.worldSize,{width:920,height:690});
@@ -75,6 +76,60 @@ async function measure(page){
       assert.equal(scene.foodCount,original.foodCount);
       assert.equal(scene.save,original.save,'terrain preview must not modify the gameplay state');
       assert.ok(scene.documentWidth<=width+4,'unexpected sideways page scroll: '+scene.documentWidth);
+      // A route is painted only for purchased facilities and must be a
+      // straight line between the exact canonical 920x690 map centers.
+      const pathsBefore=await page.evaluate(()=>{
+        const c=DCFarm.HEX_CENTERS,s=eval('state');
+        const expected=Object.keys(c).filter(z=>z!=='core'&&s.facilities?.[z]);
+        const actual=[...document.querySelectorAll('#dc-ranch-ground-paths g[data-zone]')]
+          .map(g=>({zone:g.dataset.zone,d:g.firstElementChild?.getAttribute('d')}));
+        return {expected,actual,
+          visible:getComputedStyle(document.querySelector('#dc-ranch-ground-paths')).display!=='none'};
+      });
+      assert.equal(pathsBefore.visible,true,'dynamic terrain paths should appear in preview');
+      assert.deepEqual(pathsBefore.actual.map(p=>p.zone),pathsBefore.expected,
+        'locked facilities must not have a decorative open route');
+      for(const route of pathsBefore.actual){
+        const [x,y]=await page.evaluate(id=>DCFarm.HEX_CENTERS[id],route.zone);
+        assert.equal(route.d,`M460 340 L${x} ${y}`,
+          'painted road must use DCFarm canonical straight route');
+      }
+      // Emulate an unlocked facility and map repaint. Only the read-only
+      // visual route should change; restored gameplay state stays identical.
+      const facilitiesBefore=await page.evaluate(()=>JSON.parse(
+        JSON.stringify(eval('state').facilities)));
+      await page.evaluate(()=>{
+        const s=eval('state');
+        s.facilities.training=true;
+        document.getElementById('farmWorld').appendChild(
+          Object.assign(document.createElement('span'),{id:'dc-ranch-test-poke'}));
+      });
+      await page.waitForFunction(()=>Boolean(
+        document.querySelector('#dc-ranch-ground-paths g[data-zone="training"]')));
+      const trainingPath=await page.locator(
+        '#dc-ranch-ground-paths g[data-zone="training"] path').first().getAttribute('d');
+      assert.equal(trainingPath,'M460 340 L460 128');
+      // Old/imported saves may encode unlocked as 1 rather than true.
+      // The real DCFarm.walkable uses truthiness, so the painted path must too.
+      await page.evaluate(()=>{
+        eval('state').facilities.training=1;
+        DCRanchGroundPaths.refresh();
+      });
+      assert.equal(await page.locator(
+        '#dc-ranch-ground-paths g[data-zone="training"]').count(),1,
+        'truthy legacy unlock must still draw its actual route');
+      await page.evaluate(saved=>{
+        const s=eval('state');
+        s.facilities=saved;
+        document.getElementById('dc-ranch-test-poke')?.remove();
+      },facilitiesBefore);
+      await page.waitForFunction(expected=>{
+        const actual=[...document.querySelectorAll('#dc-ranch-ground-paths g[data-zone]')]
+          .map(g=>g.dataset.zone);
+        return JSON.stringify(actual)===JSON.stringify(expected);
+      },pathsBefore.expected);
+      assert.equal((await measure(page)).save,original.save,
+        'previewed facility unlock may not change the saved data');
       const clickAreas=await page.locator('#farmPanel .hexTile').evaluateAll(
         tiles=>tiles.map(tile=>({
           id:tile.dataset.hex,
@@ -129,9 +184,13 @@ async function measure(page){
       assert.equal(response.status(),200,'preview terrain asset must load');
       const svg=await response.text();
       assert.ok(svg.includes('viewBox="0 0 920 690"')&&svg.includes('<svg'));
+      assert.ok(!svg.includes('M459 340Q462 273'),
+        'static winding route must not falsely display locked paths');
       await page.locator('#dc-ranch-preview-toggle').click();
       const reverted=await measure(page);
       assert.ok(reverted.background.includes('hex_farm_v0232.webp'));
+      assert.equal(await page.locator('#dc-ranch-ground-paths').isVisible(),false,
+        'original hex map must hide the new path layer');
       await page.waitForFunction(()=>window.DCRanchWalkability?.visible===false);
       assert.equal(await page.locator('#dc-ranch-walkable-toggle').isVisible(),false,
         'inspector must disappear with the preview');
@@ -151,6 +210,8 @@ async function measure(page){
     assert.equal(await page.evaluate(()=>!!window.DCContinuousRanchPreview),false);
     assert.equal(await page.evaluate(()=>!!window.DCRanchWalkability),false,
       'walkability inspector must not load in touch mode');
+    assert.equal(await page.evaluate(()=>!!window.DCRanchGroundPaths),false,
+      'terrain-route painter must not load on mobile/touch');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{

@@ -23,12 +23,9 @@
 <path d="M0 234Q62 201 147 232Q209 255 221 312Q180 379 64 371H0Z" fill="#57854e" opacity=".58"/>
 <path d="M317 205Q361 160 433 175Q503 160 562 194Q619 190 646 243Q684 287 654 356Q661 427 592 467Q525 494 458 468Q380 493 316 449Q250 414 264 347Q253 272 317 205Z" fill="url(#meadow)"/>
 <path d="M347 229Q397 210 459 230Q522 207 575 252Q610 296 595 353Q607 414 542 443Q463 460 408 444Q328 442 315 380Q293 290 347 229Z" fill="#a3c278" opacity=".27"/>
-<!-- Wide paths as embedded dirt trails, not navigational boundaries. -->
-<g fill="none" stroke-linecap="round" stroke-linejoin="round">
- <path d="M459 340Q462 273 460 133M452 335Q386 277 273 238M474 333Q554 272 647 237M438 361Q350 409 274 449M485 373Q574 416 646 447M463 383Q464 470 458 550" stroke="#647d4b" stroke-width="40" opacity=".38"/>
- <path d="M459 340Q462 273 460 133M452 335Q386 277 273 238M474 333Q554 272 647 237M438 361Q350 409 274 449M485 373Q574 416 646 447M463 383Q464 470 458 550" stroke="#bba574" stroke-width="22"/>
- <path d="M459 340Q462 273 460 133M452 335Q386 277 273 238M474 333Q554 272 647 237M438 361Q350 409 274 449M485 373Q574 416 646 447M463 383Q464 470 458 550" stroke="#dbcb94" stroke-width="12" opacity=".62"/>
-</g>
+<!-- Route ground is painted by src/pc-ranch-ground-paths.js.
+     It follows real DCFarm.HEX_CENTERS and only opened facilities;
+     static curved paths would incorrectly show locked passages. -->
 <!-- Rock ledges on the highlands, and a restrained lava rift. -->
 <g fill="none" stroke-linecap="round"><path d="M620 10Q651 45 675 81T741 141M761 9Q791 45 838 63T907 118" stroke="#bdc1ad" stroke-width="11" opacity=".47"/><path d="M617 17Q653 57 675 81T741 141M761 9Q795 50 838 66T907 124" stroke="#425653" stroke-width="5" opacity=".85"/><path d="M34 62L65 102L95 109L118 159L164 171M15 147L65 153L84 189" stroke="#2f302b" stroke-width="12"/><path d="M34 62L65 102L95 109L118 159L164 171M15 147L65 153L84 189" stroke="#e18448" stroke-width="4" opacity=".84"/></g>
 
