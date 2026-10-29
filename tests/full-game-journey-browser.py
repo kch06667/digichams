@@ -161,6 +161,11 @@ def farm_and_goal(page,identity):
     # Saved midway through the single user journey; reload must retain the
     # captured Digimon, its actual training and starter target.
     page.locator('[data-tab="nursery"]').click()
+    # PC remaster keeps existing save button in the contextual drawer;
+    # exercise that real UI instead of clicking a hidden control.
+    if not page.locator('#save').is_visible() and page.locator('#dc-pc-drawer-toggle').count():
+        page.locator('#dc-pc-drawer-toggle').click()
+        page.locator('#save').wait_for(state='visible')
     page.locator('#save').click()
     page.reload(wait_until='domcontentloaded',timeout=90000)
     page.wait_for_function("Boolean(window.DCHexFarm&&window.__journeyArena)")
@@ -175,7 +180,12 @@ def farm_and_goal(page,identity):
     assert restored['starter']['evo']['target']=='아구몬',restored
 
 def battles_and_championship(page,identity):
-    page.locator('#wideMode').click()
+    # The PC-only shell is already wide and hides the old NDS switcher.
+    # On touch/legacy views the original button remains usable.
+    if page.locator('#wideMode').is_visible():
+        page.locator('#wideMode').click()
+    else:
+        assert not page.evaluate("document.body.classList.contains('mode-nds')")
     for i in range(3):
         page.locator('#liveBattleLaunch').click()
         page.locator('#lbMode').select_option('owned')
