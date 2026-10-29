@@ -54,21 +54,27 @@ def check(browser,base,entry,mobile):
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
         assert page.locator("#dc-phaser-engine").input_value()=="phaser"
-        with context.expect_page(timeout=10000) as popup:
-            page.locator("#lbStart").click()
-        arena=popup.value
-        arena.on("pageerror",lambda e:errors.append("arena: "+str(e)))
-        arena.wait_for_function("""() =>
-          window.DigiPhaserLab?.selectedRoster()?.name==='아구몬'""",
-          timeout=30000)
+        page.locator("#lbStart").click()
+        assert len(context.pages)==1,"Phaser must stay inside the game tab"
+        overlay=page.locator("#dc-phaser-overlay")
+        overlay.wait_for(state="visible",timeout=10000)
+        assert page.locator("#dc-phaser-overlay-close").is_visible()
+        arena=page.frame_locator("#dc-phaser-arena-frame")
+        arena.locator("#game canvas").wait_for(state="visible",timeout=30000)
+        page.wait_for_function("""() => {
+          const frame=document.querySelector('#dc-phaser-arena-frame');
+          const lab=frame?.contentWindow?.DigiPhaserLab;
+          const battle=lab?.matchSnapshot();
+          return lab?.selectedRoster()?.name==='아구몬' &&
+            battle?.fighters?.length===2 && battle.elapsed>0;
+        }""",timeout=30000)
+        assert overlay.bounding_box()["height"]>500
         assert page.evaluate("eval('state').world.paused")
         assert page.locator("#dc-phaser-farm-cancel").is_visible()
-        arena.locator("#battle").click()
-        arena.wait_for_function("""() => {
-          const s=DigiPhaserLab?.matchSnapshot();
-          return s?.fighters?.length===2 && s.elapsed>0;
-        }""",timeout=15000)
-        assert arena.evaluate("DigiPhaserLab.qaFinishCombat()")
+        # No user click inside the Phaser lab: the validated in-page
+        # handoff automatically starts the existing autonomous battle.
+        assert arena.locator("body").evaluate(
+            "(body)=>window.DigiPhaserLab.qaFinishCombat()")
         # Production must AUTO-APPLY after the same guarded cloned-state
         # backup/commit used in developer mode, without approval click.
         page.wait_for_function("""(before) => {
@@ -90,9 +96,11 @@ def check(browser,base,entry,mobile):
         assert saved["wins"]+saved["losses"]==first["wins"]+first["losses"]+1
         assert current["approved"] and current["live"]["team"][0]["instanceId"]==first["id"]
         assert not current["live"].get("pendingBattle"),current["live"]
+        assert page.locator("#dc-phaser-overlay").count()==0
+        assert len(context.pages)==1
         assert not errors,errors
         print("PASS real",entry,"touch" if mobile else "desktop",
-              "default Phaser 1v1 -> automatic guarded save -> original reload",
+              "in-page auto 1v1 -> guarded save -> original reload",
               flush=True)
     finally:
         context.close()
@@ -108,19 +116,69 @@ def check_fallback(browser,base):
         page.locator("#liveBattleLaunch").click()
         page.locator("#lbMode").select_option("owned")
         page.locator("#lbTeamSize").select_option("1")
-        page.evaluate("window.open=()=>null")
+        # Fail creation of the embedded battle window (not window.open),
+        # verify the original one-click legacy retry is still available.
+        page.evaluate("""() => {
+          const create=document.createElement.bind(document);
+          document.createElement=(tag,...args)=>{
+            if(tag.toLowerCase()==='iframe')
+              throw Error('QA: embedded frame blocked');
+            return create(tag,...args);
+          };
+        }""")
         before=page.evaluate("eval('state').wins")
         page.locator("#lbStart").click()
         assert page.locator("#dc-phaser-engine").input_value()=="legacy"
         assert len(ctx.pages)==1
+        assert page.locator("#dc-phaser-overlay").count()==0
         assert not page.evaluate("Boolean(eval('state').pendingBattle)")
         assert page.evaluate("eval('state').wins")==before
         page.locator("#lbStart").click()
         page.wait_for_function("Boolean(eval('state').pendingBattle)",
                                timeout=10000)
         assert len(ctx.pages)==1
-        print("PASS real index.html popup-blocked -> legacy battle retry",
+        print("PASS real index.html iframe failure -> legacy battle retry",
               flush=True)
+    finally:
+        ctx.close()
+
+
+def check_cancel(browser,base):
+    ctx=browser.new_context(viewport={"width":390,"height":844},
+                            is_mobile=True,has_touch=True)
+    page=ctx.new_page()
+    try:
+        page.goto(base+"/standalone.html",
+                  wait_until="domcontentloaded",timeout=90000)
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        before=page.evaluate("""() => {
+          const s=eval('state');
+          s.world.paused=false;save(false);
+          return {id:s.team[0].instanceId,wins:s.wins,
+            losses:s.losses,paused:s.world.paused};
+        }""")
+        page.locator("#wideMode").click()
+        page.locator("#liveBattleLaunch").click()
+        page.locator("#lbMode").select_option("owned")
+        page.locator("#lbTeamSize").select_option("1")
+        page.locator("#lbStart").click()
+        page.locator("#dc-phaser-overlay").wait_for(state="visible")
+        assert len(ctx.pages)==1
+        assert page.evaluate("eval('state').world.paused")
+        page.locator("#dc-phaser-overlay-close").click()
+        assert page.locator("#dc-phaser-overlay").count()==0
+        recovered=page.evaluate("""() => ({
+          id:eval('state').team[0].instanceId,
+          paused:eval('state').world.paused,
+          wins:eval('state').wins,losses:eval('state').losses,
+          pending:!!eval('state').pendingBattle
+        })""")
+        assert recovered["id"]==before["id"],recovered
+        assert recovered["paused"]==before["paused"],recovered
+        assert recovered["wins"]==before["wins"],recovered
+        assert recovered["losses"]==before["losses"],recovered
+        assert not recovered["pending"],recovered
+        print("PASS touch in-page cancel restores original farm clock",flush=True)
     finally:
         ctx.close()
 
@@ -140,6 +198,7 @@ def main():
                 check(browser,root,"index.html",False)
                 check(browser,root,"standalone.html",True)
                 check_fallback(browser,root)
+                check_cancel(browser,root)
             finally:browser.close()
     finally:
         srv.shutdown();srv.server_close();thread.join(timeout=3)
