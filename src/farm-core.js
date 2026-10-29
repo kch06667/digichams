@@ -199,17 +199,17 @@ function command(s,id,kind,options={}){ensure(s);const m=s.team.find(m=>m.instan
  const proposedAp=kind==='cage'&&options?.apTarget!==undefined?Number(options.apTarget):null;
  if(proposedAp!==null&&(!Number.isInteger(proposedAp)||proposedAp<1||proposedAp>999))return false;
  if(proposed!==null&&(!Number.isInteger(proposed)||proposed<1||proposed>999))return false;
+ // Reject completed goals BEFORE overwriting a running training/rest order.
+ if(proposed!==null&&m[stat]>=proposed){
+  log(s,m.name+'의 '+stat+' 목표 '+proposed+' 이미 달성.');return false;
+ }
+ const family=kind==='cage'?Object.keys(cages.MAP[options.cage].ap)[0]:null;
+ if(proposedAp!==null&&(Number(m.evo?.ap?.[family])||0)>=proposedAp){
+  log(s,m.name+'의 '+family+' AP '+proposedAp+' 이미 달성.');return false;
+ }
  const a=actor(s,id);a.id=id;clear(s,a);if(kind==='stop')return true;
- if(proposed!==null){const value=proposed;
-  if(m[stat]>=value){log(s,m.name+'의 '+stat+' 목표 '+value+' 이미 달성.');return true;}
-  a.target={stat,value};
- }
- if(proposedAp!==null){
-   const family=Object.keys(cages.MAP[options.cage].ap)[0],value=proposedAp;
-   const current=Number(m.evo?.ap?.[family])||0;
-   if(current>=value){log(s,m.name+'의 '+family+' AP '+value+' 이미 달성.');return true;}
-   a.target={ap:family,value};
- }
+ if(proposed!==null)a.target={stat,value:proposed};
+ if(proposedAp!==null)a.target={ap:family,value:proposedAp};
  a.goal=destination(s,kind,options);a.mode='moving';a.pose=2;return true;}
 function placeFood(s,x=50,y=65){
  ensure(s);
@@ -343,5 +343,39 @@ function advance(s,realSeconds,hooks={}){
    step(s,.05,hooks);
   }
  }
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+// Pure read-only progress snapshot; no save schema migration.
+function trainingStatus(s,id){
+ const m=s?.team?.find(mon=>mon.instanceId===id);
+ const a=s?.farm?.actors?.[id];
+ if(!m||!a)return null;
+ const pausedForRest=a.goal?.kind==='rest'&&['attack','defense','speed','cage'].includes(a.resume);
+ const kind=pausedForRest?a.resume:a.goal?.kind;
+ const opts=pausedForRest?a.resumeOptions||{}:{};
+ const cages=root.DCCages||(typeof require==='function'?require('./cage-training-core.js'):null);
+ const cageId=kind==='cage'?(pausedForRest?opts.cage:a.goal?.cage):null;
+ const cage=cageId?cages?.MAP[cageId]:null;
+ const stat={attack:'atk',defense:'def',speed:'spd'}[kind];
+ const family=cage?Object.keys(cage.ap)[0]:null;
+ const key=family||stat||null,measure=family?'ap':stat?'stat':null;
+ const current=family?Number(m.evo?.ap?.[family])||0:
+  stat&&Number.isFinite(m[stat])?m[stat]:null;
+ const t=pausedForRest?(
+  opts.apTarget!==undefined?{ap:family,value:opts.apTarget}:
+  opts.target!==undefined?{stat,value:opts.target}:
+  a.resumeTarget!=null?{[family?'ap':'stat']:key,value:a.resumeTarget}:null
+ ):a.target;
+ const goal=t&&Number.isInteger(t.value)&&t.value>=1&&t.value<=999&&
+  (t.stat===stat||t.ap===family)?t.value:null;
+ return {name:m.name,mode:a.mode,kind:kind||'idle',
+  activity:a.goal?.kind||'idle',restResume:!!pausedForRest,
+  facility:cage?.label||null,cageId:cageId||null,
+  key,measure,current,goal,
+  remaining:goal!==null&&current!==null?Math.max(0,goal-current):null,
+  percent:goal!==null&&current!==null?Math.max(0,Math.min(100,Math.round(current/goal*100))):null,
+  cycleSeconds:a.mode==='acting'&&Number.isFinite(a.remaining)?Math.max(0,a.remaining):null,
+  hp:Math.max(0,Number(m.hp)||0),maxHp:Math.max(1,Number(m.maxHp)||1),
+  fatigue:Math.max(0,Number(m.fatigue)||0),autoRest:a.autoRest!==false
+ };
+}
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,trainingStatus,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

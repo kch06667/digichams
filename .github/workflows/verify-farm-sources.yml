@@ -16,6 +16,8 @@ on:
       - "tools/import-farm-graphics-v0232.py"
       - "tests/test_farm_graphics_import.py"
       - "tests/farm-offmap-recovery.cjs"
+      - "tests/farm-training-progress.cjs"
+      - "tests/farm-training-progress-browser.py"
       - "tests/farm-life-safety.cjs"
       - "tests/farm-life-browser.py"
       - ".github/workflows/verify-farm-sources.yml"
@@ -39,7 +41,7 @@ jobs:
         run: |
           node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs
           node tests/farm-core.cjs
-          node --test tests/farm-life-safety.cjs
+          node --test tests/farm-life-safety.cjs tests/farm-training-progress.cjs
           node --test tests/farm-offmap-recovery.cjs
           node tests/championship-core.cjs
       - name: Safe graphics importer tests
@@ -60,4 +62,6 @@ jobs:
           python3 -m pip install playwright==1.57.0
           python3 -m playwright install --with-deps chromium
       - name: Real farm care and food in original full game (PC and touch)
-        run: python3 tests/farm-life-browser.py
+        run: |
+          python3 tests/farm-life-browser.py
+          python3 tests/farm-training-progress-browser.py
