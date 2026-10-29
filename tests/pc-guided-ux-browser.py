@@ -26,6 +26,87 @@ def stable_values(page):
     }""")
 
 
+def verify_pc_layout(page,section,viewport):
+    """Read the actual DOM geometry / applied CSS, not a mock screenshot.
+
+    The source NDS-derived art stays private: screenshot files are not
+    attached to CI artifacts or checked into public GitHub.
+    """
+    result=page.evaluate("""(section) => {
+      const box=selector=>{
+        const n=document.querySelector(selector),r=n?.getBoundingClientRect();
+        return r?{width:r.width,height:r.height,left:r.left,right:r.right,
+                  top:r.top,bottom:r.bottom}:null;
+      };
+      const buttons=[...document.querySelectorAll('nav.tabs button')].map(
+        n=>({top:n.getBoundingClientRect().top,
+             bottom:n.getBoundingClientRect().bottom,
+             height:n.getBoundingClientRect().height,
+             width:n.getBoundingClientRect().width}));
+      const computed=selector=>{
+        const e=document.querySelector(selector);
+        return e?getComputedStyle(e):null;
+      };
+      const font=selector=>{
+        const e=document.querySelector(selector);
+        return e?parseFloat(getComputedStyle(e).fontSize):0;
+      };
+      return {
+        section,width:innerWidth,documentWidth:document.documentElement.scrollWidth,
+        cssReady:!!document.querySelector('#dc-pc-visual-polish')?.sheet,
+        buttons,nav:getComputedStyle(document.querySelector('nav.tabs')).gridTemplateColumns,
+        viewport:box('#farmPanel .farmViewport'),
+        map:box('#farmPanel .farmWorld'),
+        // Some original entries embed the SAME 920x690 WebP atlas as a
+        // data: URI instead of serving the asset pathname. Never dump
+        // the copyright-protected full bitmap into CI failure logs.
+        mapBackground:(computed('#farmPanel .farmWorld')?.backgroundImage||'').slice(0,115),
+        hunt:box('#huntStage'),
+        huntFont:font('#huntInstructions'),
+        actionButtons:[...document.querySelectorAll('#huntActionBar button')].map(
+          el=>({height:el.getBoundingClientRect().height,
+                width:el.getBoundingClientRect().width})),
+        cup:box('#championshipPanel'),
+        cupCards:[...document.querySelectorAll('#championshipCalendar .championshipCup')].map(
+          n=>({width:n.getBoundingClientRect().width,
+                height:n.getBoundingClientRect().height})),
+        battleGrid:computed('#battle>.layout')?.gridTemplateColumns||''
+      };
+    }""",section)
+    assert result["cssReady"],result
+    assert result["width"]==viewport,result
+    assert result["documentWidth"]<=viewport+2,result
+    # Five original tabs must be on ONE row, each with a proper mouse
+    # target. Before PR68 the fifth ROM tab wrapped to a separate row.
+    assert len(result["buttons"])==5,result
+    assert max(x["top"] for x in result["buttons"]) - min(
+        x["top"] for x in result["buttons"])<3,result
+    assert min(x["height"] for x in result["buttons"])>=43,result
+    assert min(x["width"] for x in result["buttons"])>=80,result
+    if section=="nursery":
+        assert result["viewport"]["height"]>=375,result
+        assert result["viewport"]["width"]>=680,result
+        # The original NDS-style farm atlas is not stretched/moved.
+        assert abs(result["map"]["width"]-920)<1,result
+        assert abs(result["map"]["height"]-690)<1,result
+        assert ("hex_farm_v0232.webp" in result["mapBackground"] or
+                "data:image/webp;base64," in result["mapBackground"]),result
+    if section=="hunt":
+        assert result["hunt"]["width"]>=440,result
+        assert result["hunt"]["height"]>=260,result
+        assert result["huntFont"]>=13.5,result
+        assert len(result["actionButtons"])>=4,result
+        assert min(x["height"] for x in result["actionButtons"])>=45,result
+    if section=="battle":
+        assert result["cup"]["width"]>700,result
+        assert len(result["cupCards"])>=1,result
+        assert min(x["width"] for x in result["cupCards"])>=235,result
+    print("PASS PC",viewport,section,"visual geometry: "
+          "single-row 5 tabs, readable buttons, no page overflow",
+          flush=True)
+    return result
+
+
 def check_desktop(browser,url,entry):
     ctx=browser.new_context(viewport={"width":1440,"height":900},
                             has_touch=False,is_mobile=False)
@@ -37,6 +118,21 @@ def check_desktop(browser,url,entry):
         page.locator("#dc-phaser-engine").wait_for(state="attached",timeout=30000)
         guide=page.locator("#dc-pc-guide")
         guide.wait_for(state="visible",timeout=10000)
+        page.wait_for_function(
+            "Boolean(document.querySelector('#dc-pc-visual-polish')?.sheet)",
+            timeout=10000)
+        # The source game intentionally starts in a 560px NDS-style
+        # two-screen shell; its farm window is only 330px tall. Do NOT
+        # silently replace that player's display preference. Use the
+        # real original 'wideMode' button via the new discoverable PC CTA.
+        if page.evaluate("document.body.classList.contains('mode-nds')"):
+            page.locator("#dc-pc-guide-wide").click()
+        page.wait_for_function("""() =>
+          document.querySelector('#dc-pc-guide-jump')
+            ?.getBoundingClientRect().width>30""",timeout=12000)
+        assert not page.evaluate("document.body.classList.contains('mode-nds')")
+        assert page.locator("#dc-pc-guide-wide").is_hidden()
+        verify_pc_layout(page,"nursery",1440)
         assert page.locator("#dc-pc-guide-context").inner_text().startswith(
             "사육장"),page.locator("#dc-pc-guide-context").inner_text()
         assert page.locator('[data-dc-pc-tab="nursery"]').get_attribute(
@@ -53,8 +149,25 @@ def check_desktop(browser,url,entry):
           document.querySelector('nav.tabs [data-tab="hunt"]')
             ?.classList.contains('active') &&
           DCPCGuide.snapshot()?.tab==='hunt'""")
+        verify_pc_layout(page,"hunt",1440)
         status=page.locator("#dc-pc-guide-context").inner_text()
         assert "포획" in status and "로프" in status,status
+        if not page.locator("#dc-pc-guide-jump").is_visible():
+            debug=page.evaluate("""() => {
+              const keys=['#dc-pc-guide','#dc-pc-guide-jump',
+                          '#dc-pc-guide-context','.dc-pc-links',
+                          'nav.tabs','#wideMode'];
+              return Object.fromEntries(keys.map(key=>{
+                const n=document.querySelector(key);
+                const r=n?.getBoundingClientRect(),st=n&&getComputedStyle(n);
+                return [key,{outer:n?.outerHTML?.slice(0,220),
+                  hidden:n?.hidden,display:st?.display,visibility:st?.visibility,
+                  opacity:st?.opacity,width:r?.width,height:r?.height,
+                  left:r?.left,top:r?.top}];
+              }));
+            }""")
+            raise AssertionError("PC expanded jump button is hidden: "+
+                                 repr(debug))
         page.locator("#dc-pc-guide-jump").click()
         assert page.locator("#huntStage").count()==1
         assert page.locator('[data-dc-pc-tab="hunt"]').get_attribute(
@@ -65,6 +178,7 @@ def check_desktop(browser,url,entry):
           document.querySelector('nav.tabs [data-tab="battle"]')
             ?.classList.contains('active') &&
           DCPCGuide.snapshot()?.tab==='battle'""")
+        verify_pc_layout(page,"battle",1440)
         assert "승" in page.locator("#dc-pc-guide-context").inner_text()
         assert "대회" in page.locator("#dc-pc-guide-jump").inner_text()
         page.locator("#dc-pc-guide-jump").click()
@@ -72,6 +186,10 @@ def check_desktop(browser,url,entry):
 
         page.keyboard.press("Alt+1")
         page.wait_for_function("""() => DCPCGuide.snapshot()?.tab==='nursery'""")
+        # Narrow PC window: same source farm, field and cup all remain
+        # reachable and with no body-wide horizontal overflow.
+        page.set_viewport_size({"width":1024,"height":768})
+        verify_pc_layout(page,"nursery",1024)
         page.locator("#dc-pc-guide-help summary").click()
         assert page.locator("#dc-pc-guide-help").get_attribute("open") is not None
         assert "Alt+1" in page.locator("#dc-pc-guide-help").inner_text()
@@ -124,6 +242,7 @@ def check_mobile(browser,url):
                   timeout=90000)
         page.locator("#dc-phaser-engine").wait_for(state="attached")
         assert page.locator("#dc-pc-guide").count()==0
+        assert page.locator("#dc-pc-visual-polish").count()==0
         assert page.evaluate("window.DCPCGuide===undefined")
         assert page.locator('nav.tabs [data-tab="hunt"]').count()==1
         print("PASS original mobile touch unchanged: PC guide not injected",

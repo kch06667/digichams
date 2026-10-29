@@ -1,0 +1,288 @@
+/* PR68 — desktop-only PC 1.0 visual/layout refinement.
+ * CSS is loaded by the existing production-only PC guide, never mobile,
+ * dev previews or ROM-derived asset packages. No game mechanics change.
+ */
+@media (min-width:900px) and (pointer:fine) {
+  :root { color-scheme:dark; }
+  .wrap {
+    max-width:1220px;
+    padding-inline:clamp(18px,2.1vw,32px);
+  }
+  /* The original navigation contains FIVE buttons, not four. A 4-column
+   * desktop grid gave ROM its own stray row and pushed gameplay down. */
+  nav.tabs {
+    display:grid;
+    grid-template-columns:repeat(5,minmax(0,1fr));
+    gap:9px;
+    margin-bottom:10px;
+  }
+  nav.tabs button {
+    min-width:0;
+    min-height:45px;
+    font-size:14px;
+    font-weight:650;
+    line-height:1.25;
+    text-wrap:balance;
+    border:1px solid #45667c;
+    background:linear-gradient(180deg,#20394e,#162b42);
+    transition:border-color .12s ease,background-color .12s ease;
+  }
+  nav.tabs button.active {
+    color:#fff3ce;
+    border-color:#efc97d;
+    background:linear-gradient(180deg,#315e69,#244555);
+    box-shadow:inset 0 -3px #d0a656;
+  }
+  nav.tabs button:focus-visible,
+  #farmPanel button:focus-visible,
+  #hunt button:focus-visible,
+  #battle button:focus-visible,
+  #dc-pc-guide button:focus-visible {
+    outline:3px solid #ffe39d;
+    outline-offset:2px;
+  }
+  #dc-pc-guide {
+    border-color:#5b8b9a;
+    box-shadow:0 5px 18px #06132370;
+  }
+  #dc-pc-guide .dc-pc-links { flex-wrap:nowrap; }
+  #dc-pc-guide .dc-pc-links button {
+    white-space:nowrap;
+    min-height:42px;
+    padding-inline:12px;
+  }
+  #dc-pc-guide .dc-pc-context {
+    line-height:1.5;
+    color:#ecf7f5;
+  }
+
+  /* Keep the original 920x690 art and path geometry at native scale.
+   * Only the SCROLLABLE framing and information presentation change. */
+  #farmPanel {
+    border-color:#477b93;
+    box-shadow:0 10px 27px #0005;
+  }
+  #farmPanel .farmIntro {
+    align-items:center;
+    gap:9px 18px;
+    padding-bottom:9px;
+    border-bottom:1px solid #35576d;
+  }
+  #farmPanel .farmIntro h2 {font-size:20px;line-height:1.28;}
+  #farmPanel .farmIntro p {font-size:13px;line-height:1.55;}
+  #farmPanel .farmEconomy {
+    display:flex;
+    gap:8px;
+    margin:12px 0;
+  }
+  #farmPanel .farmChip {
+    padding:9px 13px;
+    background:#102d3d;
+    border-color:#567f91;
+    color:#f2fafb;
+    font-size:13px;
+    font-variant-numeric:tabular-nums;
+  }
+  #farmPanel .farmScrollFrame {
+    max-width:1000px;
+    margin-inline:auto;
+    border:2px solid #70acbf;
+    border-radius:13px;
+    box-shadow:0 12px 28px #02111d98;
+    overflow:hidden;
+  }
+  #farmPanel .farmViewport {
+    height:clamp(380px,58vh,565px);
+    min-height:380px;
+    scrollbar-gutter:stable;
+    scrollbar-width:thin;
+  }
+  #farmPanel .farmNav {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    justify-content:center;
+    gap:9px;
+    margin-block:12px 9px;
+  }
+  #farmPanel .farmNav button,
+  #farmPanel .hexControls button,
+  #farmPanel .hexArchive button {
+    min-height:44px;
+    font-size:13px;
+    line-height:1.3;
+  }
+  #farmPanel .hexControls {
+    padding:15px 16px;
+    gap:12px;
+    margin-block:10px;
+    border:1px solid #568c9e;
+    background:linear-gradient(180deg,#123b50,#0b273d);
+  }
+  #farmPanel .hexClock {
+    gap:10px;
+    padding-bottom:11px;
+  }
+  #farmPanel .hexOrders,
+  #farmPanel .hexCageActions,
+  #farmPanel .hexTargetControls {gap:10px;}
+  #farmPanel .hexTrainingProgress {
+    padding:14px 16px;
+    background:#143347;
+    border-color:#62929a;
+  }
+  #farmPanel #hexTrainingMeter {height:16px;}
+  #farmPanel .hexNote,
+  #farmPanel .hexCageInfo,
+  #farmPanel .hexTrainingProgress p {font-size:13px;line-height:1.5;}
+
+  /* Original capture gesture lives inside huntStage. Widen its first
+   * column without changing canvas coordinates or rope mechanics. */
+  #hunt>.layout {
+    display:grid;
+    grid-template-columns:minmax(0,1.36fr) minmax(285px,.64fr);
+    gap:16px;
+    align-items:start;
+  }
+  #hunt>.layout>article.panel {
+    border-color:#477c73;
+  }
+  #hunt>.layout>article.panel:first-child {
+    background:linear-gradient(155deg,#173a3c,#102b34 78%,#112333);
+  }
+  #hunt #huntStage {
+    aspect-ratio:600/335;
+    min-height:300px;
+    max-height:435px;
+    border:3px solid #9cc3aa;
+    border-radius:15px;
+    box-shadow:0 9px 22px #021c1fa3;
+  }
+  #hunt #huntInstructions {
+    padding:10px 13px;
+    min-height:48px;
+    color:#effae8;
+    background:#193e3c;
+    border:1px solid #638f82;
+    border-radius:8px;
+    font-size:14px;
+    line-height:1.55;
+    overflow-wrap:anywhere;
+  }
+  #hunt #huntStatus {
+    font-size:13px;
+    color:#d1eadd;
+    line-height:1.5;
+  }
+  #hunt #huntActionBar {
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+    margin-block:12px;
+  }
+  #hunt #huntActionBar button {
+    min-height:47px;
+    min-width:0;
+    padding:9px 10px;
+    font-size:14px;
+    font-weight:650;
+  }
+  #hunt #huntActionBar button:disabled {opacity:.53;}
+  #hunt #huntHud {gap:10px;}
+  #hunt #huntHud>div {
+    padding:12px 8px;
+    background:#153831;
+    border:1px solid #548278;
+    font-size:13px;
+  }
+  #hunt #huntHud b {
+    font-size:16px;
+    font-variant-numeric:tabular-nums;
+  }
+
+  /* The first battle panel explains and previews combat; the second
+   * holds team info. Cups remain in a full-width independent panel. */
+  #battle>.layout {
+    display:grid;
+    grid-template-columns:minmax(0,1.14fr) minmax(300px,.86fr);
+    gap:16px;
+    align-items:start;
+  }
+  #battle>.layout>article.panel {
+    border-color:#526c8b;
+  }
+  #championshipPanel {
+    margin-top:18px;
+    border-color:#927b53;
+    background:linear-gradient(165deg,#243247,#16283b);
+  }
+  #championshipPanel>.row {
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  #championshipPanel .championshipCalendar {
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(245px,1fr));
+    gap:12px;
+  }
+  #championshipPanel .championshipCup {
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    min-width:0;
+    padding:15px;
+    border:1px solid #817e6b;
+    border-radius:12px;
+    background:linear-gradient(155deg,#263e4b,#172c3e);
+  }
+  #championshipPanel .championshipCup h3 {font-size:16px;line-height:1.4;}
+  #championshipPanel .championshipCup p {font-size:13px;line-height:1.5;}
+  #championshipPanel .championshipCup button {
+    margin-top:auto;
+    min-height:45px;
+    font-size:13px;
+  }
+  #championshipBracket {
+    padding:14px;
+    line-height:1.6;
+    border-color:#877650;
+    background:#0f2535;
+  }
+  #championshipHistory {line-height:1.55;}
+
+  /* Combat overlay still fills the window and remains keyboard-usable,
+   * while keeping the arena framed on extra-wide desktops. */
+  #dc-phaser-overlay {
+    background:radial-gradient(ellipse at center,#112e40,#05121f 78%) !important;
+  }
+  #dc-phaser-overlay>div:first-child {
+    width:100%;
+    box-sizing:border-box;
+    padding-inline:max(18px,calc((100vw - 1380px)/2)) !important;
+    border-bottom:1px solid #4b7182;
+  }
+  #dc-phaser-overlay #dc-phaser-arena-frame {
+    display:block;
+    align-self:center;
+    max-width:1380px;
+    width:100%;
+    border-left:1px solid #315568 !important;
+    border-right:1px solid #315568 !important;
+    box-sizing:border-box;
+  }
+  #dc-phaser-overlay-close:focus-visible {
+    outline:3px solid #ffe39d;
+    outline-offset:2px;
+  }
+  @media (min-width:900px) and (max-width:1120px) {
+    .wrap {padding-inline:16px;}
+    #hunt>.layout {grid-template-columns:minmax(0,1.25fr) minmax(280px,.75fr);}
+    #hunt #huntStage {min-height:265px;}
+    #farmPanel .hexControls {padding:12px;}
+    #dc-pc-guide .dc-pc-links {flex-wrap:wrap;}
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  nav.tabs button {transition:none!important;}
+}

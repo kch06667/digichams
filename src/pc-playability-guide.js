@@ -10,6 +10,15 @@
      !document.querySelector('#huntStage') ||
      !document.querySelector('#championshipPanel'))return;
 
+  // Keep visual presentation independently toggleable from navigation.
+  // This link is loaded only on a production PC pointer/viewport; mobile,
+  // old developer pages, saved progress and embedded game files are untouched.
+  const skin=document.createElement('link');
+  skin.id='dc-pc-visual-polish';
+  skin.rel='stylesheet';
+  skin.href=new URL('pc-visual-polish.css',document.currentScript.src).href;
+  document.head.appendChild(skin);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
@@ -43,6 +52,7 @@
       <button type="button" data-dc-pc-tab="nursery">🏡 사육장 <small>Alt+1</small></button>
       <button type="button" data-dc-pc-tab="hunt">🪢 포획 <small>Alt+2</small></button>
       <button type="button" data-dc-pc-tab="battle">⚔ 대전 <small>Alt+3</small></button>
+      <button type="button" id="dc-pc-guide-wide" hidden>▤ PC 확장 화면</button>
     </div>
     <div class="dc-pc-context" id="dc-pc-guide-context"></div>
     <button type="button" id="dc-pc-guide-jump">현재 화면의 조작으로</button>
@@ -59,6 +69,13 @@
   const jump=host.querySelector('#dc-pc-guide-jump');
   const graphics=host.querySelector('#dc-pc-guide-graphics');
   const tabs=[...host.querySelectorAll('[data-dc-pc-tab]')];
+  const expand=host.querySelector('#dc-pc-guide-wide');
+  expand.addEventListener('click',()=>{
+    if(!document.body.classList.contains('mode-nds'))return;
+    document.getElementById('wideMode')?.click();
+    refresh();
+    requestAnimationFrame(refresh);
+  });
 
   function gameState(){
     try { return eval('state'); } catch(_) {return null;}
@@ -120,8 +137,21 @@
     return bad.length;
   }
   function refresh(){
+    // The source two-screen ↔ expanded-mode switch can reparent the
+    // original navigation without moving this optional read-only bar.
+    // Follow its currently visible tab row, otherwise the bar could
+    // remain inside a hidden old layout after the player expands.
+    const liveNav=[...document.querySelectorAll('nav.tabs')].find(
+      n=>n.getBoundingClientRect().width>0);
+    if(liveNav && (host.previousElementSibling!==liveNav ||
+                   host.parentElement!==liveNav.parentElement))
+      liveNav.insertAdjacentElement('afterend',host);
     if(!host.isConnected)return null;
     const tab=activeTab(),state=gameState();
+    // The original DS two-screen mode deliberately keeps a 560px shell.
+    // Never override it silently: offer the EXISTING wide-mode switch.
+    expand.hidden=!document.body.classList.contains('mode-nds') ||
+      !document.getElementById('wideMode');
     const info=getSummary(tab,state);
     context.replaceChildren();
     const title=document.createElement('strong');

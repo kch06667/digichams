@@ -8,6 +8,8 @@ on:
       - 'tests/pc-offline-phaser-soak-browser.py'
       - 'src/phaser-arena-entry-choice.js'
       - 'src/pc-playability-guide.js'
+      - 'src/pc-visual-polish.css'
+      - 'docs/PC_VISUAL_LAYOUT_PASS_PR68.md'
       - 'tests/pc-guided-ux-browser.py'
       - 'tools/phaser-production-entry.cjs'
       - 'tools/sync-phaser-production.py'
@@ -135,6 +137,8 @@ jobs:
         run: |
           python3 -m pip install playwright==1.57.0
           python3 -m playwright install --with-deps chromium
+      - name: PC player usability guide, original farm/hunt/championship tabs and save protection
+        run: python3 tests/pc-guided-ux-browser.py
       - name: Six species from indexed private GIFs — local catalog + atlases only
         run: |
           python3 -m pip install 'Pillow>=10,<13'
@@ -169,8 +173,6 @@ jobs:
         run: python3 tests/phaser-main-entry-browser.py
       - name: Production PC and mobile original game Phaser default / auto commit / legacy fallback
         run: python3 tests/phaser-production-default-browser.py
-      - name: PC player usability guide, original farm/hunt/championship tabs and save protection
-        run: python3 tests/pc-guided-ux-browser.py
       - name: PC real-game offline local engine, 3 battle cycles and 2-hour simulated farm soak
         run: python3 tests/pc-offline-phaser-soak-browser.py
       - name: Explicit beta-first Phaser and popup-blocked original fallback (desktop/touch)
