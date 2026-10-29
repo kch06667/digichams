@@ -27,7 +27,7 @@ const replacement=[
 const names=all?['index.html','standalone.html']:['index.html'];
 fs.mkdirSync(target,{recursive:true});
 for(const name of names){
- const original=fs.readFileSync(path.join(root,name),'utf8');
+ const original=require('./phaser-production-entry.cjs').strip(fs.readFileSync(path.join(root,name),'utf8'));
  if(original.split(marker).length!==2)
    throw Error(name+': original match settlement entry moved or duplicated');
  if(original.includes('OPTIONAL_BATTLE_SAVE_V1'))

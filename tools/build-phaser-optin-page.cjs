@@ -18,7 +18,7 @@ const modules=[
 function build({rootDir=root}={}){
   const sourcePath=path.join(rootDir,'index.html');
   const outputPath=path.join(rootDir,'index.phaser.html');
-  const source=fs.readFileSync(sourcePath,'utf8');
+  const source=require('./phaser-production-entry.cjs').strip(fs.readFileSync(sourcePath,'utf8'));
   if(source.split('id="lbStart"').length!==2||
      source.split("el('lbStart').onclick=()=>start(false);").length!==2||
      !source.includes('id="lbMode"')||
