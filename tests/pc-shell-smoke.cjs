@@ -55,7 +55,10 @@ const server=http.createServer((req,res)=>{
       await page.screenshot({path:path.join(out,'farm-closed-'+width+'.png')});
       await toggle.click();
       assert.equal(await toggle.getAttribute('aria-expanded'),'true');
-      assert.equal(await page.evaluate(()=>getComputedStyle(document.querySelector('#dc-pc-control-drawer')).visibility),'visible');
+      // CSS transitions intentionally keep visibility hidden while opening.
+      await page.waitForFunction(()=>
+        getComputedStyle(document.querySelector('#dc-pc-control-drawer')).visibility==='visible'
+      ,{timeout:3000});
       assert.equal(await drawer.locator('#farmLeft').count(),1,'farm navigation was not moved');
       assert.equal(await drawer.locator('#farmDetails').count(),1,'facility details were not moved');
       await page.screenshot({path:path.join(out,'farm-open-'+width+'.png')});
