@@ -94,6 +94,42 @@ test('original arena effect types have distinct renderer-only projectile silhoue
   assert.equal(L.motionAction({hp:1,act:'special',pose:10},
     new Set([0,10,33])),10,'original attack4 release must not be lost');
 });
+test('impact sparks are strictly tied to actual damage events and real two-axis knockback',()=>{
+  const hit={type:'hit',x:320,y:190,targetId:'f1',damage:18,
+    special:true,color:'#43a1e9'};
+  const victim={x:325,y:185,knockVX:-160,knockVY:80};
+  const attacker={x:290,y:170};
+  const before=JSON.stringify({hit,victim,attacker});
+  const fx=L.hitCue(hit,victim,attacker);
+  assert.equal(fx.x,320);
+  assert.equal(fx.y,161);
+  assert.equal(fx.special,true);
+  assert.equal(fx.color,0x43a1e9);
+  assert.equal(fx.targetId,'f1');
+  assert.ok(fx.dx<0 && fx.dy>0,'direction follows actual impulse');
+  assert.ok(Math.abs(Math.hypot(fx.dx,fx.dy)-1)<1e-10);
+  assert.ok(fx.reach>=fx.radius);
+  assert.equal(JSON.stringify({hit,victim,attacker}),before,
+    'rendering must never change original combat data');
+  assert.equal(Object.isFrozen(fx),true);
+  assert.equal(L.hitCue({...hit,damage:0},victim,attacker),null);
+  assert.equal(L.hitCue({...hit,type:'skill'},victim,attacker),null);
+  assert.equal(L.hitCue({...hit,x:NaN},victim,attacker),null);
+  assert.equal(L.hitCue(null,victim,attacker),null);
+});
+test('impact cue has bounded values, validated colors and safe direction fallbacks',()=>{
+  const normal=L.hitCue({type:'hit',x:0,y:60,damage:1,special:false});
+  assert.deepEqual([normal.dx,normal.dy],[1,0]);
+  assert.equal(normal.color,0xffe5a2);
+  const forged=L.hitCue({type:'hit',x:50,y:50,damage:999999,
+    special:true,color:'url(https://bad.example)'},{knockVX:Infinity,knockVY:NaN});
+  assert.equal(forged.color,0xb4e4ff);
+  assert.equal(forged.reach,53);
+  assert.equal(forged.radius,36);
+  const fromTarget=L.hitCue({type:'hit',x:50,y:50,damage:10},
+    {x:30,y:50,knockVX:0,knockVY:0},{x:10,y:60});
+  assert.ok(fromTarget.dx>0 && fromTarget.dy<0);
+});
 test('stat and knockback functions bounded and side-effect free', () => {
   assert.equal(L.gainTrainingStat(10, 1), 11);
   assert.equal(L.gainTrainingStat(9999, 1), 9999);
@@ -130,6 +166,10 @@ test('JS parser accepts browser-side game and test lab stays isolated', () => {
     'browser QA should be able to inspect the per-sprite animation speed');
   assert.match(src,/L\.motionAction\(/,
     'Phaser must use the rendering-only original action/fallback resolver');
+  assert.match(src,/L\.hitCue\(e,victim,attacker\)/,
+    'impact visuals must use the original engine hit event adapter');
+  assert.match(src,/hitEffectHistory\.push\(/,
+    'audit only actual rendered hits; no synthetic damage events');
   assert.equal(L.motionAction({act:'victory',hp:50},new Set([0,30])),30);
   assert.equal(L.motionAction({act:'walk',hp:50},new Set([0,2])),2);
   assert.doesNotMatch(src,/localStorage|saveVersion|\.nds/i);
