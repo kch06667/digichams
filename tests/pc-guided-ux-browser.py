@@ -145,6 +145,22 @@ def check_desktop(browser,url,entry):
         verify_pc_layout(page,"hunt",1440)
         status=page.locator("#dc-pc-guide-context").inner_text()
         assert "포획" in status and "로프" in status,status
+        if not page.locator("#dc-pc-guide-jump").is_visible():
+            debug=page.evaluate("""() => {
+              const keys=['#dc-pc-guide','#dc-pc-guide-jump',
+                          '#dc-pc-guide-context','.dc-pc-links',
+                          'nav.tabs','#wideMode'];
+              return Object.fromEntries(keys.map(key=>{
+                const n=document.querySelector(key);
+                const r=n?.getBoundingClientRect(),st=n&&getComputedStyle(n);
+                return [key,{outer:n?.outerHTML?.slice(0,220),
+                  hidden:n?.hidden,display:st?.display,visibility:st?.visibility,
+                  opacity:st?.opacity,width:r?.width,height:r?.height,
+                  left:r?.left,top:r?.top}];
+              }));
+            }""")
+            raise AssertionError("PC expanded jump button is hidden: "+
+                                 repr(debug))
         page.locator("#dc-pc-guide-jump").click()
         assert page.locator("#huntStage").count()==1
         assert page.locator('[data-dc-pc-tab="hunt"]').get_attribute(
