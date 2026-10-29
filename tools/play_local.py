@@ -86,6 +86,8 @@ def main(argv=None):
     parser.add_argument("--skip-art",action="store_true",
                         help="start without private sprite conversion (placeholders possible)")
     parser.add_argument("--no-browser",action="store_true",help="do not open browser")
+    parser.add_argument("--lan",action="store_true",
+                        help="explicitly share playable files/art on your trusted Wi-Fi (no authentication)")
     args=parser.parse_args(argv)
     if not 1<=args.port<=65535:
         parser.error("port must be 1..65535")
@@ -95,11 +97,14 @@ def main(argv=None):
         parser.exit(1,"Could not prepare playable art: "+str(err)+"\n")
     handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(ROOT))
     try:
-        server=http.server.ThreadingHTTPServer(("127.0.0.1",args.port),handler)
+        server=http.server.ThreadingHTTPServer(("0.0.0.0" if args.lan else "127.0.0.1",args.port),handler)
     except OSError as err:
         parser.exit(1,f"Could not bind localhost:{args.port}: {err}\n")
     url=f"http://127.0.0.1:{server.server_port}/index.html"
     print("Play the original PC game (Phaser battle default): "+url,flush=True)
+    if args.lan:
+        print("WARNING: --lan exposes original graphics to devices on your network; trusted Wi-Fi only.",flush=True)
+        print("On your phone, use http://<PC-LAN-IP>:"+str(args.port)+"/index.html (different browser saves).",flush=True)
     print("Ctrl+C to stop. Your saves remain in the browser's localStorage.",flush=True)
     try:
         if not args.no_browser:
