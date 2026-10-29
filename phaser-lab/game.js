@@ -396,7 +396,11 @@
             action:v?.pose||null,angle:v?.sprite.angle||0,
             originY:v?.sprite.originY??null,
             footY:v?.sprite.y??null,
-            displayHeight:v?.sprite.displayHeight??null,
+            // Phaser scene.restart() may dispose sprite.frame before
+            // the next scene is created. Never touch the height getter
+            // until its texture source is still alive.
+            displayHeight:v?.sprite?.frame?.source?
+              v.sprite.displayHeight:null,
             phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37),
             // During scene.restart(), Phaser may already have disposed an
