@@ -213,6 +213,9 @@
       }else{
         // Newer other-tab saves are never overwritten by our rollback.
         notice.textContent='다른 탭에서 저장이 변경됐어. 새로고침 후 확인해 줘.';
+        clearParkMarker(session.token);
+        session.park=null;
+        return false;
       }
       clearParkMarker(session.token);
       session.park=null;
