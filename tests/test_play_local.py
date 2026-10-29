@@ -183,10 +183,13 @@ class LocalQuickstartTests(unittest.TestCase):
                         self.root,self.root/"not-installed",True)
             self.assertEqual(result.read_bytes(),engine)
             self.assertFalse(list(result.parent.glob(".verified-phaser-*")))
-        with mock.patch.object(mod,"PHASER_SHA256","0"*64):
+        with mock.patch.object(mod,"PHASER_SHA256","0"*64), \
+             mock.patch.object(mod.urllib.request,"urlopen",
+                 side_effect=lambda *a,**k:io.BytesIO(engine)):
             with self.assertRaisesRegex(RuntimeError,"SHA-256"):
                 mod.prepare_engine(self.root/"other",self.root/"none",
-                                   allow_download=False)
+                                   allow_download=True)
+        self.assertFalse((self.root/"other"/"vendor"/"phaser.min.js").exists())
 
     def test_game_server_serves_local_engine_and_removes_external_script(self):
         (self.root/"phaser-lab"/"local-assets"/"vendor").mkdir(parents=True)
