@@ -325,3 +325,46 @@
     border-radius:5px;
   }
 }
+
+/* PR77: depth-sorted front building layers. The main facility art continues
+ * to come from the existing v0.23.2 WebP crop; no new buildings are invented.
+ * The narrow mask covers only the building, never the original cyan hex rim.
+ */
+@media (min-width:900px) and (pointer:fine) {
+  #farmPanel .farmWorld .dc-ranch-facade-front {
+    display:none;
+    position:absolute;
+    width:220px;
+    height:226px;
+    transform:translate(-50%,-50%);
+    padding:0;
+    margin:0;
+    border:0;
+    background-image:url("../assets/farm/hex_farm_v0232.webp");
+    background-size:920px 690px;
+    background-repeat:no-repeat;
+    background-position:var(--dc-facade-offset,0 0);
+    -webkit-mask-image:radial-gradient(ellipse 38% 36% at 50% 42%,
+      #000 47%,#000e 70%,transparent 100%);
+    mask-image:radial-gradient(ellipse 38% 36% at 50% 42%,
+      #000 47%,#000e 70%,transparent 100%);
+    filter:saturate(.89) contrast(1.04);
+    image-rendering:auto;
+    pointer-events:none !important;
+    user-select:none;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .farmWorld .dc-ranch-facade-front {
+    display:block;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.unlocked:not(.core)::before {
+    /* Match the separate front slice so they blend as the actor crosses
+     * the building's doorway depth. Preserve the existing ground shadow. */
+    filter:saturate(.89) contrast(1.04)
+      drop-shadow(0 4px 3px rgba(24,58,38,.26));
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexActor::before {
+    width:var(--dc-ground-shadow-width,30px);
+    max-width:42px;
+    min-width:18px;
+  }
+}
