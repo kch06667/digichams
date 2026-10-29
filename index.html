@@ -2304,7 +2304,8 @@ prepare();drawTiles();renderRoster();drawClock();refreshCageFacilities();drawSta
   // An external Phaser battle/cup approval may have ALREADY committed a
   // newer authoritative saved result while this old tab is unloading.
   // Never let this stale page overwrite it with an in-flight battle.
-  if(state.pendingBattle||state.championship?.active?.awaiting)return;
+  if(window.DCDevPhaserApprovedSave===true||state.pendingBattle||
+     state.championship?.active?.awaiting)return;
   try{save(false);persistClock=0;}
   catch(_){/* Storage may be unavailable or full: never crash on suspend. */}
  }
