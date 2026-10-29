@@ -30,6 +30,12 @@
   continuousScript.src=new URL('pc-continuous-ranch-preview.js',document.currentScript.src).href;
   document.head.appendChild(continuousScript);
 
+  // PR74: diagnostic overlay reads the live farm core's precise walkability.
+  // It is opt-in and never writes to the canonical game state.
+  const ranchWalkabilityScript=document.createElement('script');
+  ranchWalkabilityScript.src=new URL('pc-ranch-walkability.js',document.currentScript.src).href;
+  document.head.appendChild(ranchWalkabilityScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
