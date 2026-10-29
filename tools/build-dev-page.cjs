@@ -26,7 +26,7 @@ function build({root = path.resolve(__dirname, '..'), input = 'index.html'} = {}
   const outputFile = path.join(root, 'index.dev.html');
   const generatedDir = path.join(root, '.dev-generated');
   if (!fs.existsSync(sourceFile)) throw new Error("Source missing: " + sourceFile);
-  const source = fs.readFileSync(sourceFile, 'utf8');
+  const source = require('./phaser-production-entry.cjs').strip(fs.readFileSync(sourceFile, 'utf8'));
   fs.mkdirSync(generatedDir, { recursive: true });
   const counters = {script: 0, style: 0};
   const written = [];
