@@ -19,6 +19,12 @@
   skin.href=new URL('pc-visual-polish.css',document.currentScript.src).href;
   document.head.appendChild(skin);
 
+  // First ranch camera slice: desktop mouse drag only. Original farm model,
+  // map click handlers, sprites, zoom and saves are not rewritten here.
+  const farmPanScript=document.createElement('script');
+  farmPanScript.src=new URL('pc-farm-pan.js',document.currentScript.src).href;
+  document.head.appendChild(farmPanScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
