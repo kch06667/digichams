@@ -675,6 +675,17 @@
     #farmPanel .hexControls {padding:12px;}
     #dc-pc-guide .dc-pc-links {flex-wrap:wrap;}
   }
+  /* PR70 ranch camera slice: drag the existing scrollable world on desktop.
+   * Disable inherited smooth scrolling while dragging to match the pointer. */
+  body:not(.mode-nds) #farmPanel .farmViewport {
+    cursor:grab;
+    scroll-behavior:auto;
+  }
+  body:not(.mode-nds) #farmPanel .farmViewport.dc-pc-panning {
+    cursor:grabbing;
+    user-select:none;
+  }
+
 }
 @media (prefers-reduced-motion:reduce) {
   nav.tabs button {transition:none!important;}
