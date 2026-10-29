@@ -2,6 +2,7 @@ name: Sync farm inline bundles (development branches)
 on:
   push:
     branches:
+      - feat/cage-training-progress-20261029
       - feat/farm-life-safety-20261029
       - perf/farm-paint-throttle-20261028
       - perf/farm-dom-diff-20261028
@@ -16,6 +17,7 @@ on:
       - tools/sync-embedded-farm.py
       - tests/farm-dom-paint-browser.py
       - tests/farm-offmap-recovery.cjs
+      - tests/farm-training-progress.cjs
       - tests/farm-life-safety.cjs
       - .github/workflows/sync-farm-branch.yml
   workflow_dispatch:
@@ -51,7 +53,7 @@ jobs:
         run: |
           node --test tests/farm-avoidance.cjs tests/farm-navigation.cjs
           node tests/farm-core.cjs
-          node --test tests/farm-life-safety.cjs
+          node --test tests/farm-life-safety.cjs tests/farm-training-progress.cjs
           node --test tests/farm-offmap-recovery.cjs
           node tests/championship-core.cjs
       - name: Commit generated HTML back to this branch
