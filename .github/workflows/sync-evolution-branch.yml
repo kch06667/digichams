@@ -1,0 +1,50 @@
+name: Sync evolution diagnostics into original playable HTML
+on:
+  push:
+    branches:
+      - feat/evolution-route-diagnostics-20261029
+    paths:
+      - "src/evolution-core.js"
+      - "src/evolution-goal-ui.js"
+      - "src/evolution-goal-style.css"
+      - "tools/sync-embedded-evolution.py"
+      - "tests/evolution-route-diagnostics.cjs"
+      - ".github/workflows/sync-evolution-branch.yml"
+  workflow_dispatch:
+concurrency:
+  group: evolution-inline-sync-${{ github.ref }}
+  cancel-in-progress: true
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Synchronize canonical evolution core and small UI extension into both games
+        run: |
+          python3 tools/sync-embedded-evolution.py
+          python3 tools/sync-embedded-evolution.py --check
+      - name: Validate 477-route diagnostics and existing evolution
+        run: |
+          node --check src/evolution-core.js
+          node --check src/evolution-goal-ui.js
+          node --test tests/evolution-route-diagnostics.cjs
+          node tests/evolution-tree.cjs
+          node tests/evolution-core.cjs
+      - name: Commit playable HTML sync to feature branch
+        run: |
+          git add index.html standalone.html
+          if ! git diff --cached --quiet; then
+            git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Sync 477-route evolution diagnostics into both original playable HTMLs"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
