@@ -37,6 +37,45 @@
     'padding:10px;border:2px solid #f5d68b;background:#62481f;' +
     'color:white;font:600 13px sans-serif;border-radius:9px';
   let pending=null,activeSession=null;
+  // The real PC/mobile game hosts Phaser in a same-page dialog. Developer
+  // bridge and optional QA pages retain their old popup + manual approval.
+  function openEmbedded(url){
+    const layer=document.createElement('section');
+    layer.id='dc-phaser-overlay';
+    layer.setAttribute('role','dialog');
+    layer.setAttribute('aria-modal','true');
+    layer.setAttribute('aria-label','실시간 자동 전투');
+    layer.style.cssText='position:fixed;inset:0;z-index:2147483000;' +
+      'display:flex;flex-direction:column;background:#081724;color:white;' +
+      'padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)';
+    const bar=document.createElement('div');
+    bar.style.cssText='display:flex;align-items:center;gap:12px;' +
+      'padding:6px 12px;background:#102d3c;min-height:52px';
+    const title=document.createElement('strong');
+    title.textContent='⚔ Phaser 실시간 자동 전투';
+    title.style.cssText='flex:1;font:600 15px system-ui,sans-serif';
+    const exit=document.createElement('button');
+    exit.id='dc-phaser-overlay-close';exit.type='button';
+    exit.textContent='전투 포기 · 사육장 복귀';
+    exit.style.cssText='min-height:44px;padding:8px 12px;border-radius:8px;' +
+      'border:1px solid #9db2c6;background:#274457;color:#fff;' +
+      'font:600 13px system-ui,sans-serif;cursor:pointer';
+    exit.addEventListener('click',()=>cancel.click());
+    bar.append(title,exit);
+    const frame=document.createElement('iframe');
+    frame.id='dc-phaser-arena-frame';
+    frame.title='Phaser 자동 전투 화면';
+    frame.style.cssText='flex:1;min-height:0;width:100%;border:0;background:#0e1829';
+    frame.setAttribute('allow','autoplay');
+    layer.append(bar,frame);
+    document.body.appendChild(layer);
+    frame.src=url;
+    return {popup:frame.contentWindow,frame,layer};
+  }
+  function closeSession(session){
+    if(session?.layer)session.layer.remove();
+    else try{session?.popup?.close();}catch(_){}
+  }
   const KEY='dc_recreation_save';
   const cancel=document.createElement('button');
   cancel.type='button';cancel.id='dc-phaser-farm-cancel';cancel.hidden=true;
@@ -60,7 +99,7 @@
   cancel.addEventListener('click',()=>{
     if(!activeSession)return;
     const session=activeSession;activeSession=null;
-    try{session.popup.close();}catch(_){}
+    closeSession(session);
     releasePark(session);cancel.hidden=true;
     notice.textContent='Phaser 전투 취소 · 기본 게임으로 복귀';
   });
@@ -121,8 +160,9 @@
     // Nor may a parallel popup race the same underlying save snapshot.
     if(pending){notice.textContent='이전 전투 결과를 먼저 저장하거나 페이지를 새로고침해 줘.';
       return false;}
-    if(activeSession&&!activeSession.popup.closed){
-      notice.textContent='이미 열린 Phaser 전투 탭이 있어.';return false;
+    if(activeSession&&(activeSession.frame?.isConnected||
+        (!activeSession.frame&&!activeSession.popup.closed))){
+      notice.textContent='이미 Phaser 전투가 진행 중이야.';return false;
     }
     if(activeSession?.park)releasePark(activeSession);
     activeSession=null;
@@ -172,11 +212,24 @@
     const token = [...random].map(x => x.toString(16).padStart(2,'0')).join('');
     const target = new URL('phaser-lab/',location.href);
     target.searchParams.set('farmHandoff',token); // only random nonce, no game data
-    const popup = window.open(target.href,'_blank');
-    if (!popup) {
-      notice.textContent = '팝업이 차단됐어. 이 사이트의 새 탭 열기를 허용해 줘.';
-      return false;
+    let view;
+    if(production){
+      // Explicit frame marker: the lab accepts its parent as the trusted
+      // peer, auto-starts after a validated roster, and uses compact UI.
+      target.searchParams.set('embeddedBattle','1');
+      try{view=openEmbedded(target.href);}catch(err){
+        notice.textContent='내부 전투 화면을 열 수 없어: '+err.message;
+        return false;
+      }
+    }else{
+      const popup=window.open(target.href,'_blank');
+      if(!popup){
+        notice.textContent='팝업이 차단됐어. 새 탭 열기를 허용해 줘.';
+        return false;
+      }
+      view={popup};
     }
+    const {popup}=view;
     let park=null;
     if(production){
       const live=eval('state'),paused=live.world.paused;
@@ -192,16 +245,17 @@
         park={paused,saved};
       }catch(err){
         live.world.paused=paused;
-        try{popup.close();}catch(_){}
+        closeSession(view);
         notice.textContent='Phaser 전투 시작 취소: '+err.message;
         return false;
       }
     }
-    activeSession={token,popup,park};
+    activeSession={token,...view,park};
     cancel.hidden=!production;
     let done = false;
     const onReady = event => {
-      if (done || event.source !== popup || event.origin !== origin ||
+      if (done || activeSession?.token!==token ||
+          event.source !== popup || event.origin !== origin ||
           event.data?.type !== 'dc-phaser-ready-v1' || event.data.token !== token)
         return;
       done = true;
@@ -246,6 +300,7 @@
           DCDevPhaserCommit.persist(live,launchRecord,packet,token,
             eval('speciesLookup'),localStorage);
           session.park=null;
+          closeSession(session);
           notice.textContent='Phaser 결과 자동 정산·백업 완료';
           window.DCDevPhaserApprovedSave=true;
           location.reload();
@@ -257,6 +312,7 @@
             teamSize+'대'+teamSize+' 결과 검증 완료 · 저장 승인 가능';
         }
       }catch(err){
+        if(session.frame)closeSession(session);
         releasePark(session);
         notice.textContent='Phaser 결과 저장 거부: '+err.message+
           ' · 자동 덮어쓰기 없음. 기존 세이브를 확인해 줘.';
@@ -270,7 +326,14 @@
         window.removeEventListener('message',onFinished);
         if(activeSession?.token===token){
           const session=activeSession;activeSession=null;
+          closeSession(session);
           releasePark(session);cancel.hidden=true;
+          if(production){
+            document.getElementById('dc-phaser-engine')?.value &&
+              (document.getElementById('dc-phaser-engine').value='legacy');
+            const cup=document.getElementById('dc-phaser-cup-engine');
+            if(cup)cup.value='legacy';
+          }
         }
         notice.textContent = '연결 시간이 초과됐어. 기존 화면으로 돌아왔어.';
       }
