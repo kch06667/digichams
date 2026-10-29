@@ -57,6 +57,11 @@ def check(browser,base,mobile):
     assert len(set(keys))==6,actors
     assert all("catalog%3Aspecies%2F" in key for key in keys),actors
     assert all(a["hasKoArt"] for a in actors),actors
+    stage=page.evaluate("DigiPhaserLab.stageStatus()")
+    assert stage["version"]=="retro-field-v1",stage
+    assert stage["fighters"]==6 and stage["originalArt"]==6,stage
+    assert stage["fallback"]==0,stage
+    assert "원본 GIF 6/6" in stage["stageLabel"],stage
     # Actual original AI must land at least one real hit. Assert every
     # visible impact cue is traceable to an RT.step eventHistory record,
     # not a particle fabricated by Phaser or a merely started attack.
