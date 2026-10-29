@@ -60,7 +60,10 @@ test('auto-rest keeps AP target and returns to same original cage after recovery
  assert.equal(p.restResume,true);
  assert.equal(p.remaining,10);
  let savedA=loaded.farm.actors[id];
- savedA.mode='acting';savedA.remaining=.01;
+ // Complete the real move to the rest station before exercising a cycle.
+ for(let i=0;i<100&&savedA.mode!=='acting';i++)step(loaded,.5);
+ assert.equal(savedA.mode,'acting','fighter must reach the rest station');
+ savedA.remaining=.01;
  loaded.team[0].hp=380;loaded.team[0].fatigue=20;
  step(loaded,.1);
  savedA=loaded.farm.actors[id];
