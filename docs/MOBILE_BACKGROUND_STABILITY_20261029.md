@@ -14,7 +14,11 @@ Scope: mobile switching / suspend, not new evolution, damage or farm balance.
   still pending, or a championship round is awaiting a result, a stale
   original page must NOT run a background save over a newer approved
   atomic battle result. Pending battle/cup states are already protected
-  by the battle-launch/commit code. A browser regression simulates a
+  by the battle-launch/commit code. The opt-in Phaser approval sets a
+  short-lived DCDevPhaserApprovedSave marker immediately after the atomic
+  result is stored and BEFORE reloading the stale game tab. Background save
+  skips while that marker is set, even though the live game has no
+  pendingBattle. A browser regression simulates a
   newer authoritative localStorage result then triggers old-page
   visibilitychange + pagehide and confirms no overwrite.
 - Farm resets its lastFrame origin on visibility changes so a sleeping
