@@ -3,6 +3,11 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import functools
+import http.server
+import threading
+from urllib.error import HTTPError
+from urllib.request import urlopen
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -60,6 +65,28 @@ class LocalQuickstartTests(unittest.TestCase):
         data["species"]="wrong species"
         manifest.write_text(json.dumps(data),encoding="utf-8")
         self.assertFalse(mod.catalog_ready(self.entries,self.root))
+
+    def test_local_server_never_serves_rom_saves_git_or_hidden_files(self):
+        (self.root/"index.html").write_text("safe game",encoding="utf-8")
+        (self.root/"secret.nds").write_bytes(b"private ROM")
+        (self.root/".git").mkdir()
+        (self.root/".git"/"config").write_text("private token",encoding="utf-8")
+        (self.root/"tools").mkdir()
+        (self.root/"tools"/"internal.py").write_text("secret",encoding="utf-8")
+        handler=functools.partial(mod.GameFileHandler,directory=str(self.root))
+        server=http.server.ThreadingHTTPServer(("127.0.0.1",0),handler)
+        thread=threading.Thread(target=server.serve_forever,daemon=True)
+        thread.start()
+        self.addCleanup(lambda:(server.shutdown(),server.server_close(),
+                                thread.join(timeout=2)))
+        base=f"http://127.0.0.1:{server.server_port}"
+        with urlopen(base+"/index.html",timeout=3) as response:
+            self.assertEqual(response.read(),b"safe game")
+        for path in ["/secret.nds","/.git/config","/%2Egit/config",
+                     "/tools/internal.py"]:
+            with self.subTest(path=path),self.assertRaises(HTTPError) as error:
+                urlopen(base+path,timeout=3)
+            self.assertEqual(error.exception.code,404)
 
     def test_invalid_port_refused_before_network_or_art_access(self):
         with self.assertRaises(SystemExit) as error:
