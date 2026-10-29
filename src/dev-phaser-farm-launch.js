@@ -7,7 +7,10 @@
 (() => {
   'use strict';
   const params=new URLSearchParams(location.search);
-  const arenaChoice=params.get('phaserBattle')==='1';
+  // Normal full-game HTTP entry loads this after the original arena.
+  // Developer pages retain their existing explicit URL gates.
+  const production=document.currentScript?.dataset?.phaserProduction==='1';
+  const arenaChoice=production||params.get('phaserBattle')==='1';
   if(params.get('phaserBridge')!=='1'&&!arenaChoice)return;
   const origin = location.origin;
   const button = document.createElement('button');
@@ -22,7 +25,9 @@
   notice.setAttribute('role','status');
   notice.style.cssText = 'position:fixed;right:12px;bottom:66px;z-index:9999;' +
     'max-width:85vw;padding:5px;background:#102f3f;color:#fff;font:13px sans-serif';
-  notice.textContent = '연습전 기본값: 저장 안 함 · 종료 후 별도 승인 가능';
+  notice.textContent = production?
+    'Phaser 자동전투 기본 · 결과 검증 후 자동 백업/저장':
+    '연습전 기본값: 저장 안 함 · 종료 후 별도 승인 가능';
   const apply=document.createElement('button');
   apply.type='button';
   apply.id='dc-phaser-farm-apply';
@@ -32,6 +37,33 @@
     'padding:10px;border:2px solid #f5d68b;background:#62481f;' +
     'color:white;font:600 13px sans-serif;border-radius:9px';
   let pending=null,activeSession=null;
+  const KEY='dc_recreation_save';
+  const cancel=document.createElement('button');
+  cancel.type='button';cancel.id='dc-phaser-farm-cancel';cancel.hidden=true;
+  cancel.textContent='Phaser 전투 취소 · 기존 화면 복귀';
+  cancel.style.cssText='position:fixed;right:12px;bottom:176px;z-index:10000;' +
+    'padding:9px;border-radius:9px;background:#314254;color:white';
+  // During a production fight, pause the FARM clock (not the real-time
+  // Phaser battle) to prevent a stale tab/6s autosave race. Preserve the
+  // user's original pause preference and refuse overwriting a newer tab.
+  function releasePark(session) {
+    if(!session?.park)return;
+    const live=eval('state');
+    live.world.paused=session.park.paused;
+    if(localStorage.getItem(KEY)===session.park.saved){
+      eval('save(false)');
+    }else{
+      notice.textContent='다른 탭에서 저장이 변경됐어. 새로고침 후 확인해 줘.';
+    }
+    session.park=null;
+  }
+  cancel.addEventListener('click',()=>{
+    if(!activeSession)return;
+    const session=activeSession;activeSession=null;
+    try{session.popup.close();}catch(_){}
+    releasePark(session);cancel.hidden=true;
+    notice.textContent='Phaser 전투 취소 · 기본 게임으로 복귀';
+  });
   // The two tabs never share the full save. Retain only the launch
   // fingerprint and one validated result packet in the ORIGINAL farm tab.
   apply.addEventListener('click',()=>{
@@ -92,6 +124,7 @@
     if(activeSession&&!activeSession.popup.closed){
       notice.textContent='이미 열린 Phaser 전투 탭이 있어.';return false;
     }
+    if(activeSession?.park)releasePark(activeSession);
     activeSession=null;
     apply.hidden=true;apply.disabled=false;
     try {
@@ -144,7 +177,28 @@
       notice.textContent = '팝업이 차단됐어. 이 사이트의 새 탭 열기를 허용해 줘.';
       return false;
     }
-    activeSession={token,popup};
+    let park=null;
+    if(production){
+      const live=eval('state'),paused=live.world.paused;
+      try{
+        if(typeof paused!=='boolean')throw Error('게임 시계 상태를 읽을 수 없어.');
+        live.world.paused=true;
+        // Pre-fight snapshot makes the atomic result authoritative, and
+        // records a compare-and-swap base for other-tab race detection.
+        eval('save(false)');
+        const saved=localStorage.getItem(KEY);
+        if(saved!==JSON.stringify(live))
+          throw Error('전투 전 세이브 검증 실패');
+        park={paused,saved};
+      }catch(err){
+        live.world.paused=paused;
+        try{popup.close();}catch(_){}
+        notice.textContent='Phaser 전투 시작 취소: '+err.message;
+        return false;
+      }
+    }
+    activeSession={token,popup,park};
+    cancel.hidden=!production;
     let done = false;
     const onReady = event => {
       if (done || event.source !== popup || event.origin !== origin ||
@@ -164,7 +218,7 @@
           }}:{})}},origin);
       notice.textContent = (launchRecord.tournament?
         '🏆 '+launchRecord.tournament.trainer+' 상대 대회전 · ': '명단 전달 완료 · ')+
-        teamSize+'대'+teamSize+' · 종료 후 선택적 저장 가능';
+        teamSize+'대'+teamSize+(production?' · 완료 후 자동 백업/저장':' · 종료 후 선택적 저장 가능');
     };
     const onFinished=event=>{
       if(event.source!==popup||event.origin!==origin||
@@ -172,7 +226,8 @@
           event.data.token!==token)return;
       window.removeEventListener('message',onFinished);
       if(!done||activeSession?.token!==token)return;
-      activeSession=null;
+      const session=activeSession;
+      activeSession=null;cancel.hidden=true;
       const packet=event.data.packet;
       try{
         // Pure staging performs all participant/HP/TP/identity checks
@@ -180,14 +235,31 @@
         const live=eval('state');
         DCDevPhaserCommit.stage(live,launchRecord,packet,token,
           eval('speciesLookup'));
-        pending={packet,token,launch:launchRecord};
-        apply.hidden=false;
-        notice.textContent='완료된 '+
-          (launchRecord.tournament?'🏆 대회 경기 ':'')+
-          teamSize+'대'+teamSize+' 결과 검증 완료 · 저장 승인 가능';
+        if(production){
+          // Do not silently overwrite a newer save from another tab.
+          if(!session.park||localStorage.getItem(KEY)!==session.park.saved)
+            throw Error('다른 탭의 저장이 변경되어 자동 정산을 중단했어.');
+          live.world.paused=session.park.paused;
+          // The original game state was safely paused throughout combat.
+          // Restore the previous clock choice before atomic settlement.
+          eval('save(false)');
+          DCDevPhaserCommit.persist(live,launchRecord,packet,token,
+            eval('speciesLookup'),localStorage);
+          session.park=null;
+          notice.textContent='Phaser 결과 자동 정산·백업 완료';
+          window.DCDevPhaserApprovedSave=true;
+          location.reload();
+        }else{
+          pending={packet,token,launch:launchRecord};
+          apply.hidden=false;
+          notice.textContent='완료된 '+
+            (launchRecord.tournament?'🏆 대회 경기 ':'')+
+            teamSize+'대'+teamSize+' 결과 검증 완료 · 저장 승인 가능';
+        }
       }catch(err){
-        notice.textContent='결과 저장 불가: '+err.message+
-          ' · 원본 세이브 변경 없음';
+        releasePark(session);
+        notice.textContent='Phaser 결과 저장 거부: '+err.message+
+          ' · 자동 덮어쓰기 없음. 기존 세이브를 확인해 줘.';
       }
     };
     window.addEventListener('message',onReady);
@@ -196,8 +268,11 @@
       if (!done) {
         window.removeEventListener('message',onReady);
         window.removeEventListener('message',onFinished);
-        if(activeSession?.token===token)activeSession=null;
-        notice.textContent = '연결 시간이 초과됐어. 팝업 탭을 확인해 줘.';
+        if(activeSession?.token===token){
+          const session=activeSession;activeSession=null;
+          releasePark(session);cancel.hidden=true;
+        }
+        notice.textContent = '연결 시간이 초과됐어. 기존 화면으로 돌아왔어.';
       }
     },15000);
     return true;
@@ -206,6 +281,6 @@
   // The production-layout opt-in entry calls this from the original arena's
   // real lbStart click. It is inert unless an explicit opt-in URL was used.
   window.DCDevPhaserLaunch=Object.freeze({launch});
-  if(arenaChoice)document.body.append(notice,apply);
-  else document.body.append(button,notice,apply);
+  if(arenaChoice)document.body.append(notice,apply,cancel);
+  else document.body.append(button,notice,apply,cancel);
 })();
