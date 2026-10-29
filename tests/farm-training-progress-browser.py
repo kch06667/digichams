@@ -66,9 +66,13 @@ def check(browser,entry,mobile):
  page.evaluate("""() => {
   const id=document.getElementById('hexMon').value,m=state.team.find(x=>x.instanceId===id);
   const a=state.farm.actors[id];
+  // Move to the rest station with the actual game's navigation first.
+  state.world.paused=false;
+  for(let i=0;i<100&&a.mode!=='acting';i++)DCHexFarm.tick(.5);
+  if(a.mode!=='acting')throw Error('Never reached the rest station');
   m.hp=m.maxHp;m.fatigue=20;
-  a.mode='acting';a.remaining=.01;
-  state.world.paused=false;DCHexFarm.tick(.1);state.world.paused=true;
+  a.remaining=.01;
+  DCHexFarm.tick(.1);state.world.paused=true;
  }""")
  resumed=page.evaluate("""() => DCFarm.trainingStatus(state,
   document.getElementById('hexMon').value)""")
