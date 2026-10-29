@@ -249,6 +249,12 @@
     if(!document.hidden)refresh();
   },1600);
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});
+  // PC is the primary target. The legacy HTML initially boots into the
+  // narrow NDS layout, otherwise the farm drawer seems to be missing.
+  // Use the game's own mode button; users can switch back manually.
+  if (document.body.classList.contains('mode-nds')) {
+    document.getElementById('wideMode')?.click();
+  }
   refresh();
   window.DCPCGuide=Object.freeze({snapshot:()=>refresh()});
 })();
