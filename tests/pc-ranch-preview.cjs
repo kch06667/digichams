@@ -118,7 +118,11 @@ async function measure(page){
       // The original button's click behavior must survive shrinking the
       // formerly invisible 220x226 hex bounding box.
       await page.locator('[data-hex="training"]').click();
-      assert.ok((await page.locator('#farmDetails').innerText()).includes('특별 훈련장'));
+      assert.equal(await page.locator('[data-hex="training"]').evaluate(
+        el=>el.classList.contains('selected')),true,
+        'clicking the reduced facility target must select that facility');
+      assert.ok((await page.locator('#farmDetails').textContent()).includes('특별 훈련장'),
+        'hidden drawer still keeps the original facility details updated');
       assert.equal((await measure(page)).save,original.save,
         'facility selection must not touch gameplay state');
       const response=await page.request.get(base+'/assets/farm/continuous_ranch_preview.svg');
