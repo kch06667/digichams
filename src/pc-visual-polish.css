@@ -586,6 +586,15 @@
     height:clamp(350px,calc(100dvh - 245px),780px);
   }
 
+  /* Final game-shell sizing wins over earlier experimental frame heights. */
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(420px,calc(100dvh - 92px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 190px),820px);
+  }
+
   /* Combat overlay still fills the window and remains keyboard-usable,
    * while keeping the arena framed on extra-wide desktops. */
   #dc-phaser-overlay {
