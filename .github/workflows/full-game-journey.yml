@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - "tests/full-game-journey-browser.py"
+      - "docs/FULL_GAME_ACCEPTANCE_20261029.md"
       - "src/**"
       - "index.html"
       - "standalone.html"
