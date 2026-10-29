@@ -21,27 +21,29 @@ const step=(s,sec)=>farm.advance(s,sec,{evolution:evo,
 test('progress is read-only, scoped to selected individual, and does not modify save',()=>{
  const s=init();const m=s.team[0],id=m.instanceId;
  assert.equal(farm.trainingStatus(s,'unknown'),null);
- assert.equal(farm.command(s,id,'cage',{cage:'miniVolcano',apTarget:8}),true);
+ assert.equal(farm.command(s,id,'cage',{cage:'miniVolcano',apTarget:20}),true);
  const snapshot=JSON.stringify(s);
  const progress=farm.trainingStatus(s,id);
  assert.equal(JSON.stringify(s),snapshot);
  assert.deepEqual([progress.kind,progress.cageId,progress.facility,progress.measure,
   progress.key,progress.current,progress.goal,progress.remaining,progress.percent],
- ['cage','miniVolcano','미니 화산','ap','dragon',0,8,8,0]);
+ ['cage','miniVolcano','미니 화산','ap','dragon',0,20,20,0]);
  assert.equal(farm.trainingStatus(s,'qa-2').goal,null);
- step(s,20);
+ step(s,12);
  const after=farm.trainingStatus(s,id);
- assert.equal(after.goal,8);
+ assert.equal(after.goal,20);
  assert.ok(after.current>=2);
- assert.equal(after.remaining,Math.max(0,8-after.current));
- assert.equal(after.percent,Math.round(Math.min(100,100*after.current/8)));
+ assert.equal(after.remaining,Math.max(0,20-after.current));
+ assert.equal(after.percent,Math.round(Math.min(100,100*after.current/20)));
 });
 test('auto-rest keeps AP target and returns to same original cage after recovery',()=>{
  const s=init(),id='qa-1',m=s.team[0];
  farm.command(s,id,'cage',{cage:'miniVolcano',apTarget:10});
  let a=s.farm.actors[id];
- // Exactly one due training cycle is drained, triggering existing HP guard.
- a.mode='acting';a.remaining=.01;m.hp=40;m.fatigue=80;
+ // Follow the real path and reserve a station before triggering exhaustion.
+ for(let i=0;i<50&&a.mode!=='acting';i++)step(s,.5);
+ assert.equal(a.mode,'acting','fighter must physically reach its cage first');
+ a.remaining=.01;m.hp=40;m.fatigue=80;
  step(s,.1);
  a=s.farm.actors[id];
  assert.equal(a.goal?.kind,'rest');
