@@ -1,0 +1,29 @@
+name: Full-game single-save player journey (original HTML)
+on:
+  pull_request:
+    paths:
+      - "tests/full-game-journey-browser.py"
+      - "docs/FULL_GAME_ACCEPTANCE_20261029.md"
+      - "src/**"
+      - "index.html"
+      - "standalone.html"
+      - ".github/workflows/full-game-journey.yml"
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  original-game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install headless desktop and mobile-touch Chromium
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Run one uninterrupted original game journey for PC and touch
+        run: python3 tests/full-game-journey-browser.py
