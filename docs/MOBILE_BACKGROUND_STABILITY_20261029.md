@@ -10,6 +10,13 @@ Scope: mobile switching / suspend, not new evolution, damage or farm balance.
   EXISTING save(false) when document visibility changes to hidden, or
   window pagehide fires. No new storage format, key or schema migration.
   Storage failures are contained rather than crashing the visibility event.
+- **Protected settlement guard:** While an external Phaser battle is
+  still pending, or a championship round is awaiting a result, a stale
+  original page must NOT run a background save over a newer approved
+  atomic battle result. Pending battle/cup states are already protected
+  by the battle-launch/commit code. A browser regression simulates a
+  newer authoritative localStorage result then triggers old-page
+  visibilitychange + pagehide and confirms no overwrite.
 - Farm resets its lastFrame origin on visibility changes so a sleeping
   browser does not apply a phantom catch-up delta when foregrounded.
   Normal 1x/2x/4x and paused choices remain untouched; no offline training.
