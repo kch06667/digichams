@@ -149,6 +149,11 @@
     gap:12px;
   }
   body:not(.mode-nds) #nursery.active > #farmPanel {
+    /* Keep long facility/command content inside the game stage. */
+    max-height:max(330px,calc(100dvh - 390px));
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
     grid-column:1;
     grid-row:1;
     min-width:0;
@@ -161,7 +166,7 @@
     flex-direction:column;
     gap:10px;
     min-width:0;
-    max-height:calc(100dvh - 172px);
+    max-height:max(330px,calc(100dvh - 390px));
     overflow-y:auto;
     overscroll-behavior:contain;
     scrollbar-width:thin;
