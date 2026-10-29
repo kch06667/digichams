@@ -7,11 +7,16 @@ By default the HTTP server binds to 127.0.0.1; --lan requires explicit opt-in.
 """
 import argparse
 import functools
+import hashlib
 import http.server
+import io
+import os
 import importlib.util
 import json
 import re
 import sys
+import tempfile
+import urllib.request
 import webbrowser
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -20,6 +25,10 @@ ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/"assets"
 LOCAL=ROOT/"phaser-lab"/"local-assets"
 ACTIONS=(0,2,3,5,7,10,14,28,30,31,32,33,37)
+PHASER_URL="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"
+PHASER_SHA256="PENDING_SHA256_FROM_PINNED_NPM_3_90_0"
+PHASER_MAX_BYTES=2*1024*1024
+
 
 # Local server must not accidentally serve the user's Git metadata, saves,
 # ROM files, hidden secrets or source/test folders, especially with --lan.
@@ -35,6 +44,55 @@ DENIED_EXTENSIONS=frozenset({
 })
 
 
+def verify_engine(data):
+    return (isinstance(data,bytes) and 200_000<len(data)<PHASER_MAX_BYTES
+            and hashlib.sha256(data).hexdigest()==PHASER_SHA256)
+
+
+def prepare_engine(local_root=None, npm_path=None, allow_download=True):
+    """One-time verified engine acquisition; later PC launches need no network."""
+    local_root=Path(local_root if local_root is not None else LOCAL)
+    dest=local_root/"vendor"/"phaser.min.js"
+    npm_path=Path(npm_path if npm_path is not None else
+                  ROOT/"node_modules"/"phaser"/"dist"/"phaser.min.js")
+    if dest.exists():
+        if not verify_engine(dest.read_bytes()):
+            raise RuntimeError("Local Phaser SHA-256 mismatch: inspect and remove "
+                "phaser-lab/local-assets/vendor/phaser.min.js to retry.")
+        print("Pinned Phaser 3.90.0: offline engine cache verified.",flush=True)
+        return dest
+    if npm_path.is_file():
+        data=npm_path.read_bytes()
+        source="installed npm package"
+        if not verify_engine(data):
+            raise RuntimeError("Installed Phaser is not verified version 3.90.0")
+    elif allow_download:
+        try:
+            with urllib.request.urlopen(PHASER_URL,timeout=25) as stream:
+                data=stream.read(PHASER_MAX_BYTES+1)
+        except (OSError,ValueError) as err:
+            raise RuntimeError("First run requires internet once to cache the "
+                "pinned battle engine, or a local Phaser 3.90.0 npm install. "
+                "Existing browser saves were not changed.") from err
+        if not verify_engine(data):
+            raise RuntimeError("Pinned Phaser download failed SHA-256 "
+                "verification; did not cache or execute it.")
+        source="verified HTTPS release"
+    else:
+        raise RuntimeError("Pinned Phaser cache missing; connect online once "
+                           "to prepare the PC game.")
+    dest.parent.mkdir(parents=True,exist_ok=True)
+    fd,tmp=tempfile.mkstemp(prefix=".verified-phaser-",dir=str(dest.parent))
+    try:
+        with os.fdopen(fd,"wb") as out:
+            out.write(data);out.flush();os.fsync(out.fileno())
+        os.replace(tmp,dest)
+    finally:
+        if os.path.exists(tmp):os.unlink(tmp)
+    print("Pinned Phaser cached from "+source+"; offline ready.",flush=True)
+    return dest
+
+
 class GameFileHandler(http.server.SimpleHTTPRequestHandler):
     def send_head(self):
         path=unquote(urlsplit(self.path).path).replace("\\","/")
@@ -43,9 +101,34 @@ class GameFileHandler(http.server.SimpleHTTPRequestHandler):
                Path(item).suffix.lower() in DENIED_EXTENSIONS for item in parts):
             self.send_error(404,"File not available from local game server")
             return None
+        # Only the local PC server replaces the pinned external Phaser
+        # reference. The public safe preview remains unchanged. No script
+        # is fetched remotely by the browser after a verified local launch.
+        if path in ("/phaser-lab/index.html",
+                    "/phaser-lab/vendor/phaser.min.js"):
+            root=Path(self.directory)
+            try:
+                if path.endswith("/index.html"):
+                    html=(root/"phaser-lab"/"index.html").read_text(encoding="utf-8")
+                    if html.count(PHASER_URL)!=1:
+                        raise ValueError("Unexpected Phaser reference")
+                    data=html.replace(PHASER_URL,"./vendor/phaser.min.js").encode("utf-8")
+                    mime="text/html; charset=utf-8"
+                else:
+                    data=(root/"phaser-lab"/"local-assets"/"vendor"/"phaser.min.js").read_bytes()
+                    if not verify_engine(data):
+                        raise ValueError("Local Phaser integrity failed")
+                    mime="text/javascript; charset=utf-8"
+            except (OSError,ValueError):
+                self.send_error(503,"Pinned local Phaser unavailable")
+                return None
+            self.send_response(200)
+            self.send_header("Content-Type",mime)
+            self.send_header("Content-Length",str(len(data)))
+            self.send_header("Cache-Control","no-store")
+            self.end_headers()
+            return io.BytesIO(data)
         return super().send_head()
-
-
 
 
 def missing_art(entries, local_root=None):
@@ -162,8 +245,9 @@ def main(argv=None):
         parser.error("port must be 1..65535")
     try:
         prepare_art(args.skip_art)
+        prepare_engine()
     except (OSError,ValueError,RuntimeError) as err:
-        parser.exit(1,"Could not prepare playable art: "+str(err)+"\n")
+        parser.exit(1,"Could not prepare playable PC game: "+str(err)+"\n")
     handler=functools.partial(GameFileHandler,directory=str(ROOT))
     try:
         server=http.server.ThreadingHTTPServer(("0.0.0.0" if args.lan else "127.0.0.1",args.port),handler)
