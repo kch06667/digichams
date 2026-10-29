@@ -89,7 +89,8 @@ def verify_pc_layout(page,section,viewport):
         # The original NDS-style farm atlas is not stretched/moved.
         assert abs(result["map"]["width"]-920)<1,result
         assert abs(result["map"]["height"]-690)<1,result
-        assert ("hex_farm_v0232.webp" in result["mapBackground"] or
+        assert ("connected_ranch_field.svg" in result["mapBackground"] or
+                "hex_farm_v0232.webp" in result["mapBackground"] or
                 "data:image/webp;base64," in result["mapBackground"]),result
     if section=="hunt":
         assert result["hunt"]["width"]>=440,result
@@ -120,6 +121,8 @@ def check_desktop(browser,url,entry):
         guide.wait_for(state="attached",timeout=10000)
         assert guide.is_hidden(), "PC game shell intentionally hides legacy guide"
         page.locator('#dc-pc-drawer-toggle').wait_for(state='visible',timeout=10000)
+        page.wait_for_function("() => window.DCConnectedRanch?.ready===true",timeout=10000)
+        assert page.locator('#dc-pc-ranch-toggle').is_visible()
         page.wait_for_function(
             "Boolean(document.querySelector('#dc-pc-visual-polish')?.sheet)",
             timeout=10000)
@@ -233,6 +236,8 @@ def check_mobile(browser,url):
         assert page.locator("#dc-pc-guide").count()==0
         assert page.locator("#dc-pc-visual-polish").count()==0
         assert page.evaluate("window.DCPCGuide===undefined")
+        assert page.evaluate("window.DCConnectedRanch===undefined")
+        assert page.locator("#dc-pc-ranch-toggle").count()==0
         assert page.locator('nav.tabs [data-tab="hunt"]').count()==1
         print("PASS original mobile touch unchanged: PC guide not injected",
               flush=True)
