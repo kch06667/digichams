@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="690" viewBox="0 0 920 690">
+  <title>연결형 사육장 — 지형 미리보기</title>
+  <desc>공용 잔디 목장과 주변 숲·바위·물가가 이어진 시험용 지형. 환경 육성 판정은 변경하지 않음.</desc>
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="0.7" y2="1">
+      <stop stop-color="#487d50"/><stop offset=".46" stop-color="#6da161"/><stop offset="1" stop-color="#3f714c"/>
+    </linearGradient>
+    <radialGradient id="clearing">
+      <stop stop-color="#90b973"/><stop offset=".73" stop-color="#76a962"/><stop offset="1" stop-color="#619451"/>
+    </radialGradient>
+    <linearGradient id="earth" x1="0" y1="0" x2=".6" y2="1">
+      <stop stop-color="#dfc58a"/><stop offset=".55" stop-color="#ba995f"/><stop offset="1" stop-color="#9d7c50"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2=".7" y2="1">
+      <stop stop-color="#74bec2"/><stop offset=".58" stop-color="#397b94"/><stop offset="1" stop-color="#2a557a"/>
+    </linearGradient>
+    <pattern id="grass" width="45" height="39" patternUnits="userSpaceOnUse">
+      <path d="M5 13l3 -4m0 4 2 -2M28 31l3 -5m0 5 3 -3M37 11l2 -3" fill="none" stroke="#b3cf86" stroke-width="1.8" opacity=".32"/>
+      <path d="M15 27l2 -4m0 4 2 -3M34 18l2 -3" fill="none" stroke="#245e40" stroke-width="1.8" opacity=".33"/>
+      <circle cx="23" cy="5" r="1.5" fill="#d8d69d" opacity=".44"/>
+      <circle cx="3" cy="32" r="1.3" fill="#295f47" opacity=".5"/>
+    </pattern>
+    <g id="pine">
+      <ellipse cx="1" cy="18" rx="25" ry="9" fill="#163f33" opacity=".42"/>
+      <rect x="-4" y="-5" width="9" height="25" rx="2" fill="#6b513a"/>
+      <path d="M-23 7L0 -40 23 7 12 5 20 15 -20 15 -12 5Z" fill="#2f6b47" stroke="#205239" stroke-width="3"/>
+      <path d="M-11 -13L0 -34 10 -12M-14 1L0 -20 14 1" fill="none" stroke="#54945a" stroke-width="4" opacity=".66"/>
+    </g>
+    <g id="bush">
+      <ellipse cx="0" cy="7" rx="19" ry="8" fill="#2e623d" opacity=".5"/>
+      <circle cx="-9" cy="-1" r="12" fill="#326d45"/><circle cx="6" cy="-7" r="14" fill="#417e4d"/>
+      <circle cx="15" cy="1" r="10" fill="#3a7548"/><path d="M-13 -5l6 -5m8 -5 7 -4" stroke="#74a66a" stroke-width="3" opacity=".6"/>
+    </g>
+    <g id="rock">
+      <path d="M-24 10l8 -23 21 -11 22 15 4 19-22 12-24 -1Z" fill="#657c75" stroke="#425c56" stroke-width="3"/>
+      <path d="M-16 -13L5 -24l6 20 -15 8Z" fill="#a1ae9c"/><path d="M11 -4l16 -5 4 19 -22 12Z" fill="#485d58"/>
+    </g>
+  </defs>
+  <!-- One uninterrupted ground layer, not seven floating islands. -->
+  <rect width="920" height="690" fill="#264e43"/>
+  <path d="M0 28Q82 9 151 42T337 34T544 21T731 31T920 16V690H0Z" fill="url(#ground)"/>
+  <path d="M-20 115Q79 89 133 138T290 133Q369 92 458 139T664 134T941 110V690H-20Z" fill="#6b9e58" opacity=".45"/>
+  <path d="M99 198Q207 105 362 152T607 143Q760 165 808 285T794 508Q751 608 592 624T288 621Q153 581 124 467T99 198Z" fill="url(#clearing)"/>
+  <path d="M99 198Q207 105 362 152T607 143Q760 165 808 285T794 508Q751 608 592 624T288 621Q153 581 124 467T99 198Z" fill="url(#grass)" opacity=".58"/>
+  <!-- Forest edge, alpine stone, ash-colored high ground, and a low pond
+       are visual landmarks only; the simulator's unlocks stay authoritative. -->
+  <path d="M0 0H218L198 66 168 102 116 114 85 170 0 194Z" fill="#607c5d"/>
+  <path d="M0 0H213L185 34 127 25 100 68 54 58 20 106 0 115Z" fill="#8c978b" opacity=".7"/>
+  <path d="M697 0H920V237Q887 197 852 183T799 140L746 113Z" fill="#73684e" opacity=".72"/>
+  <path d="M772 0H920V143L872 130 855 93 799 77Z" fill="#84634c" opacity=".6"/>
+  <path d="M0 496L103 511 155 561 199 624 250 690H0Z" fill="#376e45"/>
+  <path d="M728 642Q735 580 800 559T920 552V690H713Z" fill="#c3b48a"/>
+  <path d="M757 648Q754 591 811 580T920 568V690H752Z" fill="url(#water)"/>
+  <path d="M786 618q33 -21 78 -6m-55 34q43 -19 77 -5" fill="none" stroke="#a5d7cb" stroke-width="4" opacity=".55"/>
+  <!-- Paths use the current 7-zone topology; unlocked facilities will be
+       restored on top by the existing original-game controls. -->
+  <path d="M460 340Q447 278 460 215T460 150M454 329Q363 286 285 241M471 330Q565 276 640 237M446 357Q359 391 279 443M475 356Q566 388 638 445M460 359Q456 450 459 539" fill="none" stroke="#7b744b" stroke-width="44" opacity=".4" stroke-linecap="round"/>
+  <path d="M460 340Q447 278 460 215T460 150M454 329Q363 286 285 241M471 330Q565 276 640 237M446 357Q359 391 279 443M475 356Q566 388 638 445M460 359Q456 450 459 539" fill="none" stroke="url(#earth)" stroke-width="27" stroke-linecap="round"/>
+  <path d="M460 340Q447 278 460 215T460 150M454 329Q363 286 285 241M471 330Q565 276 640 237M446 357Q359 391 279 443M475 356Q566 388 638 445M460 359Q456 450 459 539" fill="none" stroke="#e6d2a0" stroke-width="4" opacity=".3" stroke-dasharray="13 19" stroke-linecap="round"/>
+  <!-- Quiet central pasture: grass, not an exposed tile grid. -->
+  <ellipse cx="460" cy="345" rx="102" ry="72" fill="#8ab875" opacity=".8"/>
+  <ellipse cx="460" cy="345" rx="102" ry="72" fill="url(#grass)" opacity=".65"/>
+  <ellipse cx="462" cy="355" rx="44" ry="21" fill="#6fa467" opacity=".64"/>
+  <path d="M420 362Q459 337 506 364" fill="none" stroke="#acd192" stroke-width="3" opacity=".5"/>
+  <g opacity=".95"><use href="#rock" x="70" y="68" transform="rotate(-9 70 68)"/><use href="#rock" x="127" y="39" transform="rotate(16 127 39)"/><use href="#rock" x="848" y="82" transform="rotate(8 848 82)"/><use href="#rock" x="889" y="183" transform="rotate(-14 889 183)"/><use href="#rock" x="81" y="346" transform="rotate(8 81 346)"/><use href="#rock" x="830" y="363" transform="rotate(-9 830 363)"/></g>
+  <g opacity=".94"><use href="#pine" x="36" y="253"/><use href="#pine" x="80" y="207"/><use href="#pine" x="105" y="573"/><use href="#pine" x="45" y="616"/><use href="#pine" x="173" y="654"/><use href="#pine" x="787" y="49"/><use href="#pine" x="900" y="319"/><use href="#pine" x="854" y="468"/><use href="#pine" x="735" y="511"/></g>
+  <g><use href="#bush" x="110" y="272"/><use href="#bush" x="774" y="296"/><use href="#bush" x="135" y="486"/><use href="#bush" x="730" y="532"/><use href="#bush" x="294" y="636"/><use href="#bush" x="635" y="631"/><use href="#bush" x="355" y="51"/><use href="#bush" x="576" y="73"/></g>
+  <g fill="#e9dcb0" opacity=".65"><circle cx="315" cy="337" r="3"/><circle cx="588" cy="363" r="2.8"/><circle cx="383" cy="582" r="2.6"/><circle cx="546" cy="602" r="3"/><circle cx="225" cy="352" r="2.3"/><circle cx="739" cy="436" r="2.6"/></g>
+  <rect x="4" y="4" width="912" height="682" rx="17" fill="none" stroke="#183f38" stroke-width="8" opacity=".75"/>
+  <rect x="12" y="12" width="896" height="666" rx="12" fill="none" stroke="#a3c689" stroke-width="2" opacity=".35"/>
+</svg>
