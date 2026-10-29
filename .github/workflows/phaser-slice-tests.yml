@@ -94,7 +94,7 @@ jobs:
       - run: node --check src/dev-phaser-farm-launch.js
       - run: node --check src/phaser-arena-entry-choice.js
       - run: python3 tools/sync-phaser-production.py --check
-      - name: One-command playable launcher: private art cache readiness, no network
+      - name: 'One-command playable launcher: private art cache readiness, no network'
         run: python3 -m unittest discover -s tests -p 'test_play_local.py' -v
       - run: node --test tests/phaser-main-entry.cjs tests/phaser-championship-save.cjs
       - run: node --test tests/phaser-owned-settlement.cjs tests/phaser-multiteam-settlement.cjs
