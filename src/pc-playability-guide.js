@@ -46,6 +46,13 @@
   ranchPathsScript.src=new URL('pc-ranch-ground-paths.js',document.currentScript.src).href;
   document.head.appendChild(ranchPathsScript);
 
+  // Visual-only Digimon depth order and overlapping-name visibility.
+  // The game engine still owns every actor position and animation frame.
+  const ranchDepthScript=document.createElement('script');
+  ranchDepthScript.async=false;
+  ranchDepthScript.src=new URL('pc-ranch-actor-depth.js',document.currentScript.src).href;
+  document.head.appendChild(ranchDepthScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
