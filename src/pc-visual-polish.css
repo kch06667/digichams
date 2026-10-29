@@ -645,6 +645,10 @@
     height:clamp(310px,calc(100dvh - 212px),820px);
   }
 
+  /* The web prototype footer is out of place in the one-window PC shell.
+   * Save/load remain available in the original controls and drawer. */
+  body:not(.mode-nds) .wrap > .footer {display:none;}
+
   /* Combat overlay still fills the window and remains keyboard-usable,
    * while keeping the arena framed on extra-wide desktops. */
   #dc-phaser-overlay {
