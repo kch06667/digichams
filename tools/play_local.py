@@ -14,11 +14,38 @@ import re
 import sys
 import webbrowser
 from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/"assets"
 LOCAL=ROOT/"phaser-lab"/"local-assets"
 ACTIONS=(0,2,3,5,7,10,14,28,30,31,32,33,37)
+
+# Local server must not accidentally serve the user's Git metadata, saves,
+# ROM files, hidden secrets or source/test folders, especially with --lan.
+# Game-facing assets/src/Phaser paths remain available.
+DENIED_FOLDERS=frozenset({
+    ".git",".github",".dev-generated","__pycache__","node_modules",
+    "rom-private","rom-output","test-output","tools","tests","docs",
+    "references","dist",
+})
+DENIED_EXTENSIONS=frozenset({
+    ".nds",".sav",".srm",".srl",".zip",".7z",".rar",".py",".pyc",
+    ".env",".key",".pem",
+})
+
+
+class GameFileHandler(http.server.SimpleHTTPRequestHandler):
+    def send_head(self):
+        path=unquote(urlsplit(self.path).path).replace("\\\\","/")
+        parts=[item for item in path.split("/") if item]
+        if any(item.startswith(".") or item.lower() in DENIED_FOLDERS or
+               Path(item).suffix.lower() in DENIED_EXTENSIONS for item in parts):
+            self.send_error(404,"File not available from local game server")
+            return None
+        return super().send_head()
+
+
 
 
 def catalog_ready(entries, local_root=LOCAL):
@@ -95,7 +122,7 @@ def main(argv=None):
         prepare_art(args.skip_art)
     except (OSError,ValueError,RuntimeError) as err:
         parser.exit(1,"Could not prepare playable art: "+str(err)+"\n")
-    handler=functools.partial(http.server.SimpleHTTPRequestHandler,directory=str(ROOT))
+    handler=functools.partial(GameFileHandler,directory=str(ROOT))
     try:
         server=http.server.ThreadingHTTPServer(("0.0.0.0" if args.lan else "127.0.0.1",args.port),handler)
     except OSError as err:
