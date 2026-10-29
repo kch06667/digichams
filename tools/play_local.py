@@ -3,7 +3,7 @@
 
 Run from a checkout:  py tools/play_local.py
 No public uploads, ZIP, ROM extraction, save edits, or automatic game reset.
-The HTTP server binds to 127.0.0.1 only.
+By default the HTTP server binds to 127.0.0.1; --lan requires explicit opt-in.
 """
 import argparse
 import functools
@@ -37,7 +37,7 @@ DENIED_EXTENSIONS=frozenset({
 
 class GameFileHandler(http.server.SimpleHTTPRequestHandler):
     def send_head(self):
-        path=unquote(urlsplit(self.path).path).replace("\\\\","/")
+        path=unquote(urlsplit(self.path).path).replace("\\","/")
         parts=[item for item in path.split("/") if item]
         if any(item.startswith(".") or item.lower() in DENIED_FOLDERS or
                Path(item).suffix.lower() in DENIED_EXTENSIONS for item in parts):
