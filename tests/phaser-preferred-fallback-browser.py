@@ -96,9 +96,14 @@ def main():
     # page is local-only and untracked, built by the existing fail-closed tool.
     for filename in ['index.html','standalone.html']:
         original=(ROOT/filename).read_text(encoding='utf-8')
-        assert 'src/phaser-arena-entry-choice.js' not in original,filename
+        # Real production now includes Phaser; the developer-only builder
+        # must strip exactly that tagged group to keep beta tests isolated.
+        assert original.count('<!-- DC-PHASER-PRODUCTION-BEGIN -->')==1,filename
     subprocess.run(['node','tools/build-phaser-optin-page.cjs'],
                    cwd=ROOT,check=True,capture_output=True,text=True)
+    generated=(ROOT/'index.phaser.html').read_text(encoding='utf-8')
+    assert 'DC-PHASER-PRODUCTION-BEGIN' not in generated
+    assert generated.count('src/phaser-arena-entry-choice.js')==1
     server=http.server.ThreadingHTTPServer(
         ('127.0.0.1',0),
         functools.partial(QuietHandler,directory=str(ROOT)))
