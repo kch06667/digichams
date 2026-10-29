@@ -104,7 +104,25 @@ def check(browser,host,mobile):
     assert "pendingBattle" not in reloaded
     for key in ("wins","losses","day","ropes","points"):
         assert reloaded[key]==final[key],(key,reloaded[key],final[key])
-    assert reloaded["logs"]==final["logs"],(reloaded["logs"],final["logs"])
+    # The farm's existing payWins() may run between the atomic arena
+    # result and a full page reload. One *legitimate* 180-Bit facility
+    # award and its log can therefore appear after the battle checkpoint.
+    # Never dismiss additional settlement logs, repeated wins or duplicate
+    # payouts as harmless timing noise.
+    new_logs=len(reloaded["logs"])-len(final["logs"])
+    assert new_logs in (0,1),(reloaded["logs"],final["logs"])
+    assert reloaded["logs"][new_logs:]==final["logs"],(
+        reloaded["logs"],final["logs"])
+    if new_logs:
+        assert reloaded["logs"][0].endswith(
+            "대회 승리 보상: +180 Bit"),reloaded["logs"]
+        assert final["facilityPaidWins"]<final["wins"],final
+        assert reloaded["facilityPaidWins"]==final["wins"],reloaded
+        assert reloaded["facilityCredits"]==final["facilityCredits"]+180,(
+            reloaded["facilityCredits"],final["facilityCredits"])
+    else:
+        assert reloaded["facilityCredits"]==final["facilityCredits"]
+        assert reloaded["facilityPaidWins"]==final["facilityPaidWins"]
     assert len(reloaded["team"])==len(final["team"])
     for now,previous in zip(reloaded["team"],final["team"]):
         for key in ("instanceId","name","level","exp","atk","def","spd"):
