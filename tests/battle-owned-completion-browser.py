@@ -92,17 +92,28 @@ def check(browser,host,mobile):
 
     # Reopen the actual page with fresh JS globals; it must load the same
     # stored state and not award a duplicate victory or extra cup prize.
-    snapshot=json.dumps(final,ensure_ascii=False,sort_keys=True)
+    # An actual pagehide now flushes the latest farm elapsed time and
+    # hunger (up to a fraction of a second) rather than freezing the exact
+    # pre-reload JSON. Compare immutable settlement semantics instead of
+    # accidentally treating valid 50ms farm progress as a duplicated match.
     page.reload(wait_until="domcontentloaded")
     page.locator("#dc-owned-optin").wait_for(timeout=20000)
     assert not page.locator("#dc-owned-optin-enable").is_checked()
     reloaded=page.evaluate(
       "() => JSON.parse(localStorage.getItem('dc_recreation_save'))")
-    assert json.dumps(reloaded,ensure_ascii=False,sort_keys=True)==snapshot
     assert "pendingBattle" not in reloaded
-    assert reloaded["wins"]==final["wins"]
-    assert reloaded["losses"]==final["losses"]
-    assert len(reloaded["logs"])==len(final["logs"])
+    for key in ("wins","losses","day","ropes","points"):
+        assert reloaded[key]==final[key],(key,reloaded[key],final[key])
+    assert reloaded["logs"]==final["logs"],(reloaded["logs"],final["logs"])
+    assert len(reloaded["team"])==len(final["team"])
+    for now,previous in zip(reloaded["team"],final["team"]):
+        for key in ("instanceId","name","level","exp","atk","def","spd"):
+            assert now[key]==previous[key],(key,now[key],previous[key])
+        for key in ("battles","wins","history"):
+            assert now["evo"][key]==previous["evo"][key],key
+    assert (final["world"]["seconds"]-.1 <=
+            reloaded["world"]["seconds"] <
+            final["world"]["seconds"]+5),"unexpected farm clock jump"
     assert not errors,errors
     print("OK natural original owned-arena settlement",
           "touch" if mobile else "desktop",
