@@ -1,0 +1,134 @@
+/* Experimental continuous ranch art: desktop visual layer only.
+ * Existing 920x690 coordinate system, facilities, AI and save format remain intact.
+ * The user must opt in to preview. No biome/evolution mechanics are inferred. */
+@media (min-width:900px) and (pointer:fine) {
+  #dc-ranch-view-switch {
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px 11px;
+    margin:0 0 8px;
+    border:1px solid #577c78;
+    border-radius:8px;
+    background:#123c3d;
+    color:#e6f0d5;
+    font:12px/1.45 system-ui,sans-serif;
+  }
+  #dc-ranch-view-switch button {
+    flex:0 0 auto;
+    min-height:37px;
+    padding:6px 12px;
+    cursor:pointer;
+    border:1px solid #bbcd87;
+    border-radius:7px;
+    background:#2e654f;
+    color:#fff6d7;
+    font:700 12px/1.35 system-ui,sans-serif;
+  }
+  #dc-ranch-view-switch button:focus-visible {
+    outline:3px solid #fff0a6;
+    outline-offset:2px;
+  }
+  #dc-ranch-view-switch button[aria-pressed="true"] {
+    background:#765d35;
+    border-color:#f4cf88;
+  }
+  #dc-ranch-view-switch span {color:#bbd2b5;}
+  /* Preserve the original world size and hit areas; only the paint changes. */
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .farmWorld {
+    background-color:#5e8b57;
+    background-image:url("../assets/farm/continuous_ranch_preview.svg");
+    background-position:left top;
+    background-repeat:no-repeat;
+    background-size:920px 690px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexPath {
+    display:none !important;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile {
+    clip-path:none;
+    background:transparent !important;
+    filter:none;
+    border:none;
+    border-radius:0;
+    overflow:visible;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked {
+    background:transparent !important;
+    opacity:1;
+  }
+  /* All facades are cropped from the same existing local v0.23.2 art
+   * and feather into the natural ground; no ROM or new character art. */
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.unlocked:not(.core)::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background-image:url("../assets/farm/hex_farm_v0232.webp");
+    background-size:920px 690px;
+    background-repeat:no-repeat;
+    background-position:var(--dc-facade-offset);
+    -webkit-mask-image:radial-gradient(ellipse 40% 39% at 50% 47%,black 48%,transparent 100%);
+    mask-image:radial-gradient(ellipse 40% 39% at 50% 47%,black 48%,transparent 100%);
+    image-rendering:auto;
+  }
+  body.dc-ranch-continuous #farmPanel .hexTile[data-hex="training"]{--dc-facade-offset:-350px -15px;}
+  body.dc-ranch-continuous #farmPanel .hexTile[data-hex="garden"]{--dc-facade-offset:-160px -121px;}
+  body.dc-ranch-continuous #farmPanel .hexTile[data-hex="track"]{--dc-facade-offset:-540px -121px;}
+  body.dc-ranch-continuous #farmPanel .hexTile[data-hex="rest"]{--dc-facade-offset:-160px -333px;}
+  body.dc-ranch-continuous #farmPanel .hexTile[data-hex="clinic"]{--dc-facade-offset:-540px -333px;}
+  body.dc-ranch-continuous #farmPanel .hexTile[data-hex="forest"]{--dc-facade-offset:-350px -439px;}
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile .hexInner {
+    width:100%;
+    height:100%;
+    box-sizing:border-box;
+    clip-path:none;
+    border:2px solid transparent;
+    background:none;
+    padding:0 4px 22px;
+    gap:3px;
+    justify-content:flex-end;
+    position:relative;
+    z-index:1;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile .hexInner strong {
+    color:#fff7db;
+    background:#1e4838e8;
+    border:1px solid #b4b884a8;
+    box-shadow:0 3px 7px #253921a6;
+    text-shadow:0 1px 2px #10231a;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile .hexInner small {
+    color:#f4efc5;
+    background:#1a382ae3;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked .hexInner {
+    opacity:.72;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.locked .hexInner b {
+    top:55px;
+    right:82px;
+    background:#2c513bd9;
+    border-color:#c1bb80;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.selected .hexInner {
+    border:2px dashed #fee29b;
+    border-radius:48%;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile:focus-visible .hexInner {
+    outline:3px solid #ffe29e;
+    outline-offset:-4px;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .hexTile.selected .hexInner strong {
+    border-color:#ffdb91;
+  }
+  body.dc-ranch-continuous:not(.mode-nds) #farmPanel .farmWorld.foodPlacement {
+    cursor:crosshair;
+  }
+  /* Fall back to the unchanged original background on narrow/touch layouts. */
+  @media (max-width:1050px) {
+    #dc-ranch-view-switch {flex-wrap:wrap;}
+  }
+}
