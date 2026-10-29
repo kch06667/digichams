@@ -5,6 +5,7 @@ on:
       - 'phaser-lab/**'
       - 'tools/play_local.py'
       - 'tests/test_play_local.py'
+      - 'tests/pc-offline-phaser-soak-browser.py'
       - 'src/phaser-arena-entry-choice.js'
       - 'tools/phaser-production-entry.cjs'
       - 'tools/sync-phaser-production.py'
@@ -97,7 +98,7 @@ jobs:
       - name: Inspect official pinned Phaser distribution digest
         run: |
           npm install --ignore-scripts --no-save --no-package-lock phaser@3.90.0
-          sha256sum node_modules/phaser/dist/phaser.min.js
+          printf '%s  %s\n' 'e92ddef111ba42e92d316979c732311757093688ea1810591cb7aa2858eba7a7' node_modules/phaser/dist/phaser.min.js | sha256sum --check --status
       - name: 'One-command playable launcher: private art cache readiness, no network'
         run: python3 -m unittest discover -s tests -p 'test_play_local.py' -v
       - run: node --test tests/phaser-main-entry.cjs tests/phaser-championship-save.cjs
@@ -165,6 +166,8 @@ jobs:
         run: python3 tests/phaser-main-entry-browser.py
       - name: Production PC and mobile original game Phaser default / auto commit / legacy fallback
         run: python3 tests/phaser-production-default-browser.py
+      - name: PC real-game offline local engine, 3 battle cycles and 2-hour simulated farm soak
+        run: python3 tests/pc-offline-phaser-soak-browser.py
       - name: Explicit beta-first Phaser and popup-blocked original fallback (desktop/touch)
         run: python3 tests/phaser-preferred-fallback-browser.py
       - name: Actual owned 2v2/3v3 Phaser approved save, backup and reload (desktop/touch)
