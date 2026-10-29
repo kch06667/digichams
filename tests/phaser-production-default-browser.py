@@ -330,6 +330,140 @@ def check_newer_save_preserved(browser,base):
 
 
 
+
+def check_storage_failures(browser,base,entry,mobile,kind):
+    """Actual game rejects storage faults without a stranded paused save."""
+    ctx=browser.new_context(
+        viewport={"width":390,"height":844} if mobile else
+                 {"width":1280,"height":800},
+        is_mobile=mobile,has_touch=mobile)
+    if VENDOR.is_file():
+        ctx.route(CDN,lambda route:route.fulfill(
+            path=str(VENDOR),content_type="application/javascript"))
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda e:errors.append(str(e)))
+    try:
+        page.goto(base+"/"+entry,wait_until="domcontentloaded",timeout=90000)
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        page.locator("#wideMode").click()
+        page.locator("#liveBattleLaunch").click()
+        page.locator("#lbMode").select_option("owned")
+        page.locator("#lbTeamSize").select_option("1")
+        before=page.evaluate("""() => {
+          const s=eval('state');
+          s.world.paused=false;save(false);
+          return {saved:localStorage.getItem('dc_recreation_save'),
+            id:s.team[0].instanceId,wins:s.wins,losses:s.losses};
+        }""")
+        page.evaluate("""kind => {
+          const old=Storage.prototype.setItem;
+          let once=false;
+          Storage.prototype.setItem=function(key,value){
+            if(this===localStorage &&
+               (kind==='lease-quota'?
+                 key==='dc_phaser_park_recovery_v1':
+                 key==='dc_recreation_save' &&
+                   localStorage.getItem('dc_phaser_park_recovery_v1')!==null)
+                && !once){
+              once=true;
+              if(kind==='silent-save')return; // browser-adapter no-op
+              throw new DOMException('Injected storage quota','QuotaExceededError');
+            }
+            return old.call(this,key,value);
+          };
+        }""",kind)
+        page.locator("#lbStart").click()
+        assert page.locator("#dc-phaser-engine").input_value()=="legacy"
+        assert page.locator("#dc-phaser-overlay").count()==0
+        result=page.evaluate("""() => ({
+          live:eval('state'),
+          saved:localStorage.getItem('dc_recreation_save'),
+          marker:localStorage.getItem('dc_phaser_park_recovery_v1'),
+          tab:sessionStorage.getItem('dc_phaser_tab_recovery_v1'),
+          status:document.getElementById('dc-phaser-farm-status').textContent
+        })""")
+        assert result["live"]["world"]["paused"] is False,result
+        assert result["marker"] is None and result["tab"] is None,result
+        assert result["saved"]==before["saved"],(
+            "Failure wrote a partial/false paused save",kind)
+        assert result["live"]["team"][0]["instanceId"]==before["id"]
+        assert result["live"]["wins"]==before["wins"]
+        assert result["live"]["losses"]==before["losses"]
+        assert "취소" in result["status"],result
+        assert not errors,errors
+        print("PASS original",entry,kind,
+              "aborted with unchanged save and no orphan lease",flush=True)
+    finally:
+        ctx.close()
+
+
+def check_failed_cancel_recovers_after_reload(browser,base):
+    """Failed rollback keeps lease, then normal reload repairs the clock."""
+    ctx=browser.new_context(viewport={"width":390,"height":844},
+                            is_mobile=True,has_touch=True)
+    if VENDOR.is_file():
+        ctx.route(CDN,lambda route:route.fulfill(
+            path=str(VENDOR),content_type="application/javascript"))
+    page=ctx.new_page()
+    errors=[]
+    page.on("pageerror",lambda e:errors.append(str(e)))
+    try:
+        page.goto(base+"/standalone.html",wait_until="domcontentloaded",
+                  timeout=90000)
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        baseline=page.evaluate("""() => {
+          const s=eval('state');
+          s.world.paused=false;save(false);
+          return {id:s.team[0].instanceId,wins:s.wins,losses:s.losses};
+        }""")
+        page.locator("#wideMode").click()
+        page.locator("#liveBattleLaunch").click()
+        page.locator("#lbMode").select_option("owned")
+        page.locator("#lbTeamSize").select_option("1")
+        page.locator("#lbStart").click()
+        page.locator("#dc-phaser-overlay").wait_for(state="visible")
+        page.evaluate("""() => {
+          const old=Storage.prototype.setItem;
+          Storage.prototype.setItem=function(key,value){
+            if(this===localStorage && key==='dc_recreation_save')
+              throw new DOMException('Quota while canceling','QuotaExceededError');
+            return old.call(this,key,value);
+          };
+        }""")
+        page.locator("#dc-phaser-overlay-close").click()
+        state=page.evaluate("""() => ({
+          paused:eval('state').world.paused,
+          persisted:JSON.parse(localStorage.getItem('dc_recreation_save')),
+          marker:localStorage.getItem('dc_phaser_park_recovery_v1'),
+          status:document.getElementById('dc-phaser-farm-status').textContent
+        })""")
+        assert state["paused"] is True,state
+        assert state["persisted"]["world"]["paused"] is True,state
+        assert state["marker"] is not None,state
+        assert "저장 실패" in state["status"],state
+        page.reload(wait_until="domcontentloaded")
+        page.locator("#dc-phaser-engine").wait_for(state="attached")
+        recovered=page.evaluate("""() => ({
+          live:eval('state'),
+          saved:JSON.parse(localStorage.getItem('dc_recreation_save')),
+          marker:localStorage.getItem('dc_phaser_park_recovery_v1'),
+          tab:sessionStorage.getItem('dc_phaser_tab_recovery_v1')
+        })""")
+        assert recovered["live"]["world"]["paused"] is False,recovered
+        assert recovered["saved"]["world"]["paused"] is False,recovered
+        assert recovered["saved"]["team"][0]["instanceId"]==baseline["id"]
+        assert recovered["saved"]["wins"]==baseline["wins"]
+        assert recovered["saved"]["losses"]==baseline["losses"]
+        assert recovered["marker"] is None and recovered["tab"] is None
+        assert not errors,errors
+        print("PASS original mobile denied-cancel save -> crash lease retained "
+              "-> next reload recovers without rewards",flush=True)
+    finally:
+        ctx.close()
+
+
+
 def main():
     subprocess.run(["python3","tools/sync-phaser-production.py","--check"],
                    cwd=ROOT,check=True)
@@ -349,6 +483,13 @@ def main():
                 check_interrupted(browser,root,"index.html",False)
                 check_interrupted(browser,root,"standalone.html",True)
                 check_newer_save_preserved(browser,root)
+                check_storage_failures(browser,root,"index.html",False,
+                                       "lease-quota")
+                check_storage_failures(browser,root,"standalone.html",True,
+                                       "save-quota")
+                check_storage_failures(browser,root,"index.html",False,
+                                       "silent-save")
+                check_failed_cancel_recovers_after_reload(browser,root)
             finally:browser.close()
     finally:
         srv.shutdown();srv.server_close();thread.join(timeout=3)

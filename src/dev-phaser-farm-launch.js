@@ -94,12 +94,18 @@
     }catch(_){return null;}
   }
   function clearParkMarker(token){
-    const record=readParkMarker();
-    if(record?.token===token)localStorage.removeItem(PARK_KEY);
+    // Clearing metadata is best-effort: a denied storage.removeItem must
+    // never escape a cancel/rollback callback and leave the UI locked.
+    let cleared=true;
+    try {
+      const record=readParkMarker();
+      if(record?.token===token)localStorage.removeItem(PARK_KEY);
+    }catch(_){cleared=false;}
     try {
       if(sessionStorage.getItem(TAB_KEY)===token)
         sessionStorage.removeItem(TAB_KEY);
-    }catch(_){}
+    }catch(_){cleared=false;}
+    return cleared;
   }
   function rememberPark(token,park){
     const record={version:1,token,paused:park.paused,
@@ -108,9 +114,17 @@
     // recovery-store write cancels the fight instead of leaving it paused.
     if(localStorage.getItem(PARK_KEY))throw Error(
       '중단된 이전 전투 기록이 있어. 기존 세이브 복구를 먼저 확인해 줘.');
-    localStorage.setItem(PARK_KEY,JSON.stringify(record));
-    try{sessionStorage.setItem(TAB_KEY,token);}
-    catch(err){clearParkMarker(token);throw err;}
+    const encoded=JSON.stringify(record);
+    localStorage.setItem(PARK_KEY,encoded);
+    try {
+      if(localStorage.getItem(PARK_KEY)!==encoded)
+        throw Error('전투 복구 기록을 저장하지 못했어.');
+      sessionStorage.setItem(TAB_KEY,token);
+      if(sessionStorage.getItem(TAB_KEY)!==token)
+        throw Error('전투 탭 기록을 저장하지 못했어.');
+    } catch(err) {
+      clearParkMarker(token);throw err;
+    }
   }
   const restore=document.createElement('button');
   restore.id='dc-phaser-recover-interrupted';
@@ -150,8 +164,18 @@
       if(!disk?.world||disk.world.paused!==true||
          live?.world?.paused!==true||live.pendingBattle)
         throw Error('기존 게임 상태와 저장 기록이 달라.');
+      // Browser storage can throw (quota/private mode) or silently reject
+      // a write. Leave the original frozen in-memory state and lease intact
+      // until the persisted save is VERIFIED.
       live.world.paused=record.paused;
-      eval('save(false)');
+      try {
+        eval('save(false)');
+        if(localStorage.getItem(KEY)!==JSON.stringify(live))
+          throw Error('복구한 세이브 재확인 실패');
+      }catch(err){
+        live.world.paused=true;
+        throw err;
+      }
       clearParkMarker(record.token);
       restore.hidden=true;
       notice.textContent='중단된 Phaser 전투를 정산하지 않고 사육장 시간을 복구했어.';
@@ -172,24 +196,44 @@
   // Phaser battle) to prevent a stale tab/6s autosave race. Preserve the
   // user's original pause preference and refuse overwriting a newer tab.
   function releasePark(session) {
-    if(!session?.park)return;
+    if(!session?.park)return true;
     const live=eval('state');
-    if(localStorage.getItem(KEY)===session.park.saved){
-      live.world.paused=session.park.paused;
-      eval('save(false)');
-    }else{
-      notice.textContent='다른 탭에서 저장이 변경됐어. 새로고침 후 확인해 줘.';
+    try {
+      if(localStorage.getItem(KEY)===session.park.saved){
+        live.world.paused=session.park.paused;
+        try {
+          eval('save(false)');
+          if(localStorage.getItem(KEY)!==JSON.stringify(live))
+            throw Error('복귀 세이브 재확인 실패');
+        }catch(err){
+          // Keep the matching paused checkpoint and lease recoverable.
+          live.world.paused=true;
+          throw err;
+        }
+      }else{
+        // Newer other-tab saves are never overwritten by our rollback.
+        notice.textContent='다른 탭에서 저장이 변경됐어. 새로고침 후 확인해 줘.';
+        clearParkMarker(session.token);
+        session.park=null;
+        return false;
+      }
+      clearParkMarker(session.token);
+      session.park=null;
+      return true;
+    }catch(err){
+      notice.textContent='사육장 복귀 저장 실패: '+err.message+
+        ' · 중단 복구 기록을 유지했어. 새로고침 후 다시 확인해 줘.';
+      return false;
     }
-    clearParkMarker(session.token);
-    session.park=null;
   }
   cancel.addEventListener('click',()=>{
     if(!activeSession)return;
     const session=activeSession;activeSession=null;
     session.cleanup?.();
     closeSession(session);
-    releasePark(session);cancel.hidden=true;
-    notice.textContent='Phaser 전투 취소 · 기본 게임으로 복귀';
+    const released=releasePark(session);cancel.hidden=true;
+    if(released)
+      notice.textContent='Phaser 전투 취소 · 기본 게임으로 복귀';
   });
   // The two tabs never share the full save. Retain only the launch
   // fingerprint and one validated result packet in the ORIGINAL farm tab.
@@ -323,22 +367,39 @@
       const live=eval('state'),paused=live.world.paused;
       try{
         if(typeof paused!=='boolean')throw Error('게임 시계 상태를 읽을 수 없어.');
+        // Write the recovery intent BEFORE the paused checkpoint. If a
+        // browser is terminated in between, the old unpaused save remains;
+        // if the paused save commits, a matching crash-recovery lease already
+        // exists. Never leave a new paused save without a prepared lease.
+        const previousSaved=localStorage.getItem(KEY);
         live.world.paused=true;
-        // Pre-fight snapshot makes the atomic result authoritative, and
-        // records a compare-and-swap base for other-tab race detection.
-        eval('save(false)');
-        const saved=localStorage.getItem(KEY);
-        if(saved!==JSON.stringify(live))
-          throw Error('전투 전 세이브 검증 실패');
-        park={paused,saved};
+        park={paused,saved:JSON.stringify(live),previousSaved};
         rememberPark(token,park);
+        eval('save(false)');
+        if(localStorage.getItem(KEY)!==park.saved)
+          throw Error('전투 전 세이브 검증 실패');
       }catch(err){
+        // Only roll back OUR own paused checkpoint. A failed preparatory
+        // write never authorizes replacing a newer save from another tab.
+        const savedBefore=park?.previousSaved;
+        const checkpoint=park?.saved;
         live.world.paused=paused;
-        // A failed marker write must not strand a persisted paused state.
-        try{eval('save(false)');}catch(_){}
-        clearParkMarker(token);
+        let safeToClear=false;
+        try {
+          const disk=localStorage.getItem(KEY);
+          if(disk===checkpoint){
+            eval('save(false)');
+            safeToClear=localStorage.getItem(KEY)===JSON.stringify(live);
+          }else{
+            safeToClear=disk===savedBefore;
+          }
+        }catch(_){}
+        // If rollback cannot be verified and the game was paused on disk,
+        // RETAIN the lease so a subsequent reload can recover its clock.
+        if(safeToClear)clearParkMarker(token);
         closeSession(view);
-        notice.textContent='Phaser 전투 시작 취소: '+err.message;
+        notice.textContent='Phaser 전투 시작 취소: '+err.message+
+          (safeToClear?'':' · 저장 복구 기록을 보존했어. 새로고침해 줘.');
         return false;
       }
     }
