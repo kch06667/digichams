@@ -46,5 +46,9 @@ jobs:
           git add index.html standalone.html
           if ! git diff --cached --quiet; then
             git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Sync immediate mobile background save and hunt gesture recovery into playable games"
+            # Other docs/tests may land while sync runs. Rebase our two
+            # generated HTML edits onto the current feature-branch HEAD.
+            git fetch origin "${GITHUB_REF_NAME}:refs/remotes/origin/${GITHUB_REF_NAME}"
+            git rebase "refs/remotes/origin/${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
