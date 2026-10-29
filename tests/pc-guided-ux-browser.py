@@ -123,6 +123,9 @@ def check_desktop(browser,url,entry):
         # real original 'wideMode' button via the new discoverable PC CTA.
         if page.evaluate("document.body.classList.contains('mode-nds')"):
             page.locator("#dc-pc-guide-wide").click()
+        page.wait_for_function("""() =>
+          document.querySelector('#dc-pc-guide-jump')
+            ?.getBoundingClientRect().width>30""",timeout=12000)
         assert not page.evaluate("document.body.classList.contains('mode-nds')")
         assert page.locator("#dc-pc-guide-wide").is_hidden()
         verify_pc_layout(page,"nursery",1440)
