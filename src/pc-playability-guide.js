@@ -27,14 +27,24 @@
 
   // Separate opt-in terrain paint experiment. No save, AI or ROM changes.
   const continuousScript=document.createElement('script');
+  // DOM-dependent view layers must load in declared order.
+  continuousScript.async=false;
   continuousScript.src=new URL('pc-continuous-ranch-preview.js',document.currentScript.src).href;
   document.head.appendChild(continuousScript);
 
   // PR74: diagnostic overlay reads the live farm core's precise walkability.
   // It is opt-in and never writes to the canonical game state.
   const ranchWalkabilityScript=document.createElement('script');
+  ranchWalkabilityScript.async=false;
   ranchWalkabilityScript.src=new URL('pc-ranch-walkability.js',document.currentScript.src).href;
   document.head.appendChild(ranchWalkabilityScript);
+
+  // Straight opened paths match DCFarm's existing actual route coordinates;
+  // this is a visual layer only, not another movement engine.
+  const ranchPathsScript=document.createElement('script');
+  ranchPathsScript.async=false;
+  ranchPathsScript.src=new URL('pc-ranch-ground-paths.js',document.currentScript.src).href;
+  document.head.appendChild(ranchPathsScript);
 
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
