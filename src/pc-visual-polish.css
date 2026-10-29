@@ -435,8 +435,9 @@
     visibility:hidden;
     pointer-events:none;
     opacity:0;
-    transform:translateX(16px);
-    transition:opacity .15s ease,transform .15s ease,visibility .15s;
+    /* Offscreen transforms created a 4px page overflow at 1024px. */
+    transform:none;
+    transition:opacity .15s ease,visibility .15s;
   }
   body:not(.mode-nds) #nursery.active.dc-pc-drawer-open > .layout#dc-pc-control-drawer {
     visibility:visible;
