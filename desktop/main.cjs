@@ -1,53 +1,65 @@
 'use strict';
-// Windows desktop launcher. The existing game remains the source of truth.
-// No remote site, renderer Node.js APIs, or ROM loading is involved.
-const {app, BrowserWindow, shell} = require('electron');
+// Separate Windows desktop shell for the existing game. No ROM execution.
+const {app, BrowserWindow, protocol, net} = require('electron');
 const path = require('node:path');
 const fs = require('node:fs');
+const {pathToFileURL} = require('node:url');
 
-function gameEntry(base = app.isPackaged
-  ? path.join(process.resourcesPath, 'game')
-  : path.join(__dirname, '..')) {
-  return path.join(base, 'index.html');
+// Standard/secure origin keeps fetch(), asset URLs and localStorage functional.
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'digichamp',
+  privileges: {standard:true, secure:true, supportFetchAPI:true, stream:true}
+}]);
+
+function gameRoot() {
+  return app.isPackaged ? path.join(process.resourcesPath, 'game')
+    : path.join(__dirname, '..');
+}
+function resolveGamePath(requestUrl, root = gameRoot()) {
+  const url = new URL(requestUrl);
+  if (url.protocol !== 'digichamp:' || url.hostname !== 'game') return null;
+  let pathname;
+  try { pathname = decodeURIComponent(url.pathname); }
+  catch (_) { return null; }
+  if (pathname.includes('\\') || pathname.includes('\0')) return null;
+  const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  const resolved = path.resolve(root, relative);
+  if (!resolved.startsWith(path.resolve(root) + path.sep)) return null;
+  return resolved;
 }
 function gameWindowOptions() {
   return {
-    width: 1440,
-    height: 900,
-    minWidth: 960,
-    minHeight: 640,
-    show: false,
-    autoHideMenuBar: true,
-    backgroundColor: '#0e2436',
-    title: 'Digimon Championship',
+    width: 1440, height: 900,
+    minWidth: 960, minHeight: 640,
+    show: false, autoHideMenuBar: true,
+    backgroundColor: '#0e2436', title: 'Digimon Championship',
     webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      sandbox: true,
-      webSecurity: true,
-      webviewTag: false,
-      allowRunningInsecureContent: false
+      nodeIntegration:false, contextIsolation:true, sandbox:true,
+      webSecurity:true, webviewTag:false, allowRunningInsecureContent:false
     }
   };
 }
 function createGameWindow() {
-  const file = gameEntry();
-  if (!fs.existsSync(file)) throw new Error('Game entry not found: ' + file);
   const win = new BrowserWindow(gameWindowOptions());
-  win.webContents.setWindowOpenHandler(() => ({action: 'deny'}));
+  win.webContents.setWindowOpenHandler(() => ({action:'deny'}));
   win.webContents.on('will-navigate', (event, url) => {
-    // Block page navigation to remote websites. The renderer is only a game.
-    if (url !== win.webContents.getURL()) event.preventDefault();
+    if (!url.startsWith('digichamp://game/')) event.preventDefault();
   });
   win.once('ready-to-show', () => win.show());
-  win.loadFile(file);
-  win.webContents.on('did-fail-load', (_event, errorCode, description) => {
-    console.error('[Desktop] game load failed:', errorCode, description);
+  win.loadURL('digichamp://game/index.html');
+  win.webContents.on('did-fail-load', (_event, code, desc) => {
+    console.error('[Desktop] loading error', code, desc);
   });
   return win;
 }
 if (require.main === module) {
   app.whenReady().then(() => {
+    protocol.handle('digichamp', request => {
+      const file = resolveGamePath(request.url);
+      if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile())
+        return new Response('Not found', {status:404});
+      return net.fetch(pathToFileURL(file).href);
+    });
     createGameWindow();
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createGameWindow();
@@ -57,4 +69,4 @@ if (require.main === module) {
     if (process.platform !== 'darwin') app.quit();
   });
 }
-module.exports = {gameEntry,gameWindowOptions};
+module.exports = {resolveGamePath,gameWindowOptions};
