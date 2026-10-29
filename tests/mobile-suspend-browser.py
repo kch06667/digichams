@@ -100,15 +100,23 @@ def run(browser,base,entry,mobile):
       window.dispatchEvent(new Event('pagehide'));
       const preserved=localStorage.getItem(key)===authoritative;
       delete state.pendingBattle;
+      // Opt-in Phaser battle starts with no pendingBattle. Its result is
+      // approved in localStorage only; the unloading page is still stale.
+      window.DCDevPhaserApprovedSave=true;
+      state.food=approved.food-3;
+      document.dispatchEvent(new Event('visibilitychange'));
+      window.dispatchEvent(new Event('pagehide'));
+      const approvedGuard=localStorage.getItem(key)===authoritative;
+      delete window.DCDevPhaserApprovedSave;
       state.food=approved.food;
       Object.defineProperty(document,'hidden',{configurable:true,
         get:()=>false});
       document.dispatchEvent(new Event('visibilitychange'));
       save(false);
-      return {preserved,approvedFood:approved.food,
+      return {preserved,approvedGuard,approvedFood:approved.food,
         liveFood:state.food};
     }""")
-    assert settlement_guard['preserved'],settlement_guard
+    assert settlement_guard['preserved'] and settlement_guard['approvedGuard'],settlement_guard
     assert settlement_guard['approvedFood']==settlement_guard['liveFood']
 
     # A second class of unfinished state, live hunting, must checkpoint the
