@@ -46,6 +46,41 @@ function satisfied(m,r){const e=ensureMon(m).evo;
  (!r.ap||Object.entries(r.ap).every(([k,v])=>safeInt(e.ap[k])>=v));
 }
 function candidates(m,available){return rulesFor(m).map(r=>({to:r.to,available:!!available?.(r.to),ready:satisfied(m,r),requirements:r}));}
+// Read-only diagnostics for all 477 confirmed guide-sourced evolution routes.
+// Never call ensureMon here: asking the UI to show requirements must not mutate
+// an old save, award AP, choose a target, or change evolution priorities.
+function routeProgress(m,available){
+ if(!m||typeof m.name!=='string')return [];
+ const e=m.evo||{}, ap=e.ap||{};
+ const battles=safeInt(e.battles), wins=safeInt(e.wins);
+ const winFraction=battles?Math.min(1,wins/battles):0;
+ const reverts=safeInt(e.eggReverts), penalties=safeInt(e.penalties);
+ const days=safeInt(e.stageDays);
+ const check=(kind,key,have,need)=>({
+  kind,key,have,need,missing:Math.max(0,need-have),
+  met:have>=need
+ });
+ return rulesFor(m).map(r=>{
+  const conditions=[];
+  if(r.battles)conditions.push(check('battles',null,battles,r.battles));
+  if(r.wins)conditions.push(check('winRate',null,winFraction,r.wins));
+  if(r.eggReverts)conditions.push(check('eggReverts',null,reverts,r.eggReverts));
+  if(r.penalties)conditions.push(check('penalties',null,penalties,r.penalties));
+  if(r.time)conditions.push(check('stageDays',null,days,BALANCE.timeEvolutionDays));
+  for(const [family,need] of Object.entries(r.ap||{}))
+   conditions.push(check('ap',family,safeInt(ap[family]),need));
+  const known=typeof available==='function'?!!available(r.to):true;
+  return {to:r.to,available:known,ready:known&&conditions.every(c=>c.met),
+   selected:e.target===r.to,
+   missing:conditions.filter(c=>!c.met),
+   conditions,source:r.source||null};
+ });
+}
+function lineage(name){
+ if(typeof name!=='string'||!name||name.length>90)return {from:[],to:[]};
+ return {from:incoming(name).map(r=>r.from),
+  to:(KNOWN[name]||[]).map(r=>r.to)};
+}
 function log(g,message){if(!Array.isArray(g.logs))g.logs=[];g.logs.unshift(`[DAY ${g.day||1}] ${message}`);g.logs=g.logs.slice(0,60);}
 function transform(g,m,target,lookUp){const base=lookUp?.(target);if(!base)return false;const old=m.name;const e=ensureMon(m).evo;
  e.history.push({from:old,to:target,day:g.day||1,battles:e.battles});e.history=e.history.slice(-25);
@@ -125,7 +160,7 @@ function advanceDays(g,days,lookUp){ensure(g);let events=0;const n=Math.max(0,Ma
 function describe(m,available){ensureMon(m);const e=m.evo;
  return {battles:e.battles,wins:e.wins,winRate:Math.floor(winRate(m)*100),eggReverts:e.eggReverts,stageDays:e.stageDays,limit:BALANCE.stageDays[m.stage]||null,ap:{...e.ap},resist:{...e.resist},target:e.target||null,candidates:candidates(m,available)};
 }
-const api={KNOWN,BALANCE,ensureMon,ensure,winRate,rulesFor,incoming,chooseTarget,candidates,describe,maybeEvolve,recordBattle,train,hatch,advanceDays,eggRevert,EMPTY_AP};
+const api={KNOWN,BALANCE,ensureMon,ensure,winRate,rulesFor,incoming,lineage,routeProgress,chooseTarget,candidates,describe,maybeEvolve,recordBattle,train,hatch,advanceDays,eggRevert,EMPTY_AP};
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 root.DCEvolution=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

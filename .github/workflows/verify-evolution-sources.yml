@@ -1,0 +1,53 @@
+name: Evolution guide route coverage, source sync and real original game
+on:
+  pull_request:
+    paths:
+      - "src/evolution-core.js"
+      - "src/evolution-goal-ui.js"
+      - "src/evolution-goal-style.css"
+      - "tools/sync-embedded-evolution.py"
+      - "tests/evolution-route-diagnostics.cjs"
+      - "tests/evolution-route-browser.py"
+      - "index.html"
+      - "standalone.html"
+      - ".github/workflows/verify-evolution-sources.yml"
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify 216-species original game bundles are identical to canonical source
+        run: python3 tools/sync-embedded-evolution.py --check
+      - name: Node parse and source route/target regression tests
+        run: |
+          node --check src/evolution-core.js
+          node --check src/evolution-goal-ui.js
+          node --test tests/evolution-route-diagnostics.cjs
+          node tests/evolution-tree.cjs
+          node tests/evolution-core.cjs
+          node tests/cage-training.cjs
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install desktop and touch Chromium
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: Play real original game evolution diagnostics and catalog on PC/mobile
+        run: python3 tests/evolution-route-browser.py

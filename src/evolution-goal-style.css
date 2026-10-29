@@ -1,0 +1,10 @@
+/* Read-only evolution route diagnostics; optimized for mobile and large catalogs. */
+#evolutionGoalDiagnostics,#evolutionCatalogLineage{border:1px solid #456475;border-radius:10px;padding:10px 12px;margin:10px 0;background:#112635;color:#d5ede8;min-width:0}
+#evolutionGoalDiagnostics strong,#evolutionCatalogLineage strong{font-size:13px;color:#f4dfab}
+#evolutionGoalDiagnostics p,#evolutionCatalogLineage p{font-size:12px;line-height:1.55;margin:5px 0;overflow-wrap:anywhere}
+#evolutionGoalDiagnostics .evoGuideList{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:8px;margin-top:9px}
+#evolutionGoalDiagnostics .evoGuideRow{padding:8px;border:1px solid #3c5664;border-radius:8px;background:#142c3a;min-width:0}
+#evolutionGoalDiagnostics .evoGuideReady{color:#a8e2af}
+#evolutionGoalDiagnostics .evoGuideMissing{color:#d5dce6}
+#evolutionGoalDiagnostics .evoGuideNote,#evolutionCatalogLineage .evoGuideNote{font-size:11px;color:#a6cad2}
+@media(max-width:500px){#evolutionGoalDiagnostics,#evolutionCatalogLineage{padding:9px}#evolutionGoalDiagnostics .evoGuideList{grid-template-columns:1fr}}
