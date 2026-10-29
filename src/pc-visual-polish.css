@@ -5,7 +5,7 @@
 @media (min-width:900px) and (pointer:fine) {
   :root { color-scheme:dark; }
   .wrap {
-    max-width:1220px;
+    max-width:1480px;
     padding-inline:clamp(18px,2.1vw,32px);
   }
   /* The original navigation contains FIVE buttons, not four. A 4-column
@@ -144,13 +144,13 @@
    * instead of requiring the player to travel down the entire document. */
   body:not(.mode-nds) #nursery.section.active {
     display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(280px,310px);
+    grid-template-columns:minmax(0,1fr) minmax(270px,290px);
     align-items:start;
     gap:12px;
   }
   body:not(.mode-nds) #nursery.active > #farmPanel {
     /* Keep long facility/command content inside the game stage. */
-    max-height:max(330px,calc(100dvh - 390px));
+    max-height:max(400px,calc(100dvh - 240px));
     overflow-y:auto;
     overscroll-behavior:contain;
     scrollbar-width:thin;
@@ -166,7 +166,7 @@
     flex-direction:column;
     gap:10px;
     min-width:0;
-    max-height:max(330px,calc(100dvh - 390px));
+    max-height:max(400px,calc(100dvh - 240px));
     overflow-y:auto;
     overscroll-behavior:contain;
     scrollbar-width:thin;
@@ -187,7 +187,7 @@
   body:not(.mode-nds) #nursery.active > #farmPanel .farmEconomy {flex-wrap:wrap;gap:5px;margin:7px 0;}
   body:not(.mode-nds) #nursery.active > #farmPanel .farmChip {padding:5px 8px;font-size:12px;}
   body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
-    height:clamp(300px,calc(100dvh - 360px),555px);
+    height:clamp(340px,calc(100dvh - 310px),640px);
   }
   body:not(.mode-nds) #nursery.active > #farmPanel .farmNav {
     justify-content:flex-start;
@@ -196,8 +196,23 @@
   }
   body:not(.mode-nds) #nursery.active > #farmPanel .farmNav .farmHint {font-size:11px;}
   @media (min-width:900px) and (max-width:1080px) {
-    body:not(.mode-nds) #nursery.section.active {grid-template-columns:minmax(0,1fr) 280px;gap:8px;}
-    body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {height:clamp(270px,calc(100dvh - 380px),490px);}
+    body:not(.mode-nds) #nursery.section.active {grid-template-columns:minmax(0,1fr) 260px;gap:8px;}
+    body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {height:clamp(330px,calc(100dvh - 330px),500px);}
+  }
+
+  /* At PC widths the map receives most of the available space. The
+   * original scrollable map and its actors remain unchanged. */
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmScrollFrame {
+    width:100%;
+    max-width:none;
+    box-sizing:border-box;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    width:100%;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmDetails {
+    font-size:12px;
+    line-height:1.4;
   }
 
   /* Original capture gesture lives inside huntStage. Widen its first
