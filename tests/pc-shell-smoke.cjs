@@ -45,6 +45,38 @@ const server=http.createServer((req,res)=>{
       }
       await page.waitForFunction(()=>Boolean(window.DCPCDrawer),{timeout:10000});
       await page.waitForFunction(()=>window.DCPCFarmPan?.enabled===true,{timeout:10000});
+      await page.waitForFunction(()=>window.DCConnectedRanch?.ready===true &&
+        document.querySelector('#dc-connected-ranch-style')?.sheet,{timeout:10000});
+      const ranchSwitch=page.locator('#dc-pc-ranch-toggle');
+      const stateBefore=await page.evaluate(()=>{
+        const s=eval('state');
+        return JSON.stringify({ids:s.team.map(m=>m.instanceId),
+          wins:s.wins,food:s.food,day:s.day,buildings:s.facilities});
+      });
+      assert.equal(await ranchSwitch.count(),1,'connected ranch switch missing');
+      assert.equal(await ranchSwitch.getAttribute('aria-pressed'),'true');
+      assert.equal(await page.locator('#farmPanel .hexTile').count(),7,
+        'canonical seven facility zones must not be replaced');
+      const connectedBackground=await page.locator('#farmWorld').evaluate(
+        e=>getComputedStyle(e).backgroundImage);
+      assert.match(connectedBackground,/connected_ranch_field\.svg/,
+        'continuous ranch preview did not load');
+      assert.equal(await page.locator('#farmWorld').evaluate(e=>e.clientWidth),920);
+      assert.equal(await page.locator('#farmWorld').evaluate(e=>e.clientHeight),690);
+      await ranchSwitch.click();
+      assert.equal(await ranchSwitch.getAttribute('aria-pressed'),'false');
+      const originalBackground=await page.locator('#farmWorld').evaluate(
+        e=>getComputedStyle(e).backgroundImage);
+      assert.match(originalBackground,/hex_farm_v0232\.webp/,
+        'original NDS-derived art must be one click away');
+      await ranchSwitch.click();
+      assert.equal(await ranchSwitch.getAttribute('aria-pressed'),'true');
+      const stateAfter=await page.evaluate(()=>{
+        const s=eval('state');
+        return JSON.stringify({ids:s.team.map(m=>m.instanceId),
+          wins:s.wins,food:s.food,day:s.day,buildings:s.facilities});
+      });
+      assert.equal(stateAfter,stateBefore,'visual ranch preview changed game state');
       await page.waitForTimeout(300);
       const toggle=page.locator('#dc-pc-drawer-toggle');
       const drawer=page.locator('#dc-pc-control-drawer');
