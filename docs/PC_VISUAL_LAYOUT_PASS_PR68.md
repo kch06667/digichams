@@ -34,6 +34,12 @@ already chooses whether to display desktop-only controls. Original
 `index.html`/`standalone.html`, original sprite assets and mobile
 CSS are not edited.
 
+- **Display modes:** original startup can be the deliberately narrow
+  **NDS two-screen layout** (roughly 560px shell / 330px farm viewport).
+  PR68 leaves that mode intact. The PC quick bar now offers an explicit
+  **PC 확장 화면** button using the game's original `wideMode` action,
+  with no automatic preference or save change. The larger dimensions
+  below are checked **after selecting expanded PC mode**.
 - **Top navigation:** five equal columns, readable 45px-high buttons
   and explicit keyboard focus / active-tab borders.
 - **Farm:** more distinct resource chips, centered scrollable map frame,
@@ -56,6 +62,7 @@ CSS are not edited.
 
 Existing `tests/pc-guided-ux-browser.py` now validates the actual
 `index.html` and `standalone.html` desktop game at **1440×900**:
+- loaded stylesheet and explicit use of original wide-mode switch;
 - loaded PC stylesheet;
 - all five original tab buttons on a **single row**, proper target sizes;
 - no body horizontal overflow;
@@ -78,8 +85,10 @@ and 2v2/3v3 championships still must pass before GitHub merge.
 ## User verification
 
 After merging: `git pull origin main`, run `PLAY_ON_PC.bat`, use
-a desktop Chrome/Edge window at least 900px wide, and compare the
-top five tabs, the 920×690 scrollable farm art, rope field and cup
+a desktop Chrome/Edge window at least 900px wide. Select
+**PC 확장 화면** in the quick bar (or the original **▤ 확장 화면**
+button), then compare the top five tabs, the 920×690 farm art,
+rope field and cup
 cards. Original private GIFs / ROM remain local; **no screenshots
 containing the user's game art are published into Git**.
 
