@@ -512,6 +512,15 @@
   }
   #championshipHistory {line-height:1.55;}
 
+  /* Final shell sizing must follow the earlier per-nursery rules. */
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(430px,calc(100dvh - 125px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 245px),780px);
+  }
+
   /* Combat overlay still fills the window and remains keyboard-usable,
    * while keeping the arena framed on extra-wide desktops. */
   #dc-phaser-overlay {
