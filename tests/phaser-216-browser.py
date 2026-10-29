@@ -44,7 +44,14 @@ def check(browser,base,mobile):
       return s?.fighters?.length===6 && s.elapsed>0 &&
         actors?.length===6 && actors.every(a=>a.privateArt);
     }""",timeout=30000)
-    actors=page.evaluate("DigiPhaserLab.renderedArt()")
+    # Freeze art and simulation positions in the SAME browser JS task.
+    # Separate Playwright calls let the battle advance several frames and
+    # incorrectly report a GIF foot jump despite stable origin/geometry.
+    frozen=page.evaluate("""() => ({
+      actors:DigiPhaserLab.renderedArt(),
+      snapshot:DigiPhaserLab.matchSnapshot()
+    })""")
+    actors=frozen["actors"]
     assert [a["name"] for a in actors]==NAMES,actors
     keys=[a["textureKey"] for a in actors]
     assert len(set(keys))==6,actors
@@ -75,7 +82,7 @@ def check(browser,base,mobile):
         assert 13<=cue["radius"]<=36 and 16<=cue["reach"]<=53,cue
     assert all(a["originY"]==1 for a in actors),(
         "Original GIFs must be anchored at the feet across poses",actors)
-    snapshot=page.evaluate("DigiPhaserLab.matchSnapshot()")
+    snapshot=frozen["snapshot"]
     for fighter,visual in zip(snapshot["fighters"],actors):
         assert abs(visual["footY"]-(fighter["y"]-2))<5,(
             "Art changed its ground line across GIF cell heights",
