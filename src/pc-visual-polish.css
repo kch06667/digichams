@@ -76,6 +76,14 @@
   body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro h2 {font-size:15px;}
   body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro .tag {display:none;}
 
+  /* Windows PC remaster uses a single game viewport.
+   * The old two-screen layout remains in legacy source, but its switcher
+   * and DS frame are not part of the PC interface. */
+  .displaySwitcher,
+  #dsConsole {
+    display:none!important;
+  }
+
   /* The original navigation contains FIVE buttons, not four. A 4-column
    * desktop grid gave ROM its own stray row and pushed gameplay down. */
   nav.tabs {
