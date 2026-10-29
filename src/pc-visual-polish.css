@@ -84,6 +84,63 @@
     display:none!important;
   }
 
+  /* PC one-window layout: compact status HUD instead of a website masthead.
+   * Keep day/time controls and navigation available for keyboard/mouse play. */
+  body:not(.mode-nds) .wrap > header.top {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    height:24px;
+    min-height:24px;
+    margin:0 0 2px;
+    padding:0 3px;
+    border:0;
+    background:transparent;
+  }
+  body:not(.mode-nds) .wrap > header.top .brand {display:none;}
+  body:not(.mode-nds) .wrap > header.top #dayPill {
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    margin:0;
+    font-size:11px;
+  }
+  body:not(.mode-nds) .wrap > .notice,
+  body:not(.mode-nds) .wrap > .displaySwitcher,
+  body:not(.mode-nds) .wrap > #dsConsole {display:none!important;}
+  body:not(.mode-nds) .wrap > nav.tabs {
+    position:relative;
+    z-index:2;
+    margin:0 0 5px;
+    gap:5px;
+  }
+  body:not(.mode-nds) .wrap > nav.tabs button {
+    min-height:34px;
+    padding:4px 8px;
+    border-radius:6px;
+  }
+  /* Remove redundant farm title text; the selected game tab and facilities
+   * already provide the section identity. Keep resources and controls. */
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro {
+    display:none;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmEconomy {
+    margin:3px 0 6px;
+    padding:0;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmNav {
+    margin:4px 0;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    max-height:max(420px,calc(100dvh - 92px));
+  }
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(420px,calc(100dvh - 92px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 190px),820px);
+  }
+
   /* The original navigation contains FIVE buttons, not four. A 4-column
    * desktop grid gave ROM its own stray row and pushed gameplay down. */
   nav.tabs {
