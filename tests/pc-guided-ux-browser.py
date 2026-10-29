@@ -57,7 +57,10 @@ def verify_pc_layout(page,section,viewport):
         buttons,nav:getComputedStyle(document.querySelector('nav.tabs')).gridTemplateColumns,
         viewport:box('#farmPanel .farmViewport'),
         map:box('#farmPanel .farmWorld'),
-        mapBackground:computed('#farmPanel .farmWorld')?.backgroundImage||'',
+        // Some original entries embed the SAME 920x690 WebP atlas as a
+        // data: URI instead of serving the asset pathname. Never dump
+        // the copyright-protected full bitmap into CI failure logs.
+        mapBackground:(computed('#farmPanel .farmWorld')?.backgroundImage||'').slice(0,115),
         hunt:box('#huntStage'),
         huntFont:font('#huntInstructions'),
         actionButtons:[...document.querySelectorAll('#huntActionBar button')].map(
@@ -86,7 +89,8 @@ def verify_pc_layout(page,section,viewport):
         # The original NDS-style farm atlas is not stretched/moved.
         assert abs(result["map"]["width"]-920)<1,result
         assert abs(result["map"]["height"]-690)<1,result
-        assert "hex_farm_v0232.webp" in result["mapBackground"],result
+        assert ("hex_farm_v0232.webp" in result["mapBackground"] or
+                "data:image/webp;base64," in result["mapBackground"]),result
     if section=="hunt":
         assert result["hunt"]["width"]>=440,result
         assert result["hunt"]["height"]>=260,result
