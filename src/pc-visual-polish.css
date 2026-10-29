@@ -215,6 +215,47 @@
     line-height:1.4;
   }
 
+  /* PC remaster visual pass #1: restrained DS-inspired frame language.
+   * Inspired by the original's compact digital panels, NOT a claim of
+   * pixel-identical ROM UI reconstruction. Original assets stay unchanged. */
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    border:3px solid #c9a15b;
+    border-radius:10px;
+    background:linear-gradient(180deg,#1c4564 0%,#133650 72%,#102c42 100%);
+    box-shadow:inset 0 0 0 2px #426d84,0 8px 22px #06131f80;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmScrollFrame {
+    border:3px solid #dbbd72;
+    border-radius:7px;
+    background:#0b2d3b;
+    box-shadow:inset 0 0 0 2px #315e73,0 3px 10px #05151e80;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmChip {
+    border:1px solid #c0ad70;
+    border-radius:5px;
+    color:#e9ffdd;
+    background:linear-gradient(180deg,#234b40,#173a35);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro h2 {
+    color:#f8df9a;
+    text-shadow:1px 2px #0b2235;
+  }
+  body:not(.mode-nds) #nursery.active > .layout > .panel {
+    border:2px solid #b29a66;
+    border-radius:8px;
+    background:linear-gradient(180deg,#1d405b,#102c40);
+    box-shadow:inset 0 0 0 1px #42677a;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel button,
+  body:not(.mode-nds) #nursery.active > .layout button {
+    border-radius:6px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel button:focus-visible,
+  body:not(.mode-nds) #nursery.active > .layout button:focus-visible {
+    outline:3px solid #ffe294;
+    outline-offset:2px;
+  }
+
   /* Original capture gesture lives inside huntStage. Widen its first
    * column without changing canvas coordinates or rope mechanics. */
   #hunt>.layout {
