@@ -3,8 +3,10 @@ on:
   push:
     branches:
       - feature/continuous-ranch-preview-20261030
+      - feature/ranch-walkability-qa-20261030
     paths:
       - 'src/pc-continuous-ranch-preview.js'
+      - 'src/pc-ranch-walkability.js'
       - 'src/pc-continuous-ranch.css'
       - 'src/pc-playability-guide.js'
       - 'assets/farm/continuous_ranch_preview.svg'
@@ -14,6 +16,7 @@ on:
   pull_request:
     paths:
       - 'src/pc-continuous-ranch-preview.js'
+      - 'src/pc-ranch-walkability.js'
       - 'src/pc-continuous-ranch.css'
       - 'assets/farm/continuous_ranch_preview.svg'
       - 'tests/pc-ranch-preview.cjs'
@@ -31,6 +34,7 @@ jobs:
       - name: Syntax and source-farm regressions
         run: |
           node --check src/pc-continuous-ranch-preview.js
+          node --check src/pc-ranch-walkability.js
           node --check src/pc-playability-guide.js
           node --check tests/pc-ranch-preview.cjs
           node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs
