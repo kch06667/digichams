@@ -44,6 +44,7 @@ const server=http.createServer((req,res)=>{
         await page.addScriptTag({url:base+'/src/pc-playability-guide.js'});
       }
       await page.waitForFunction(()=>Boolean(window.DCPCDrawer),{timeout:10000});
+      await page.waitForFunction(()=>window.DCPCFarmPan?.enabled===true,{timeout:10000});
       await page.waitForTimeout(300);
       const toggle=page.locator('#dc-pc-drawer-toggle');
       const drawer=page.locator('#dc-pc-control-drawer');
@@ -63,6 +64,24 @@ const server=http.createServer((req,res)=>{
       await toggle.click();
       await drawer.locator('#dc-pc-drawer-close').click();
       assert.equal(await toggle.getAttribute('aria-expanded'),'false','close button failed');
+      // An actual pan must move the existing scroller; avoid asserting a
+      // direction when the current resolution already shows the whole map.
+      const farmViewport=page.locator('#farmPanel .farmViewport');
+      const scrollRange=await farmViewport.evaluate(e=>e.scrollHeight-e.clientHeight);
+      if(scrollRange>70){
+        await farmViewport.evaluate(e=>{e.scrollTop=40;});
+        const before=await farmViewport.evaluate(e=>e.scrollTop);
+        const rect=await farmViewport.boundingBox();
+        const x=rect.x+Math.min(rect.width*0.15,120);
+        const y=rect.y+rect.height*0.35;
+        await page.mouse.move(x,y);
+        await page.mouse.down();
+        await page.mouse.move(x,y-55,{steps:5});
+        await page.mouse.up();
+        const after=await farmViewport.evaluate(e=>e.scrollTop);
+        assert.ok(after>before+20,
+          'PC map dragging must update the existing farm scroll position');
+      }
       const metrics=await page.evaluate(()=>{
         const h=document.documentElement,b=document.body;
         return {pageVerticalOverflow:Math.max(h.scrollHeight,b.scrollHeight)-innerHeight,
