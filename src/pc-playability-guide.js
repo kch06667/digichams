@@ -10,6 +10,15 @@
      !document.querySelector('#huntStage') ||
      !document.querySelector('#championshipPanel'))return;
 
+  // Keep visual presentation independently toggleable from navigation.
+  // This link is loaded only on a production PC pointer/viewport; mobile,
+  // old developer pages, saved progress and embedded game files are untouched.
+  const skin=document.createElement('link');
+  skin.id='dc-pc-visual-polish';
+  skin.rel='stylesheet';
+  skin.href=new URL('pc-visual-polish.css',document.currentScript.src).href;
+  document.head.appendChild(skin);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
