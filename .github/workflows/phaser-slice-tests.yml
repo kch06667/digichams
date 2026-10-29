@@ -9,6 +9,7 @@ on:
       - 'src/phaser-arena-entry-choice.js'
       - 'src/pc-playability-guide.js'
       - 'src/pc-visual-polish.css'
+      - 'docs/PC_VISUAL_LAYOUT_PASS_PR68.md'
       - 'tests/pc-guided-ux-browser.py'
       - 'tools/phaser-production-entry.cjs'
       - 'tools/sync-phaser-production.py'
