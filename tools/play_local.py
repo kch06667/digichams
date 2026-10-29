@@ -48,36 +48,73 @@ class GameFileHandler(http.server.SimpleHTTPRequestHandler):
 
 
 
-def catalog_ready(entries, local_root=LOCAL):
-    """Check every needed local Phaser sheet, not just catalog existence."""
-    index=Path(local_root)/"catalog.json"
-    if not index.is_file() or len(entries)!=216:
-        return False
+def missing_art(entries, local_root=None):
+    """List species with missing/incomplete local motion sheets in index order.
+
+    Use ONLY the local catalog's indexed species folder, never arbitrary
+    user-provided paths from the manifest. Existing valid atlases are left
+    alone, so an interrupted conversion doesn't redo all 216 on PC.
+    """
+    if len(entries)!=216:
+        raise ValueError("expected exactly 216 indexed Digimon")
+    names=[entry["name"] for entry in entries]
+    if len(set(names))!=216:
+        raise ValueError("ambiguous local species names")
+    local_root=Path(local_root if local_root is not None else LOCAL)
+    index=local_root/"catalog.json"
+    if not index.is_file():
+        return names
     try:
         source=json.loads(index.read_text(encoding="utf-8"))
-        converted=source["entries"]
-        if source.get("format")!="digi-phaser-local-species-catalog-v1":
-            return False
-        for entry in entries:
-            name,stem=entry["name"],entry["stem"]
-            if not re.fullmatch(r"m[A-Za-z0-9_-]+",stem):
-                return False
-            record=converted.get(name)
-            if not isinstance(record,dict) or record.get("folder")!="species/"+stem:
-                return False
-            folder=Path(local_root)/"species"/stem
-            manifest=json.loads((folder/"manifest.json").read_text(encoding="utf-8"))
-            if manifest.get("species")!=name:
-                return False
+    except (ValueError,OSError) as err:
+        raise ValueError("Local sprite catalog is unreadable; inspect "
+                         "phaser-lab/local-assets/catalog.json before retrying") from err
+    if (not isinstance(source,dict) or
+        source.get("format")!="digi-phaser-local-species-catalog-v1" or
+        not isinstance(source.get("entries"),dict)):
+        raise ValueError("Unrecognized local sprite catalog format; "
+                         "existing private files were not overwritten")
+    converted=source["entries"]
+    missing=[]
+    for entry in entries:
+        name,stem=entry["name"],entry["stem"]
+        if not re.fullmatch(r"m[A-Za-z0-9_-]+",stem):
+            raise ValueError("Invalid indexed species stem: "+str(name))
+        record=converted.get(name)
+        if (not isinstance(record,dict) or
+            record.get("folder")!="species/"+stem):
+            missing.append(name)
+            continue
+        folder=local_root/"species"/stem
+        try:
+            manifest=json.loads((folder/"manifest.json").read_text(
+                encoding="utf-8"))
+            if (not isinstance(manifest,dict) or
+                manifest.get("species")!=name or
+                manifest.get("format")!="digi-phaser-local-atlas-v1"):
+                missing.append(name)
+                continue
             actions=manifest.get("actions")
-            if not isinstance(actions,dict) or any(
+            if not isinstance(actions,dict):
+                missing.append(name)
+                continue
+            if any(
                 not isinstance(actions.get(str(action)),dict) or
                 actions[str(action)].get("file")!=f"action_{action}.png" or
-                not (folder/f"action_{action}.png").is_file()
+                not (folder/f"action_{action}.png").is_file() or
+                (folder/f"action_{action}.png").stat().st_size==0
                 for action in ACTIONS):
-                return False
-        return True
-    except (ValueError,KeyError,TypeError,OSError,AttributeError):
+                missing.append(name)
+        except (ValueError,OSError,TypeError,KeyError,AttributeError):
+            missing.append(name)
+    return missing
+
+
+def catalog_ready(entries, local_root=None):
+    """Backward-compatible all-species readiness check (read-only)."""
+    try:
+        return not missing_art(entries,local_root)
+    except (ValueError,OSError,KeyError,TypeError):
         return False
 
 
@@ -97,14 +134,19 @@ def prepare_art(skip=False):
         if err.name=="PIL":
             raise RuntimeError("Pillow is required: py -m pip install Pillow") from err
         raise
-    if catalog_ready(entries):
-        print("Original 216-species Phaser sprites: already prepared, reusing files.")
+    needs=missing_art(entries)
+    if not needs:
+        print("Original 216-species Phaser sprites: ready, reusing all files.")
         return
-    print("Preparing 216 Digimon × 13 battle motions locally (one-time).",flush=True)
-    module.export_roster(asset_root=ASSETS,output_root=LOCAL)
-    if not catalog_ready(entries):
-        raise RuntimeError("Sprite conversion incomplete; local files were left for inspection.")
-    print("Original 216-species sprite conversion ready. No graphics uploaded.")
+    print(f"Preparing only {len(needs)} missing/incomplete Digimon "
+          f"of 216 × {len(ACTIONS)} battle motions locally.",flush=True)
+    module.export_roster(asset_root=ASSETS,output_root=LOCAL,species=needs,
+                         actions=ACTIONS)
+    remaining=missing_art(entries)
+    if remaining:
+        raise RuntimeError(f"Sprite conversion incomplete: {len(remaining)} "
+                           "species still need repair. No files were uploaded.")
+    print("Original 216-species sprite catalog ready. Unchanged sheets reused.")
 
 
 def main(argv=None):
