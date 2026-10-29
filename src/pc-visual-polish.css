@@ -91,9 +91,12 @@
     box-shadow:0 12px 28px #02111d98;
     overflow:hidden;
   }
+  /* Issue #69 first slice: use available PC viewport height rather than
+   * a fixed tall farm frame. Keep the existing farm pan/scroll mechanics.
+   * Full one-screen shell is a separate follow-up after baseline captures. */
   #farmPanel .farmViewport {
-    height:clamp(380px,58vh,565px);
-    min-height:380px;
+    height:clamp(280px,calc(100dvh - 330px),565px);
+    min-height:280px;
     scrollbar-gutter:stable;
     scrollbar-width:thin;
   }
