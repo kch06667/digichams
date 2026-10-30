@@ -45,8 +45,8 @@ test('216 existing original Digimon have all 40 real animation GIF destinations'
   assert.ok(!visited.has(s.stem),'duplicate sprite stem: '+s.stem);
   visited.add(s.stem);
   for(let i=0;i<40;i++){
-   // Existing renderer's sole known native alias: Unimon pose #5 -> #4.
-   const pose=s.stem==='m357_unimon_main'&&i===5?4:i;
+   // Original Unimon action 5 has a distinct filename suffix, 5_1.
+   const pose=s.stem==='m357_unimon_main'&&i===5?'5_1':String(i);
    const full=file('assets','sprites',s.folder,s.stem+'_'+pose+'.gif');
    const st=fs.statSync(full,{throwIfNoEntry:false});
    assert.ok(st?.isFile()&&st.size>=32,s.name+' GIF '+i+' missing');
