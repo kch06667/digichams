@@ -119,6 +119,14 @@ async function run(){
     assert.ok(offlineAssets.local&&!offlineAssets.cdn,
       'Windows game battle page must NEVER load Phaser over the internet');
     assert.ok(offlineAssets.bytes>200000&&offlineAssets.bytes<2*1024*1024);
+    // Actively block ALL external web requests, not just the known CDN.
+    // The real same-origin digichamp:// game and 216 built-in GIFs must
+    // initialize and render without any permitted external network access.
+    const externalRequests=[];
+    await page.route(/^https?:\/\//,route=>{
+      externalRequests.push(route.request().url());
+      return route.abort();
+    });
     await page.evaluate(()=>{
       const frame=document.createElement('iframe');
       frame.id='dc-desktop-offline-phaser-probe';
@@ -146,6 +154,8 @@ async function run(){
       for(const src of offlineBattle.srcs)
         assert.ok(src?.startsWith('../assets/sprites/')&&src.endsWith('.gif'),
           'native original GIF path missing: '+String(src));
+      assert.deepEqual(externalRequests,[],
+        'actual Windows Phaser fight must make ZERO external HTTP(S) requests');
     }finally{
       await page.evaluate(()=>document.querySelector(
         '#dc-desktop-offline-phaser-probe')?.remove());
