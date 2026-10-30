@@ -111,6 +111,7 @@
   const host=document.createElement('aside');
   host.id='dc-pc-guide';
   host.setAttribute('aria-label','PC 빠른 이동 및 현재 활동 안내');
+  host.setAttribute('aria-live','off');
   host.innerHTML=`
     <div class="dc-pc-links" aria-label="PC 탭 바로가기">
       <button type="button" data-dc-pc-tab="nursery">🏡 사육장 <small>Alt+1</small></button>
@@ -213,15 +214,33 @@
     const btn=document.querySelector('nav.tabs button.active[data-tab]');
     return btn?.dataset.tab || 'nursery';
   }
+  // The Phaser battle overlay can remain attached after a match. Its
+  // mere existence is NOT an active battle: otherwise PC shortcuts become
+  // permanently locked after the first fight. Respect actual visibility,
+  // including the element's hidden ancestor and CSS state.
+  function visibleOverlay(el){
+    if(!el||!el.isConnected||el.hidden||el.getAttribute('aria-hidden')==='true')return false;
+    const css=getComputedStyle(el);
+    return css.display!=='none'&&css.visibility!=='hidden'&&
+      el.getClientRects().length>0;
+  }
   function inGameModal(){
-    return !!document.getElementById('dc-phaser-overlay') ||
-      document.getElementById('liveBattle')?.style.display==='block';
+    return visibleOverlay(document.getElementById('dc-phaser-overlay'))||
+      visibleOverlay(document.getElementById('liveBattle'));
   }
   function goTab(id){
     if(inGameModal())return false;
     const original=document.querySelector('nav.tabs button[data-tab="'+id+'"]');
-    if(!original)return false;
-    original.click();refresh();return true;
+    if(!original||original.disabled)return false;
+    // Dispatch the ORIGINAL tab control. Never replace the game section,
+    // click a phantom shortcut, commit a battle or change saved progress.
+    original.click();
+    const changed=activeTab()===id;
+    if(changed) {
+      refresh();
+      queueMicrotask(refresh); // original tabs may reparent between layouts
+    }
+    return changed;
   }
   function trim(s,max=115){
     const str=String(s??'').replace(/\s+/g,' ').trim();
@@ -330,5 +349,9 @@
     document.getElementById('wideMode')?.click();
   }
   refresh();
-  window.DCPCGuide=Object.freeze({snapshot:()=>refresh()});
+  window.DCPCGuide=Object.freeze({
+    snapshot:()=>refresh(),
+    navigate:goTab,
+    get blocked(){return inGameModal();}
+  });
 })();
