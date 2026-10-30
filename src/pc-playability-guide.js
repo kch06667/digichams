@@ -60,6 +60,13 @@
   ranchFacadeScript.src=new URL('pc-ranch-facade-occlusion.js',document.currentScript.src).href;
   document.head.appendChild(ranchFacadeScript);
 
+  // Optional PC gameplay extension, separate from the graphics-only terrain
+  // preview. Disabled until the player explicitly enables free strolls.
+  const roamingScript=document.createElement('script');
+  roamingScript.async=false;
+  roamingScript.src=new URL('pc-ranch-free-roam.js',document.currentScript.src).href;
+  document.head.appendChild(roamingScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
