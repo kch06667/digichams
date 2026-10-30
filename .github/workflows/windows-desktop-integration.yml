@@ -13,6 +13,12 @@ on:
       - '.github/workflows/windows-desktop-integration.yml'
   workflow_dispatch:
 
+# Push and PR checks for the same integration branch should not run several
+# expensive Windows EXE builds simultaneously.
+concurrency:
+  group: windows-review-${{ github.event.pull_request.head.ref || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
