@@ -64,6 +64,51 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(window.DCRanchFacadeOcclusion),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
+      // Drive the actual production ranch renderer against a reversible
+      // name-change probe, without altering evolution rules or real saves.
+      await page.waitForFunction(()=>Boolean(window.DCRanchEvolutionFX),{timeout:12000});
+      assert.equal(await page.evaluate(()=>DCRanchEvolutionFX.transitions),0,
+        'first render/load is not an evolution');
+      const evolvedRender=await page.evaluate(()=>{
+        const s=eval('state');
+        const mon=s.team.find(m=>m.location!=='storage'&&!m.lost&&!m.egg);
+        if(!mon)throw Error('No active Digimon in the real saved scene');
+        const id=mon.instanceId,old=mon.name;
+        const next=old==='아구몬'?'가부몬':'아구몬';
+        const originalActor=[...document.querySelectorAll('#farmPanel .hexActor')].find(el=>
+          el.dataset.mon===old);
+        if(!originalActor)throw Error('No original actor rendered for '+old);
+        mon.name=next;
+        DCHexFarm.tick(0); // actual production DOM paint, zero gameplay seconds
+        return {id,old,next,actor:originalActor};
+      });
+      const transition=await page.evaluate(()=>{
+        const name=eval('state').team.find(m=>m.instanceId===
+          [...eval('state').team].find(m=>m.location!=='storage'&&!m.lost&&!m.egg)?.instanceId).name;
+        const node=[...document.querySelectorAll('#farmPanel .hexActor')].find(el=>
+          el.dataset.mon===name);
+        return {name,oldNew:node?.dataset.dcEvolutionLabel,
+          label:node?.querySelector('span')?.textContent,
+          title:node?.title,active:node?.classList.contains('dc-ranch-evolving'),
+          src:node?.querySelector('img')?.getAttribute('src'),
+          count:window.DCRanchEvolutionFX.transitions,
+          animation:node?.querySelector('img')&&getComputedStyle(node.querySelector('img')).animationName};
+      });
+      assert.equal(transition.name,evolvedRender.next);
+      assert.equal(transition.label,evolvedRender.next,
+        'existing actor nameplate must change with actual species');
+      assert.equal(transition.title,evolvedRender.next+' 선택');
+      assert.equal(transition.oldNew,evolvedRender.old+' → '+evolvedRender.next);
+      assert.equal(transition.active,true,'new species must trigger native GIF reveal');
+      assert.match(transition.animation,/dc-ranch-evolution-reveal/);
+      assert.ok(transition.count>=1);
+      await page.evaluate(probe=>{
+        const s=eval('state');
+        s.team.find(m=>m.instanceId===probe.id).name=probe.old;
+        DCHexFarm.tick(0); // restore the exact player species after visual QA
+      },{id:evolvedRender.id,old:evolvedRender.old});
+      assert.equal((await measure(page)).save,original.save,
+        'real ranch name/GIF transition must leave canonical save unchanged');
       // Exercise real local GIF HTTP loads without mutating player actors.
       // The recovery guard may ONLY retry an animation as the same species'
       // native idle frame. If that is also absent, the broken image is hidden.
@@ -472,6 +517,8 @@ async function measure(page){
       'PC life-status UI must never load on mobile/touch');
     assert.equal(await page.evaluate(()=>!!window.DCRanchSpriteGuard),false,
       'PC-only original GIF recovery must not load on mobile/touch');
+    assert.equal(await page.evaluate(()=>!!window.DCRanchEvolutionFX),false,
+      'PC-only native GIF evolution reveal must not load on touch/mobile');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{
