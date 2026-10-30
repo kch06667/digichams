@@ -386,3 +386,48 @@
     background:#53613a;border-color:#e2d38d;
   }
 }
+
+/* PR84: a live old-species→new-species change reveals the existing real GIF.
+ * No sprite replacement, animation remapping or gameplay state changes. */
+@media (min-width:900px) and (pointer:fine) {
+  #farmPanel .hexActor.dc-ranch-evolving img {
+    animation:dc-ranch-evolution-reveal 1.12s ease-out both;
+  }
+  #farmPanel .hexActor.dc-ranch-evolving::after {
+    content:attr(data-dc-evolution-label);
+    position:absolute;
+    left:50%;top:-27px;
+    transform:translateX(-50%);
+    width:max-content;
+    max-width:190px;
+    padding:3px 7px;
+    border-radius:7px;
+    border:1px solid #f6e6ab;
+    background:rgba(32,54,55,.93);
+    color:#fff5c4;
+    font:700 11px/1.4 system-ui,sans-serif;
+    text-shadow:0 1px 2px #1d2930;
+    box-shadow:0 2px 9px #0c27207c;
+    pointer-events:none;
+    white-space:normal;
+    z-index:2;
+    animation:dc-ranch-evolution-label 1.12s ease-out both;
+  }
+}
+@keyframes dc-ranch-evolution-reveal {
+  0% {opacity:.45;filter:brightness(1.65);}
+  25% {opacity:1;filter:brightness(1.35);}
+  48% {opacity:.75;filter:brightness(1.2);}
+  75%,100% {opacity:1;filter:brightness(1);}
+}
+@keyframes dc-ranch-evolution-label {
+  0% {opacity:0;transform:translate(-50%,4px);}
+  20%,65% {opacity:1;transform:translate(-50%,-2px);}
+  100% {opacity:0;transform:translate(-50%,-8px);}
+}
+@media (prefers-reduced-motion:reduce) {
+  #farmPanel .hexActor.dc-ranch-evolving img,
+  #farmPanel .hexActor.dc-ranch-evolving::after {
+    animation:none!important;
+  }
+}
