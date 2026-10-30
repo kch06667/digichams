@@ -84,7 +84,9 @@ def verify_pc_layout(page,section,viewport):
     assert min(x["height"] for x in result["buttons"])>=43,result
     assert min(x["width"] for x in result["buttons"])>=80,result
     if section=="nursery":
-        assert result["viewport"]["height"]>=375,result
+        # The remake focuses the original 920x690 field in a shorter
+        # single-screen room viewport, with internal scrolling for controls.
+        assert result["viewport"]["height"]>=270,result
         assert result["viewport"]["width"]>=680,result
         # The original NDS-style farm atlas is not stretched/moved.
         assert abs(result["map"]["width"]-920)<1,result
@@ -121,12 +123,18 @@ def check_desktop(browser,url,entry):
         page.wait_for_function(
             "Boolean(document.querySelector('#dc-pc-visual-polish')?.sheet)",
             timeout=10000)
-        # The source game intentionally starts in a 560px NDS-style
-        # two-screen shell; its farm window is only 330px tall. Do NOT
-        # silently replace that player's display preference. Use the
-        # real original 'wideMode' button via the new discoverable PC CTA.
+        # Phase 1 PC remake uses the SOURCE wide-mode control and starts
+        # on a two-row cage overview instead of the old always-visible map.
+        # The guide loads it asynchronously, so check the actual finished UI.
+        page.wait_for_function("Boolean(window.DCRemakeCages)",timeout=12000)
         if page.evaluate("document.body.classList.contains('mode-nds')"):
             page.locator("#dc-pc-guide-wide").click()
+        overview=page.locator("#dc-cage-overview")
+        overview.wait_for(state="visible",timeout=12000)
+        assert page.locator("#dc-cage-grid .dc-cage-slot").count()==12
+        assert page.locator(".farmScrollFrame").is_hidden()
+        page.locator('[data-dc-cage="base"]').click()
+        page.locator(".farmScrollFrame").wait_for(state="visible")
         page.wait_for_function("""() =>
           document.querySelector('#dc-pc-guide-jump')
             ?.getBoundingClientRect().width>30""",timeout=12000)
