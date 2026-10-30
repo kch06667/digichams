@@ -67,6 +67,14 @@
   roamingScript.src=new URL('pc-ranch-free-roam.js',document.currentScript.src).href;
   document.head.appendChild(roamingScript);
 
+  // Read-only display recovery: if a species-specific GIF frame fails to
+  // load, use only that same species' canonical idle frame. Never load
+  // remote assets or alter game pose, identity, saves or battle rules.
+  const spriteGuardScript=document.createElement('script');
+  spriteGuardScript.async=false;
+  spriteGuardScript.src=new URL('pc-ranch-sprite-guard.js',document.currentScript.src).href;
+  document.head.appendChild(spriteGuardScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
