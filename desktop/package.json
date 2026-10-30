@@ -1,6 +1,6 @@
 {
   "name": "digimon-championship-desktop",
-  "version": "0.1.0",
+  "version": "0.24.0-rc.1",
   "private": true,
   "description": "Standalone Windows shell for the existing Digimon Championship game",
   "main": "main.cjs",
@@ -9,6 +9,7 @@
     "build:win": "electron-builder --win portable --x64 --publish never",
     "build:dir": "electron-builder --win dir --x64 --publish never",
     "test": "node --test tests/*.test.cjs",
+    "test:release": "node --test tests/release-preflight.test.cjs",
     "test:ui": "node tests/electron-smoke.cjs"
   },
   "devDependencies": {
