@@ -12,6 +12,7 @@ on:
       - feature/ranch-ambient-dwell-20261030
       - quality/pc-sprite-integrity-20261030
       - fix/pc-evolution-ranch-transition-20261030
+      - fix/original-battle-pose-consistency-20261030
     paths:
       - 'src/pc-continuous-ranch-preview.js'
       - 'src/pc-ranch-walkability.js'
@@ -31,6 +32,8 @@ on:
       - 'tests/pc-ranch-life-routine.cjs'
       - 'tests/pc-ranch-ambient-dwell.cjs'
       - 'tests/sprite-gif-integrity.cjs'
+      - 'tests/original-battle-pose-parity.cjs'
+      - 'tools/sync-original-unimon-hit.py'
       - 'tests/pc-ranch-sprite-guard.cjs'
       - 'tests/pc-evolution-ranch-return.cjs'
       - 'assets/sprite-index.json'
@@ -56,6 +59,8 @@ on:
       - 'tests/pc-ranch-life-routine.cjs'
       - 'tests/pc-ranch-ambient-dwell.cjs'
       - 'tests/sprite-gif-integrity.cjs'
+      - 'tests/original-battle-pose-parity.cjs'
+      - 'tools/sync-original-unimon-hit.py'
       - 'tests/pc-ranch-sprite-guard.cjs'
       - 'tests/pc-evolution-ranch-return.cjs'
       - 'assets/sprite-index.json'
@@ -85,13 +90,15 @@ jobs:
           node --check src/hex-farm-ui.js
           node --check tests/pc-evolution-ranch-return.cjs
           node --check tests/sprite-gif-integrity.cjs
+          node --check tests/original-battle-pose-parity.cjs
+          python3 tools/sync-original-unimon-hit.py --check
           node --check tests/pc-ranch-sprite-guard.cjs
           node --check tests/pc-ranch-free-roam.cjs
           node --check tests/pc-ranch-life-routine.cjs
           node --check tests/pc-ranch-ambient-dwell.cjs
           node --check src/pc-playability-guide.js
           node --check tests/pc-ranch-preview.cjs
-          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs tests/pc-ranch-free-roam.cjs tests/pc-ranch-life-routine.cjs tests/pc-ranch-ambient-dwell.cjs tests/sprite-gif-integrity.cjs tests/pc-ranch-sprite-guard.cjs tests/pc-evolution-ranch-return.cjs
+          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs tests/pc-ranch-free-roam.cjs tests/pc-ranch-life-routine.cjs tests/pc-ranch-ambient-dwell.cjs tests/sprite-gif-integrity.cjs tests/original-battle-pose-parity.cjs tests/pc-ranch-sprite-guard.cjs tests/pc-evolution-ranch-return.cjs
       - name: Install browser dependencies
         run: |
           npm install --ignore-scripts --no-save --no-package-lock playwright@1.62.1
