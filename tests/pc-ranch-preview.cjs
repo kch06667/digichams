@@ -197,6 +197,20 @@ async function measure(page){
         return el?.dataset.dcSpriteRecovery==='retry-idle' &&
           el.querySelector('img')?.naturalWidth>0;
       },{timeout:12000});
+      // The same actor can revisit the SAME missing action in a later
+      // training/battle cycle. A successful fallback resets the retry guard.
+      await page.evaluate(()=>{
+        const img=document.querySelector('#dc-sprite-success-probe img');
+        img.src='assets/sprites/rookie/m201_agumon_main_98.gif';
+      });
+      await page.waitForFunction(()=>{
+        const el=document.querySelector('#dc-sprite-success-probe');
+        const img=el?.querySelector('img');
+        return el?.dataset.dcSpriteRecovery==='retry-idle' &&
+          img?.getAttribute('src')?.endsWith('m201_agumon_main_0.gif') &&
+          img?.naturalWidth>0 && img?.style.visibility!=='hidden' &&
+          !img?.dataset.dcRanchTried;
+      },{timeout:12000});
       await page.waitForFunction(()=>{
         const el=document.querySelector('#dc-sprite-missing-probe');
         return el?.dataset.dcSpriteRecovery==='missing' &&
