@@ -89,7 +89,17 @@ function transform(g,m,target,lookUp){const base=lookUp?.(target);if(!base)retur
  m.maxHp=Math.max(m.maxHp,base.hp);m.hp=Math.min(m.maxHp,Math.max(m.hp,base.hp));
  m.atk=Math.max(m.atk,base.atk);m.def=Math.max(m.def,base.def);m.spd=Math.max(m.spd,base.spd);
  // Battle totals intentionally remain (verified). Hidden AP intentionally resets (verified).
- const a=g.farm?.actors?.[m.instanceId];if(a){a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;a.resume=null;a.target=null;}
+ // Species changes cancel the old body's actions, but keep its actual
+ // world coordinates and identity. An old station/route/meal reservation
+ // must not make the newly evolved sprite teleport or block another actor.
+ const a=g.farm?.actors?.[m.instanceId];
+ if(a){
+  for(const food of g.farm?.foods||[])if(food.claim===m.instanceId)delete food.claim;
+  a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;
+  a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;
+  a.route=null;a.routeKey=null;delete a.station;a.waitPosition=null;
+  a.foodId=null;a.repositioning=false;a.trafficWait=0;a.idleTime=0;
+ }
  log(g,`${old} → ${target} 진화! (누적 전투 ${e.battles}회, AP 새 단계 초기화)`);return true;
 }
 function maybeEvolve(g,m,lookUp,{automatic=true,target=null}={}){
