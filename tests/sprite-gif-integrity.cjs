@@ -9,9 +9,9 @@ const index=require('../assets/sprite-index.json');
 const actions=require('../assets/sprite-action-map.json').sprite_actions;
 const species=index.catalog_entries.filter(x=>x.category!=='egg');
 function fileFor(d,n){
- // Original game's Unimon #5 falls back to available #4.
- const ix=d.stem==='m357_unimon_main'&&n===5?4:n;
- return path.join(root,'assets','sprites',d.folder,d.stem+'_'+ix+'.gif');
+ // The original sprite pack's Unimon pose #5 is named #5_1, not #5.
+ const suffix=d.stem==='m357_unimon_main'&&n===5?'5_1':String(n);
+ return path.join(root,'assets','sprites',d.folder,d.stem+'_'+suffix+'.gif');
 }
 test('216 existing original species, mapped poses, unique sprite files',()=>{
  assert.equal(species.length,216);
@@ -42,6 +42,6 @@ test('original 40 frames per species exist and have valid GIF data',()=>{
  }
  assert.deepEqual(problems,[],'missing/corrupt GIFs:\n'+problems.slice(0,25).join('\n'));
  assert.equal(verified,216*40);
- assert.equal(aliased,1,'known Unimon #5 alias');
- console.log('PASS 216 existing species / 8640 GIF poses / one Unimon #5-to-#4 alias');
+ assert.equal(aliased,1,'known Unimon #5_1 suffix');
+ console.log('PASS 216 existing species / 8640 GIF poses / one original Unimon #5-to-#5_1 suffix');
 });
