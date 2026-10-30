@@ -1,0 +1,122 @@
+/* Phase 1 remake: compact PC cage selection, no game mechanics/save changes. */
+@media (min-width:900px) and (pointer:fine) {
+  #farmPanel.dc-cage-mode-overview .farmScrollFrame,
+  #farmPanel.dc-cage-mode-overview .farmNav,
+  #farmPanel.dc-cage-mode-overview .farmDetails,
+  #farmPanel.dc-cage-mode-overview .farmLegend,
+  #farmPanel.dc-cage-mode-overview .hexControls,
+  #farmPanel.dc-cage-mode-room #dc-cage-overview,
+  #farmPanel.dc-cage-mode-room .farmNav,
+  #farmPanel.dc-cage-mode-room .farmLegend { display:none!important; }
+
+  #farmPanel #dc-cage-overview {
+    margin:6px 0 10px;
+    padding:16px;
+    border-radius:12px;
+    border:1px solid #5a9791;
+    color:#eaf6e9;
+    background:linear-gradient(135deg,#0f2c37,#154049);
+  }
+  #farmPanel #dc-cage-overview[hidden],
+  #farmPanel #dc-cage-room[hidden] { display:none!important; }
+  #farmPanel .dc-cage-heading {
+    display:flex;justify-content:space-between;align-items:center;
+    gap:12px;margin-bottom:12px;
+  }
+  #farmPanel .dc-cage-heading strong{font-size:20px}
+  #farmPanel .dc-cage-heading small{
+    display:block;font-size:12px;color:#c0ddd9;
+  }
+  #farmPanel #dc-cage-count{
+    white-space:nowrap;border-radius:20px;padding:7px 12px;
+    border:1px solid #84b5a8;background:#235651;
+    font-size:12px;font-variant-numeric:tabular-nums;
+  }
+  #farmPanel .dc-cage-grid{
+    display:grid;
+    grid-template-columns:repeat(6,minmax(0,1fr));
+    grid-template-rows:repeat(2,minmax(132px,1fr));
+    gap:9px;
+  }
+  #farmPanel .dc-cage-slot{
+    position:relative;min-height:132px;min-width:0;
+    padding:15px 7px 9px;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:7px;
+    color:#f1f9ee;text-align:center;cursor:pointer;
+    border:2px solid #7db59e;border-radius:9px;
+    background:linear-gradient(150deg,#4e825a,#285e58 72%,#1c4857);
+    box-shadow:inset 0 -4px #153d45,0 4px 8px #06162466;
+  }
+  #farmPanel .dc-cage-slot .dc-cage-number{
+    position:absolute;top:7px;left:9px;font-size:11px;
+    color:#c9e5de;
+  }
+  #farmPanel .dc-cage-slot .dc-cage-lock{
+    font-size:17px;color:#f7e5b7;
+  }
+  #farmPanel .dc-cage-slot strong{
+    font-size:14px;line-height:1.25;overflow-wrap:anywhere;
+  }
+  #farmPanel .dc-cage-slot small{
+    font-size:11px;line-height:1.3;overflow-wrap:anywhere;
+    color:#d4e9e0;
+  }
+  #farmPanel .dc-cage-slot.dc-cage-locked{
+    border-color:#506c7b;color:#cbdbe1;
+    background:linear-gradient(130deg,#35495c,#263e51);
+  }
+  #farmPanel .dc-cage-slot.dc-cage-locked small{color:#aebfc9}
+  #farmPanel .dc-cage-slot:hover,
+  #farmPanel .dc-cage-slot:focus-visible{
+    border-color:#ffe1a0;outline:2px solid #ffe1a0;outline-offset:2px;
+  }
+  #farmPanel .dc-cage-hint{
+    margin:12px 0 0;font-size:12px;color:#bbd6d0;
+  }
+  #farmPanel #dc-cage-room{
+    margin:9px 0;padding:10px 12px;
+    color:#eaf6ec;border:1px solid #5c9091;
+    border-radius:10px;background:#102e3b;
+  }
+  #farmPanel .dc-cage-room-top{
+    display:flex;align-items:center;gap:12px;
+  }
+  #farmPanel #dc-cage-back{
+    min-height:40px;border-radius:7px;
+    padding:6px 11px;white-space:nowrap;
+    border:1px solid #8cb1b7;background:#204b59;color:white;
+  }
+  #farmPanel .dc-cage-room-top>div{min-width:0;flex:1}
+  #farmPanel #dc-cage-name{display:block;font-size:18px}
+  #farmPanel #dc-cage-description{
+    display:block;font-size:12px;color:#b6d7d8;
+  }
+  #farmPanel #dc-cage-unlock{
+    font-size:12px;color:#f0e3b3;white-space:nowrap;
+  }
+  #farmPanel #dc-cage-action{
+    margin:6px 0 0;font-size:12px;color:#cbe6db;
+  }
+  #farmPanel.dc-cage-mode-room .farmScrollFrame{
+    max-width:1000px;margin-inline:auto;
+  }
+  #farmPanel.dc-cage-mode-room .farmViewport{
+    height:clamp(270px,44vh,430px);min-height:270px;
+  }
+  /* Hide only the old hex/map decorations; keep existing moving sprites,
+     original event handlers, engine and training/food controls alive. */
+  #farmPanel.dc-cage-mode-room .hexPath,
+  #farmPanel.dc-cage-mode-room .hexTile{
+    visibility:hidden;pointer-events:none;
+  }
+  #farmPanel.dc-cage-mode-room .hexControls{
+    max-height:270px;overflow:auto;scrollbar-width:thin;
+  }
+  @media (max-width:1240px){
+    #farmPanel .dc-cage-grid{
+      gap:7px;grid-template-rows:repeat(2,minmax(118px,1fr));
+    }
+    #farmPanel .dc-cage-slot{min-height:118px;padding-inline:4px}
+    #farmPanel .dc-cage-slot strong{font-size:13px}
+  }
+}

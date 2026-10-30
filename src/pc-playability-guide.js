@@ -173,6 +173,11 @@
     btn.addEventListener('click',()=>goTab(btn.dataset.dcPcTab));
   }
   jump.addEventListener('click',()=>{
+    // Training controls are inside the selected room, not on the new
+    // two-row overview. Reuse the original room before scrolling.
+    if(activeTab()==='nursery'&&
+       window.DCRemakeCages?.snapshot()?.mode==='overview')
+      window.DCRemakeCages.open('base');
     const el=document.querySelector(jump.dataset.target) ||
       document.querySelector(activeTab()==='battle'?'#championshipPanel':
         activeTab()==='hunt'?'#huntStage':'#farmPanel');
@@ -196,4 +201,10 @@
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});
   refresh();
   window.DCPCGuide=Object.freeze({snapshot:()=>refresh()});
+  // Production PC only: stage-1 original-style two-row cage selection.
+  // The script reads the EXISTING farm/cage state; no separate game state.
+  const cageView=document.createElement('script');
+  cageView.src=new URL('remake-cage-view.js',document.currentScript.src).href;
+  cageView.async=true;
+  document.head.appendChild(cageView);
 })();
