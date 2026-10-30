@@ -86,7 +86,7 @@ def main():
             page.locator('[data-dc-cage="forest"]').click()
             assert page.locator("#hexCageSelect").input_value()=="forest"
             assert "해금 조건" in page.locator("#dc-cage-action").inner_text()
-            assert page.evaluate("QA.calls.slice(-2)")==["facility:forest","map:core"]
+            assert page.evaluate("QA.calls.slice(-2)")==["facility:forest","map:training"]
             # The TEST changes synthetic ownership, never the view code.
             page.evaluate("QA.state.facilities.training=true;QA.state.cageFacilities.forest=true")
             page.evaluate("DCRemakeCages.snapshot()")
