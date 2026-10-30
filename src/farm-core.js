@@ -19,17 +19,34 @@ function foodGround(s,x,y){
 }
 function center(id){const [x,y]=HEX_CENTERS[id];return {x:(x-369)/1.82,y:(y-262)/1.56};}
 function openZones(s){return Object.keys(HEX_CENTERS).filter(id=>id==='core'||s.facilities?.[id]);}
+// One shared corridor graph for rendering and actor collision/navigation.
+// Keep original seven hex coordinates for old saves and the existing background.
+const CORRIDOR_EDGES=[['core','training'],['core','garden'],['core','track'],['core','rest'],['core','clinic'],['core','forest'],['training','garden'],['training','track'],['garden','rest'],['track','clinic'],['rest','forest'],['clinic','forest']];
+function openCorridors(s){const unlocked=new Set(openZones(s));return CORRIDOR_EDGES.filter(([a,b])=>unlocked.has(a)&&unlocked.has(b));}
 function zoneAt(s,p){return openZones(s).sort((a,b)=>Math.hypot(p.x-center(a).x,p.y-center(a).y)-Math.hypot(p.x-center(b).x,p.y-center(b).y))[0];}
 function segmentDistance(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy)));return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy);}
 function walkable(s,x,y){
  if(foodGround(s,x,y))return true;
  if(!Number.isFinite(x)||!Number.isFinite(y))return false;
- return openZones(s).some(id=>id!=='core'&&segmentDistance({x,y},center('core'),center(id))<=9);
+ return openCorridors(s).some(([a,b])=>segmentDistance({x,y},center(a),center(b))<=16);
 }
-// Expansion topology, not recovered NDS movement: outer plots connect through core.
+// Route through actual visible, unlocked corridors; never cross locked plots.
 function routeTo(s,a,target){
  const from=zoneAt(s,a),to=zoneAt(s,target),points=[];
- if(from!==to){if(from!=='core')points.push(center(from));points.push(center('core'));if(to!=='core')points.push(center(to));}
+ if(from!==to){
+  const adjacency=new Map(openZones(s).map(id=>[id,[]]));
+  for(const [u,v] of openCorridors(s)){adjacency.get(u).push(v);adjacency.get(v).push(u);}
+  const queue=[from],previous=new Map([[from,null]]);
+  for(let i=0;i<queue.length&&!previous.has(to);i++)for(const next of adjacency.get(queue[i])){
+   if(previous.has(next))continue;
+   previous.set(next,queue[i]);queue.push(next);
+  }
+  if(previous.has(to)){
+   const path=[];for(let id=to;id!==null;id=previous.get(id))path.unshift(id);
+   if(from!=='core')points.push(center(from));
+   for(const id of path.slice(1))points.push(center(id));
+  }else points.push(center('core'));
+ }
  points.push({x:target.x,y:target.y});return points;
 }
 // Small ground footprints, not sprite bounding boxes. Numbers are expansion UX.
@@ -377,5 +394,5 @@ function trainingStatus(s,id){
   fatigue:Math.max(0,Number(m.fatigue)||0),autoRest:a.autoRest!==false
  };
 }
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,trainingStatus,HEX_CENTERS,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,trainingStatus,HEX_CENTERS,CORRIDOR_EDGES,openCorridors,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
