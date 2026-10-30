@@ -290,9 +290,9 @@ async function measure(page){
       // straight line between the exact canonical 920x690 map centers.
       const pathsBefore=await page.evaluate(()=>{
         const c=DCFarm.HEX_CENTERS,s=eval('state');
-        const expected=Object.keys(c).filter(z=>z!=='core'&&s.facilities?.[z]);
+        const expected=DCFarm.HEX_EDGES.filter(([a,b])=>(a==='core'||s.facilities?.[a])&&(b==='core'||s.facilities?.[b])).map(pair=>pair[1]);
         const actual=[...document.querySelectorAll('#dc-ranch-ground-paths g[data-zone]')]
-          .map(g=>({zone:g.dataset.zone,d:g.firstElementChild?.getAttribute('d')}));
+          .map(g=>({zone:g.dataset.zone,from:g.dataset.from,to:g.dataset.to,d:g.firstElementChild?.getAttribute('d')}));
         return {expected,actual,
           visible:getComputedStyle(document.querySelector('#dc-ranch-ground-paths')).display!=='none'};
       });
@@ -300,8 +300,9 @@ async function measure(page){
       assert.deepEqual(pathsBefore.actual.map(p=>p.zone),pathsBefore.expected,
         'locked facilities must not have a decorative open route');
       for(const route of pathsBefore.actual){
-        const [x,y]=await page.evaluate(id=>DCFarm.HEX_CENTERS[id],route.zone);
-        assert.equal(route.d,`M460 340 L${x} ${y}`,
+        const {from,to}=route;
+        const [x0,y0,x,y]=await page.evaluate(ids=>[...DCFarm.HEX_CENTERS[ids[0]],...DCFarm.HEX_CENTERS[ids[1]]],[from,to]);
+        assert.equal(route.d,`M${x0} ${y0} L${x} ${y}`,
           'painted road must use DCFarm canonical straight route');
       }
       // Emulate an unlocked facility and map repaint. Only the read-only
@@ -318,7 +319,7 @@ async function measure(page){
         document.querySelector('#dc-ranch-ground-paths g[data-zone="training"]')));
       const trainingPath=await page.locator(
         '#dc-ranch-ground-paths g[data-zone="training"] path').first().getAttribute('d');
-      assert.equal(trainingPath,'M460 340 L460 128');
+      assert.equal(trainingPath,'M460 421 L350 252');
       // Old/imported saves may encode unlocked as 1 rather than true.
       // The real DCFarm.walkable uses truthiness, so the painted path must too.
       await page.evaluate(()=>{
@@ -364,10 +365,10 @@ async function measure(page){
         return {
           size:[canvas.width,canvas.height],
           samples:overlay.sampleCount,
-          centerPassable:overlay.walkableAt(460,340),
-          unopenedTrainingPassable:overlay.walkableAt(460,128),
-          centerAlpha:ctx.getImageData(460,340,1,1).data[3],
-          unopenedTrainingAlpha:ctx.getImageData(460,128,1,1).data[3]
+          centerPassable:overlay.walkableAt(460,421),
+          unopenedTrainingPassable:overlay.walkableAt(350,252),
+          centerAlpha:ctx.getImageData(460,421,1,1).data[3],
+          unopenedTrainingAlpha:ctx.getImageData(350,252,1,1).data[3]
         };
       });
       assert.deepEqual(passability.size,[920,690]);
@@ -382,7 +383,7 @@ async function measure(page){
         'walking overlay must not touch gameplay or save state');
       // The original button's click behavior must survive shrinking the
       // formerly invisible 220x226 hex bounding box.
-      await page.locator('[data-hex="training"]').click();
+      await page.locator('#dc-pc-facility-picker [data-site="training"]').click();
       assert.equal(await page.locator('[data-hex="training"]').evaluate(
         el=>el.classList.contains('selected')),true,
         'clicking the reduced facility target must select that facility');
