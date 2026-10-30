@@ -93,7 +93,7 @@ test('seven hexes form two contiguous connected rows without locked corridors',(
  assert.equal(Object.values(farm.HEX_CENTERS).filter(p=>p[1]===252).length,4);
  assert.equal(Object.values(farm.HEX_CENTERS).filter(p=>p[1]===421).length,3);
  assert.ok(farm.HEX_EDGES.length>=8);
- const s=initial();farm.ensure(s);
+ const s=initial();s.facilities={core:true};farm.ensure(s);
  assert.equal(s.farm.layoutVersion,2);
  assert.equal(farm.walkable(s,(350-369)/1.82,(252-262)/1.56),false);
  s.facilities.training=true;
