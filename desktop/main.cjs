@@ -19,8 +19,12 @@ function resolveGamePath(requestUrl, root = gameRoot()) {
   const url = new URL(requestUrl);
   if (url.protocol !== 'digichamp:' || url.hostname !== 'game') return null;
   let pathname;
+  // Encoded separators could turn a single apparent path segment into a
+  // second root or a Windows UNC-looking path after decoding.
+  if (/%2f|%5c/i.test(url.pathname)) return null;
   try { pathname = decodeURIComponent(url.pathname); }
   catch (_) { return null; }
+  if (pathname.startsWith('//')) return null;
   if (pathname.includes('\\') || pathname.includes('\0')) return null;
   const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
   const resolved = path.resolve(root, relative);
