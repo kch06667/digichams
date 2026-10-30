@@ -208,7 +208,17 @@ function renderRoster(){const names=state.team.filter(m=>m.location!=='storage')
  select.replaceChildren();names.forEach(m=>{const o=document.createElement('option');o.value=m.instanceId;o.textContent=m.name+' · Lv.'+m.level;select.appendChild(o);});
  if(names.some(m=>m.instanceId===value))select.value=value;else if(state.team[state.selected])select.value=state.team[state.selected].instanceId;
  for(const [id,node] of actors){if(!names.some(m=>m.instanceId===id)){node.remove();actors.delete(id);}}
- for(const m of names){if(actors.has(m.instanceId))continue;const node=document.createElement('button');node.className='hexActor';node.type='button';node.title=m.name+' 선택';node.innerHTML='<img alt=""><span></span><i class="hexEmote" aria-hidden="true"></i>';node.querySelector('span').textContent=m.name;node.addEventListener('click',()=>{select.value=m.instanceId;state.selected=state.team.findIndex(a=>a.instanceId===m.instanceId);render();drawStatus();});$('farmWorld').appendChild(node);actors.set(m.instanceId,node);}}
+ // Evolution keeps the same instanceId and actor button. Refresh the
+ // existing nameplate/title too; replacing only its GIF left the OLD species
+ // name visible forever, even after the actual new sprite appeared.
+ for(const m of names){const existing=actors.get(m.instanceId);
+  if(existing){const nameplate=existing.querySelector('span');
+   if(nameplate&&nameplate.textContent!==m.name)nameplate.textContent=m.name;
+   const title=m.name+' 선택';
+   if(existing.title!==title)existing.title=title;
+   continue;
+  }
+  const node=document.createElement('button');node.className='hexActor';node.type='button';node.title=m.name+' 선택';node.innerHTML='<img alt=""><span></span><i class="hexEmote" aria-hidden="true"></i>';node.querySelector('span').textContent=m.name;node.addEventListener('click',()=>{select.value=m.instanceId;state.selected=state.team.findIndex(a=>a.instanceId===m.instanceId);render();drawStatus();});$('farmWorld').appendChild(node);actors.set(m.instanceId,node);}}
 $('hexMon').onchange=()=>{const actor=state.farm.actors[$('hexMon').value];
  const physical=actor?.target?.stat?actor.target:
   actor?.resume&&actor.resume!=='cage'&&actor.resumeOptions?.target?
