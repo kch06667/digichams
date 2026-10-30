@@ -43,6 +43,14 @@ function gameWindowOptions() {
     }
   };
 }
+// Keep automated desktop UI tests entirely separate from a real player's
+// persistent digichamp://game save profile. Never change userData normally.
+if (process.env.DC_TEST_USER_DATA && typeof app.setPath === 'function') {
+  const isolatedProfile=path.resolve(process.env.DC_TEST_USER_DATA);
+  fs.mkdirSync(isolatedProfile,{recursive:true});
+  app.setPath('userData',isolatedProfile);
+}
+
 function createGameWindow() {
   const win = new BrowserWindow(gameWindowOptions());
   win.webContents.setWindowOpenHandler(() => ({action:'deny'}));
