@@ -787,6 +787,82 @@
     min-width:0;
   }
 
+  /* Live controls were accidentally clipped below the fixed ranch viewport.
+   * The original command inputs are now reparented, never duplicated. */
+  body:not(.mode-nds) #dc-pc-control-drawer #dc-pc-live-commands {
+    display:flex;
+    flex-direction:column;
+    flex:none;
+    gap:10px;
+    margin:10px 0 0;
+    padding:11px;
+    border:1px solid #b69b5b;
+    border-radius:7px;
+    background:linear-gradient(180deg,#123b51,#102939);
+    box-sizing:border-box;
+    min-width:0;
+    color:#e5f6ef;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexClock,
+  body:not(.mode-nds) #dc-pc-live-commands .hexOrders,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageActions,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCareControls,
+  body:not(.mode-nds) #dc-pc-live-commands .hexArchive,
+  body:not(.mode-nds) #dc-pc-live-commands .hexTargetControls {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexClock,
+  body:not(.mode-nds) #dc-pc-live-commands .hexTargetControls,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageBox,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCareControls {
+    padding-block:8px;
+    border-bottom:1px solid #456b79;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexOrders select,
+  body:not(.mode-nds) #dc-pc-live-commands #hexCageSelect {flex:1 1 130px;min-width:0;}
+  body:not(.mode-nds) #dc-pc-live-commands button,
+  body:not(.mode-nds) #dc-pc-live-commands select,
+  body:not(.mode-nds) #dc-pc-live-commands input[type=number] {
+    min-height:36px;
+    max-width:100%;
+    padding:5px 8px;
+    border:1px solid #70979f;
+    border-radius:5px;
+    background:#1a4053;
+    color:#f5f4dd;
+    font-size:12px;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexOrders > button {
+    flex:1 1 calc(50% - 4px);
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexAutoToggle {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    font-size:12px;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageBox > strong,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCareControls > strong {
+    display:block;
+    margin-bottom:7px;
+    color:#ffdf99;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageBox > * {max-width:100%;}
+  body:not(.mode-nds) #dc-pc-live-commands button:focus-visible,
+  body:not(.mode-nds) #dc-pc-live-commands select:focus-visible {
+    outline:2px solid #ffe6a4;
+    outline-offset:2px;
+  }
+  /* The map is the main stage, not a left-aligned block on widescreen PCs. */
+  body:not(.mode-nds) #farmPanel .farmWorld {
+    margin-inline:auto;
+  }
+
   /* PR70 ranch camera slice: drag the existing scrollable world on desktop.
    * Disable inherited smooth scrolling while dragging to match the pointer. */
   body:not(.mode-nds) #farmPanel .farmViewport {
