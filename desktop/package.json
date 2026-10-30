@@ -1,0 +1,68 @@
+{
+  "name": "digimon-championship-desktop",
+  "version": "0.24.0-rc.1",
+  "private": true,
+  "description": "Standalone Windows shell for the existing Digimon Championship game",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win portable --x64 --publish never",
+    "build:dir": "electron-builder --win dir --x64 --publish never",
+    "test": "node --test tests/*.test.cjs",
+    "test:release": "node --test tests/release-preflight.test.cjs",
+    "test:ui": "node tests/electron-smoke.cjs"
+  },
+  "devDependencies": {
+    "electron": "^38.0.0",
+    "electron-builder": "^26.0.0",
+    "playwright": "1.62.1"
+  },
+  "build": {
+    "appId": "local.digimon.championship",
+    "productName": "Digimon Championship",
+    "asar": true,
+    "files": [
+      "main.cjs",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../index.html",
+        "to": "game/index.html"
+      },
+      {
+        "from": "../src",
+        "to": "game/src",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../assets",
+        "to": "game/assets",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "../phaser-lab",
+        "to": "game/phaser-lab",
+        "filter": [
+          "**/*",
+          "!local-assets/**",
+          "!node_modules/**",
+          "!test-output/**"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "../dist/desktop"
+    },
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "artifactName": "Digimon-Championship-${version}-Windows-${arch}.${ext}"
+    }
+  }
+}

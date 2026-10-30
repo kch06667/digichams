@@ -5,9 +5,142 @@
 @media (min-width:900px) and (pointer:fine) {
   :root { color-scheme:dark; }
   .wrap {
-    max-width:1220px;
+    max-width:1480px;
     padding-inline:clamp(18px,2.1vw,32px);
   }
+  /* PC game shell: remove the web landing-page scaffolding while keeping
+   * the real game controls accessible. No DOM deletion / save changes. */
+  body:not(.mode-nds) { overflow-x:hidden; }
+  body:not(.mode-nds) .wrap {
+    max-width:none;
+    width:100%;
+    box-sizing:border-box;
+    padding:5px clamp(8px,1.2vw,18px) 8px;
+  }
+  body:not(.mode-nds) .wrap > header.top {
+    min-height:27px;
+    margin:0 0 4px;
+    padding:0 3px;
+    gap:6px;
+  }
+  body:not(.mode-nds) .wrap > header.top .brand {gap:0;}
+  body:not(.mode-nds) .wrap > header.top .brand .logo,
+  body:not(.mode-nds) .wrap > header.top .brand p {display:none;}
+  body:not(.mode-nds) .wrap > header.top h1 {
+    font-size:14px;
+    line-height:1.2;
+    margin:0;
+    color:#f1dba5;
+  }
+  body:not(.mode-nds) .wrap > header.top #dayPill {
+    font-size:11px;
+    padding:3px 8px;
+  }
+  body:not(.mode-nds) .wrap > .notice {display:none;}
+  body:not(.mode-nds) .wrap > .displaySwitcher {
+    margin:0 0 3px;
+    padding:0;
+    min-height:0;
+    gap:5px;
+    justify-content:flex-end;
+  }
+  body:not(.mode-nds) .wrap > .displaySwitcher .displaySwitcherLabel {display:none;}
+  body:not(.mode-nds) .wrap > .displaySwitcher button {
+    min-height:25px;
+    padding:3px 8px;
+    font-size:11px;
+  }
+  body:not(.mode-nds) nav.tabs {
+    gap:4px;
+    margin-bottom:4px;
+  }
+  body:not(.mode-nds) nav.tabs button {
+    min-height:32px;
+    padding:5px 6px;
+    font-size:12px;
+  }
+  body:not(.mode-nds) #dc-pc-guide {
+    display:none!important;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(430px,calc(100dvh - 125px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 245px),780px);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro {
+    padding-bottom:4px;
+    gap:4px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro h2 {font-size:15px;}
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro .tag {display:none;}
+
+  /* Windows PC remaster uses a single game viewport.
+   * The old two-screen layout remains in legacy source, but its switcher
+   * and DS frame are not part of the PC interface. */
+  .displaySwitcher,
+  #dsConsole {
+    display:none!important;
+  }
+
+  /* PC one-window layout: compact status HUD instead of a website masthead.
+   * Keep day/time controls and navigation available for keyboard/mouse play. */
+  body:not(.mode-nds) .wrap > header.top {
+    display:flex;
+    justify-content:flex-end;
+    align-items:center;
+    height:24px;
+    min-height:24px;
+    margin:0 0 2px;
+    padding:0 3px;
+    border:0;
+    background:transparent;
+  }
+  body:not(.mode-nds) .wrap > header.top .brand {display:none;}
+  body:not(.mode-nds) .wrap > header.top #dayPill {
+    display:inline-flex;
+    align-items:center;
+    min-height:20px;
+    margin:0;
+    font-size:11px;
+  }
+  body:not(.mode-nds) .wrap > .notice,
+  body:not(.mode-nds) .wrap > .displaySwitcher,
+  body:not(.mode-nds) .wrap > #dsConsole {display:none!important;}
+  body:not(.mode-nds) .wrap > nav.tabs {
+    position:relative;
+    z-index:2;
+    margin:0 0 5px;
+    gap:5px;
+  }
+  body:not(.mode-nds) .wrap > nav.tabs button {
+    min-height:34px;
+    padding:4px 8px;
+    border-radius:6px;
+  }
+  /* Remove redundant farm title text; the selected game tab and facilities
+   * already provide the section identity. Keep resources and controls. */
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro {
+    display:none;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmEconomy {
+    margin:3px 0 6px;
+    padding:0;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmNav {
+    margin:4px 0;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    max-height:max(420px,calc(100dvh - 92px));
+  }
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(420px,calc(100dvh - 92px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 190px),820px);
+  }
+
   /* The original navigation contains FIVE buttons, not four. A 4-column
    * desktop grid gave ROM its own stray row and pushed gameplay down. */
   nav.tabs {
@@ -91,9 +224,12 @@
     box-shadow:0 12px 28px #02111d98;
     overflow:hidden;
   }
+  /* Issue #69 first slice: use available PC viewport height rather than
+   * a fixed tall farm frame. Keep the existing farm pan/scroll mechanics.
+   * Full one-screen shell is a separate follow-up after baseline captures. */
   #farmPanel .farmViewport {
-    height:clamp(380px,58vh,565px);
-    min-height:380px;
+    height:clamp(280px,calc(100dvh - 330px),565px);
+    min-height:280px;
     scrollbar-gutter:stable;
     scrollbar-width:thin;
   }
@@ -135,6 +271,197 @@
   #farmPanel .hexNote,
   #farmPanel .hexCageInfo,
   #farmPanel .hexTrainingProgress p {font-size:13px;line-height:1.5;}
+
+  /* Issue #69: PC nursery has a map stage and a compact control rail.
+   * Existing buttons/IDs/events remain untouched. The rail scrolls locally,
+   * instead of requiring the player to travel down the entire document. */
+  body:not(.mode-nds) #nursery.section.active {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(270px,290px);
+    align-items:start;
+    gap:12px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    /* Keep long facility/command content inside the game stage. */
+    max-height:max(400px,calc(100dvh - 240px));
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    grid-column:1;
+    grid-row:1;
+    min-width:0;
+    margin-bottom:0;
+  }
+  body:not(.mode-nds) #nursery.active > .layout {
+    grid-column:2;
+    grid-row:1;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    min-width:0;
+    max-height:max(400px,calc(100dvh - 240px));
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    padding-right:4px;
+  }
+  body:not(.mode-nds) #nursery.active > .layout > .panel {
+    min-width:0;
+    width:100%;
+    box-sizing:border-box;
+    margin:0;
+  }
+  body:not(.mode-nds) #nursery.active > #legacyRoomDetails {
+    grid-column:1/-1;
+    grid-row:2;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro p,
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmLegend {display:none;}
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmEconomy {flex-wrap:wrap;gap:5px;margin:7px 0;}
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmChip {padding:5px 8px;font-size:12px;}
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(340px,calc(100dvh - 310px),640px);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmNav {
+    justify-content:flex-start;
+    margin:7px 0 4px;
+    gap:5px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmNav .farmHint {font-size:11px;}
+  @media (min-width:900px) and (max-width:1080px) {
+    body:not(.mode-nds) #nursery.section.active {grid-template-columns:minmax(0,1fr) 260px;gap:8px;}
+    body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {height:clamp(330px,calc(100dvh - 330px),500px);}
+  }
+
+  /* At PC widths the map receives most of the available space. The
+   * original scrollable map and its actors remain unchanged. */
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmScrollFrame {
+    width:100%;
+    max-width:none;
+    box-sizing:border-box;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    width:100%;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmDetails {
+    font-size:12px;
+    line-height:1.4;
+  }
+
+  /* PC remaster visual pass #1: restrained DS-inspired frame language.
+   * Inspired by the original's compact digital panels, NOT a claim of
+   * pixel-identical ROM UI reconstruction. Original assets stay unchanged. */
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    border:3px solid #c9a15b;
+    border-radius:10px;
+    background:linear-gradient(180deg,#1c4564 0%,#133650 72%,#102c42 100%);
+    box-shadow:inset 0 0 0 2px #426d84,0 8px 22px #06131f80;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmScrollFrame {
+    border:3px solid #dbbd72;
+    border-radius:7px;
+    background:#0b2d3b;
+    box-shadow:inset 0 0 0 2px #315e73,0 3px 10px #05151e80;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmChip {
+    border:1px solid #c0ad70;
+    border-radius:5px;
+    color:#e9ffdd;
+    background:linear-gradient(180deg,#234b40,#173a35);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmIntro h2 {
+    color:#f8df9a;
+    text-shadow:1px 2px #0b2235;
+  }
+  body:not(.mode-nds) #nursery.active > .layout > .panel {
+    border:2px solid #b29a66;
+    border-radius:8px;
+    background:linear-gradient(180deg,#1d405b,#102c40);
+    box-shadow:inset 0 0 0 1px #42677a;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel button,
+  body:not(.mode-nds) #nursery.active > .layout button {
+    border-radius:6px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel button:focus-visible,
+  body:not(.mode-nds) #nursery.active > .layout button:focus-visible {
+    outline:3px solid #ffe294;
+    outline-offset:2px;
+  }
+
+  /* Issue #69 contextual drawer: keep the farm at full available width.
+   * Hide the existing rail until invoked rather than displaying it forever. */
+  body:not(.mode-nds) #nursery.section.active {
+    position:relative;
+    grid-template-columns:minmax(0,1fr);
+    isolation:isolate;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    grid-column:1;
+    grid-row:1;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel #dc-pc-drawer-toggle {
+    float:right;
+    position:sticky;
+    top:4px;
+    z-index:3;
+    margin:0 0 6px 10px;
+    min-height:40px;
+    padding:6px 12px;
+    border:2px solid #d4b772;
+    color:#fff4cc;
+    background:#1c4a63;
+    cursor:pointer;
+  }
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    position:absolute;
+    z-index:15;
+    top:0;
+    right:0;
+    bottom:0;
+    left:auto;
+    grid-column:auto;
+    grid-row:auto;
+    width:min(370px,calc(100% - 28px));
+    max-height:none;
+    box-sizing:border-box;
+    margin:0;
+    padding:12px;
+    border:2px solid #d4b772;
+    border-radius:9px;
+    background:#102d42;
+    box-shadow:-12px 2px 28px #061523ba;
+    overflow-y:auto;
+    visibility:hidden;
+    pointer-events:none;
+    opacity:0;
+    /* Offscreen transforms created a 4px page overflow at 1024px. */
+    transform:none;
+    transition:opacity .15s ease,visibility .15s;
+  }
+  body:not(.mode-nds) #nursery.active.dc-pc-drawer-open > .layout#dc-pc-control-drawer {
+    visibility:visible;
+    pointer-events:auto;
+    opacity:1;
+    transform:translateX(0);
+  }
+  body:not(.mode-nds) #dc-pc-drawer-close {
+    position:sticky;
+    top:0;
+    z-index:2;
+    align-self:flex-end;
+    min-height:38px;
+    padding:6px 13px;
+    border:2px solid #d4b772;
+    color:#fff0c8;
+    background:#284a61;
+    cursor:pointer;
+  }
+  body.mode-nds #dc-pc-drawer-toggle,
+  body.mode-nds #dc-pc-drawer-close {display:none!important;}
+  @media (prefers-reduced-motion:reduce) {
+    body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {transition:none;}
+  }
 
   /* Original capture gesture lives inside huntStage. Widen its first
    * column without changing canvas coordinates or rope mechanics. */
@@ -251,6 +578,78 @@
   }
   #championshipHistory {line-height:1.55;}
 
+  /* Final shell sizing must follow the earlier per-nursery rules. */
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(430px,calc(100dvh - 125px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 245px),780px);
+  }
+
+  /* Final game-shell sizing wins over earlier experimental frame heights. */
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(420px,calc(100dvh - 92px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(350px,calc(100dvh - 190px),820px);
+  }
+
+  /* Desktop layout audit: leave room for the farm navigation/actions beneath
+   * the map. Prior 190px offset pushed controls below 768px/1080px screens. */
+  body:not(.mode-nds) #nursery.active > #farmPanel,
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    max-height:max(350px,calc(100dvh - 115px));
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    height:clamp(290px,calc(100dvh - 265px),740px);
+    min-height:290px;
+  }
+
+  /* Map controls now live in the slide-out drawer. Keep the gameplay
+   * viewport full-sized and prevent legacy debug panels extending the page. */
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmLegend {display:none;}
+  body:not(.mode-nds) #nursery.active > #legacyRoomDetails {display:none;}
+  body:not(.mode-nds) #dc-pc-farm-tools {
+    display:grid;
+    gap:8px;
+    padding:10px;
+    border:1px solid #ad9868;
+    border-radius:7px;
+    background:#183c51;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmNav {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:5px;
+    margin:0;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmNav button {
+    padding:5px;
+    min-height:35px;
+    font-size:11px;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmHint {
+    grid-column:1/-1;
+    font-size:11px;
+  }
+  body:not(.mode-nds) #dc-pc-farm-tools .farmDetails {
+    font-size:12px;
+    line-height:1.5;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    max-height:calc(100dvh - 100px);
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    /* Leave 22px for bottom shell spacing and the legacy footer. */
+    height:clamp(310px,calc(100dvh - 212px),820px);
+  }
+
+  /* The web prototype footer is out of place in the one-window PC shell.
+   * Save/load remain available in the original controls and drawer. */
+  body:not(.mode-nds) .wrap > .footer {display:none;}
+
   /* Combat overlay still fills the window and remains keyboard-usable,
    * while keeping the arena framed on extra-wide desktops. */
   #dc-phaser-overlay {
@@ -282,6 +681,17 @@
     #farmPanel .hexControls {padding:12px;}
     #dc-pc-guide .dc-pc-links {flex-wrap:wrap;}
   }
+  /* PR70 ranch camera slice: drag the existing scrollable world on desktop.
+   * Disable inherited smooth scrolling while dragging to match the pointer. */
+  body:not(.mode-nds) #farmPanel .farmViewport {
+    cursor:grab;
+    scroll-behavior:auto;
+  }
+  body:not(.mode-nds) #farmPanel .farmViewport.dc-pc-panning {
+    cursor:grabbing;
+    user-select:none;
+  }
+
 }
 @media (prefers-reduced-motion:reduce) {
   nav.tabs button {transition:none!important;}

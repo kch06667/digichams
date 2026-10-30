@@ -19,6 +19,70 @@
   skin.href=new URL('pc-visual-polish.css',document.currentScript.src).href;
   document.head.appendChild(skin);
 
+  // First ranch camera slice: desktop mouse drag only. Original farm model,
+  // map click handlers, sprites, zoom and saves are not rewritten here.
+  const farmPanScript=document.createElement('script');
+  farmPanScript.src=new URL('pc-farm-pan.js',document.currentScript.src).href;
+  document.head.appendChild(farmPanScript);
+
+  // Separate opt-in terrain paint experiment. No save, AI or ROM changes.
+  const continuousScript=document.createElement('script');
+  // DOM-dependent view layers must load in declared order.
+  continuousScript.async=false;
+  continuousScript.src=new URL('pc-continuous-ranch-preview.js',document.currentScript.src).href;
+  document.head.appendChild(continuousScript);
+
+  // PR74: diagnostic overlay reads the live farm core's precise walkability.
+  // It is opt-in and never writes to the canonical game state.
+  const ranchWalkabilityScript=document.createElement('script');
+  ranchWalkabilityScript.async=false;
+  ranchWalkabilityScript.src=new URL('pc-ranch-walkability.js',document.currentScript.src).href;
+  document.head.appendChild(ranchWalkabilityScript);
+
+  // Straight opened paths match DCFarm's existing actual route coordinates;
+  // this is a visual layer only, not another movement engine.
+  const ranchPathsScript=document.createElement('script');
+  ranchPathsScript.async=false;
+  ranchPathsScript.src=new URL('pc-ranch-ground-paths.js',document.currentScript.src).href;
+  document.head.appendChild(ranchPathsScript);
+
+  // Visual-only Digimon depth order and overlapping-name visibility.
+  // The game engine still owns every actor position and animation frame.
+  const ranchDepthScript=document.createElement('script');
+  ranchDepthScript.async=false;
+  ranchDepthScript.src=new URL('pc-ranch-actor-depth.js',document.currentScript.src).href;
+  document.head.appendChild(ranchDepthScript);
+
+  // The original atlas facade needs its own world-Y occlusion depth.
+  // Runs only in PC connected terrain preview, never on mobile/NDS.
+  const ranchFacadeScript=document.createElement('script');
+  ranchFacadeScript.async=false;
+  ranchFacadeScript.src=new URL('pc-ranch-facade-occlusion.js',document.currentScript.src).href;
+  document.head.appendChild(ranchFacadeScript);
+
+  // Optional PC gameplay extension, separate from the graphics-only terrain
+  // preview. Disabled until the player explicitly enables free strolls.
+  const roamingScript=document.createElement('script');
+  roamingScript.async=false;
+  roamingScript.src=new URL('pc-ranch-free-roam.js',document.currentScript.src).href;
+  document.head.appendChild(roamingScript);
+
+  // Read-only display recovery: if a species-specific GIF frame fails to
+  // load, use only that same species' canonical idle frame. Never load
+  // remote assets or alter game pose, identity, saves or battle rules.
+  const spriteGuardScript=document.createElement('script');
+  spriteGuardScript.async=false;
+  spriteGuardScript.src=new URL('pc-ranch-sprite-guard.js',document.currentScript.src).href;
+  document.head.appendChild(spriteGuardScript);
+
+  // A live Digimon species change should animate the original GIF in place.
+  // The transition observes the existing farm renderer only; it never edits
+  // evolution rules, sprite mappings or the player's saved state.
+  const evolutionFxScript=document.createElement('script');
+  evolutionFxScript.async=false;
+  evolutionFxScript.src=new URL('pc-ranch-evolution-fx.js',document.currentScript.src).href;
+  document.head.appendChild(evolutionFxScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
@@ -47,6 +111,7 @@
   const host=document.createElement('aside');
   host.id='dc-pc-guide';
   host.setAttribute('aria-label','PC 빠른 이동 및 현재 활동 안내');
+  host.setAttribute('aria-live','off');
   host.innerHTML=`
     <div class="dc-pc-links" aria-label="PC 탭 바로가기">
       <button type="button" data-dc-pc-tab="nursery">🏡 사육장 <small>Alt+1</small></button>
@@ -77,6 +142,71 @@
     requestAnimationFrame(refresh);
   });
 
+  // PC-only contextual control drawer. The original controls stay mounted,
+  // preserving their event handlers and the current game/save state.
+  const nursery=document.getElementById('nursery');
+  const farmPanel=document.getElementById('farmPanel');
+  const rail=nursery?.querySelector(':scope > .layout');
+  let drawerOpen=false;
+  let lastDrawerFocus=null;
+  if(nursery && farmPanel && rail){
+    const toggle=document.createElement('button');
+    toggle.type='button';
+    toggle.id='dc-pc-drawer-toggle';
+    toggle.textContent='☰ 디지몬 · 시설 관리';
+    toggle.setAttribute('aria-controls','dc-pc-control-drawer');
+    toggle.setAttribute('aria-expanded','false');
+    farmPanel.insertBefore(toggle,farmPanel.firstChild);
+    rail.id='dc-pc-control-drawer';
+    rail.setAttribute('role','region');
+    rail.setAttribute('aria-label','디지몬 및 사육장 조작');
+    const close=document.createElement('button');
+    close.id='dc-pc-drawer-close';
+    close.type='button';
+    close.textContent='✕ 닫기';
+    close.setAttribute('aria-label','조작 패널 닫기');
+    rail.insertBefore(close,rail.firstChild);
+    // Preserve original controls and event handlers; move only their DOM
+    // nodes into the drawer, so the main farm view has no lower control strip.
+    const farmNavigation=farmPanel.querySelector('.farmNav');
+    const farmDetails=farmPanel.querySelector('#farmDetails');
+    const farmTools=document.createElement('section');
+    farmTools.id='dc-pc-farm-tools';
+    farmTools.setAttribute('aria-label','맵 탐색 및 시설 정보');
+    if(farmNavigation)farmTools.appendChild(farmNavigation);
+    if(farmDetails)farmTools.appendChild(farmDetails);
+    rail.insertBefore(farmTools,close.nextSibling);
+    function setDrawer(open,returnFocus=false){
+      drawerOpen=!!open;
+      nursery.classList.toggle('dc-pc-drawer-open',drawerOpen);
+      toggle.setAttribute('aria-expanded',String(drawerOpen));
+      if(!drawerOpen && returnFocus) (lastDrawerFocus||toggle).focus({preventScroll:true});
+      if(drawerOpen) {lastDrawerFocus=document.activeElement;close.focus({preventScroll:true});}
+    }
+    toggle.addEventListener('click',()=>setDrawer(!drawerOpen,true));
+    close.addEventListener('click',()=>setDrawer(false,true));
+    // Selecting an existing actor/facility on the game map reveals controls.
+    // Do not intercept or cancel the original click event.
+    farmPanel.addEventListener('click',event=>{
+      if(event.target.closest('#dc-pc-drawer-toggle'))return;
+      if(event.target.closest('.hexActor, [data-facility-id], .farmFacility, .farmRoom')){
+        if(!document.body.classList.contains('mode-nds'))setDrawer(true);
+      }
+    });
+    document.addEventListener('keydown',event=>{
+      if(event.key==='Escape' && drawerOpen && !inGameModal()){
+        setDrawer(false,true);event.preventDefault();
+      }
+    });
+    nav.addEventListener('click',event=>{
+      if(event.target.closest('[data-tab]'))setDrawer(false);
+    });
+    window.DCPCDrawer=Object.freeze({
+      open:()=>setDrawer(true),close:()=>setDrawer(false),
+      get isOpen(){return drawerOpen;}
+    });
+  }
+
   function gameState(){
     try { return eval('state'); } catch(_) {return null;}
   }
@@ -84,15 +214,33 @@
     const btn=document.querySelector('nav.tabs button.active[data-tab]');
     return btn?.dataset.tab || 'nursery';
   }
+  // The Phaser battle overlay can remain attached after a match. Its
+  // mere existence is NOT an active battle: otherwise PC shortcuts become
+  // permanently locked after the first fight. Respect actual visibility,
+  // including the element's hidden ancestor and CSS state.
+  function visibleOverlay(el){
+    if(!el||!el.isConnected||el.hidden||el.getAttribute('aria-hidden')==='true')return false;
+    const css=getComputedStyle(el);
+    return css.display!=='none'&&css.visibility!=='hidden'&&
+      el.getClientRects().length>0;
+  }
   function inGameModal(){
-    return !!document.getElementById('dc-phaser-overlay') ||
-      document.getElementById('liveBattle')?.style.display==='block';
+    return visibleOverlay(document.getElementById('dc-phaser-overlay'))||
+      visibleOverlay(document.getElementById('liveBattle'));
   }
   function goTab(id){
     if(inGameModal())return false;
     const original=document.querySelector('nav.tabs button[data-tab="'+id+'"]');
-    if(!original)return false;
-    original.click();refresh();return true;
+    if(!original||original.disabled)return false;
+    // Dispatch the ORIGINAL tab control. Never replace the game section,
+    // click a phantom shortcut, commit a battle or change saved progress.
+    original.click();
+    const changed=activeTab()===id;
+    if(changed) {
+      refresh();
+      queueMicrotask(refresh); // original tabs may reparent between layouts
+    }
+    return changed;
   }
   function trim(s,max=115){
     const str=String(s??'').replace(/\s+/g,' ').trim();
@@ -194,6 +342,16 @@
     if(!document.hidden)refresh();
   },1600);
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});
+  // PC is the primary target. The legacy HTML initially boots into the
+  // narrow NDS layout, otherwise the farm drawer seems to be missing.
+  // Use the game's own mode button; users can switch back manually.
+  if (document.body.classList.contains('mode-nds')) {
+    document.getElementById('wideMode')?.click();
+  }
   refresh();
-  window.DCPCGuide=Object.freeze({snapshot:()=>refresh()});
+  window.DCPCGuide=Object.freeze({
+    snapshot:()=>refresh(),
+    navigate:goTab,
+    get blocked(){return inGameModal();}
+  });
 })();

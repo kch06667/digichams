@@ -1,0 +1,100 @@
+name: Continuous ranch preview safety checks
+on:
+  push:
+    branches:
+      - feature/continuous-ranch-preview-20261030
+      - feature/ranch-walkability-qa-20261030
+      - feature/ranch-ground-paths-20261030
+      - feature/ranch-actor-depth-20261030
+      - feature/ranch-facade-occlusion-20261030
+      - feature/pc-ranch-free-roam-20261030
+      - feature/ranch-life-routine-20261030
+      - feature/ranch-ambient-dwell-20261030
+      - quality/pc-sprite-integrity-20261030
+      - fix/pc-evolution-ranch-transition-20261030
+    paths:
+      - 'src/pc-continuous-ranch-preview.js'
+      - 'src/pc-ranch-walkability.js'
+      - 'src/pc-ranch-ground-paths.js'
+      - 'src/pc-ranch-actor-depth.js'
+      - 'src/pc-ranch-facade-occlusion.js'
+      - 'src/pc-ranch-free-roam.js'
+      - 'src/pc-ranch-sprite-guard.js'
+      - 'src/pc-ranch-evolution-fx.js'
+      - 'src/evolution-core.js'
+      - 'src/hex-farm-ui.js'
+      - 'src/pc-continuous-ranch.css'
+      - 'src/pc-playability-guide.js'
+      - 'assets/farm/continuous_ranch_preview.svg'
+      - 'tests/pc-ranch-preview.cjs'
+      - 'tests/pc-ranch-free-roam.cjs'
+      - 'tests/pc-ranch-life-routine.cjs'
+      - 'tests/pc-ranch-ambient-dwell.cjs'
+      - 'tests/sprite-gif-integrity.cjs'
+      - 'tests/pc-ranch-sprite-guard.cjs'
+      - 'tests/pc-evolution-ranch-return.cjs'
+      - 'assets/sprite-index.json'
+      - 'assets/sprite-action-map.json'
+      - '.github/workflows/pc-ranch-preview.yml'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'src/pc-continuous-ranch-preview.js'
+      - 'src/pc-ranch-walkability.js'
+      - 'src/pc-ranch-ground-paths.js'
+      - 'src/pc-ranch-actor-depth.js'
+      - 'src/pc-ranch-facade-occlusion.js'
+      - 'src/pc-ranch-free-roam.js'
+      - 'src/pc-ranch-sprite-guard.js'
+      - 'src/pc-ranch-evolution-fx.js'
+      - 'src/evolution-core.js'
+      - 'src/hex-farm-ui.js'
+      - 'src/pc-continuous-ranch.css'
+      - 'assets/farm/continuous_ranch_preview.svg'
+      - 'tests/pc-ranch-preview.cjs'
+      - 'tests/pc-ranch-free-roam.cjs'
+      - 'tests/pc-ranch-life-routine.cjs'
+      - 'tests/pc-ranch-ambient-dwell.cjs'
+      - 'tests/sprite-gif-integrity.cjs'
+      - 'tests/pc-ranch-sprite-guard.cjs'
+      - 'tests/pc-evolution-ranch-return.cjs'
+      - 'assets/sprite-index.json'
+      - 'assets/sprite-action-map.json'
+permissions:
+  contents: read
+jobs:
+  ranch-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and source-farm regressions
+        run: |
+          node --check src/pc-continuous-ranch-preview.js
+          node --check src/pc-ranch-walkability.js
+          node --check src/pc-ranch-ground-paths.js
+          node --check src/pc-ranch-actor-depth.js
+          node --check src/pc-ranch-facade-occlusion.js
+          node --check src/pc-ranch-free-roam.js
+          node --check src/pc-ranch-sprite-guard.js
+          node --check src/pc-ranch-evolution-fx.js
+          node --check src/evolution-core.js
+          node --check src/hex-farm-ui.js
+          node --check tests/pc-evolution-ranch-return.cjs
+          node --check tests/sprite-gif-integrity.cjs
+          node --check tests/pc-ranch-sprite-guard.cjs
+          node --check tests/pc-ranch-free-roam.cjs
+          node --check tests/pc-ranch-life-routine.cjs
+          node --check tests/pc-ranch-ambient-dwell.cjs
+          node --check src/pc-playability-guide.js
+          node --check tests/pc-ranch-preview.cjs
+          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs tests/pc-ranch-free-roam.cjs tests/pc-ranch-life-routine.cjs tests/pc-ranch-ambient-dwell.cjs tests/sprite-gif-integrity.cjs tests/pc-ranch-sprite-guard.cjs tests/pc-evolution-ranch-return.cjs
+      - name: Install browser dependencies
+        run: |
+          npm install --ignore-scripts --no-save --no-package-lock playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Test actual original game with reversible ranch preview
+        run: node tests/pc-ranch-preview.cjs
