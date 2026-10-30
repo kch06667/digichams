@@ -131,6 +131,11 @@ def capture(page,mobile):
 
 def farm_and_goal(page,identity):
     page.locator('[data-tab="nursery"]').click()
+    # The PC remake starts on the new two-row cage overview; enter the
+    # real original farm room before using the existing training controls.
+    if page.evaluate("matchMedia('(min-width:900px) and (pointer:fine)').matches"):
+        page.wait_for_function("Boolean(window.DCRemakeCages)",timeout=15000)
+        page.locator('[data-dc-cage="base"]').click()
     page.locator('#hexMon').select_option(identity['captured'])
     before=page.evaluate("""(id) => {
       const m=state.team.find(x=>x.instanceId===id);
@@ -175,7 +180,9 @@ def farm_and_goal(page,identity):
     assert restored['starter']['evo']['target']=='아구몬',restored
 
 def battles_and_championship(page,identity):
-    page.locator('#wideMode').click()
+    # PC remake has already selected the wide single-window mode.
+    if page.evaluate("document.body.classList.contains('mode-nds')"):
+        page.locator('#wideMode').click()
     for i in range(3):
         page.locator('#liveBattleLaunch').click()
         page.locator('#lbMode').select_option('owned')
