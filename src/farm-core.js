@@ -49,7 +49,7 @@ function routeTo(s,a,target){
    if(next&&opened.has(next)&&!seen.has(next)){seen.add(next);queue.push([...chain,next]);}
   }
  }
- return [...(route?.slice(1).map(center)||[center('core')]),{x:target.x,y:target.y}];
+ return [...(from===to?[]:[center(from)]),...(route?.slice(1).map(center)||[center('core')]),{x:target.x,y:target.y}];
 }
 // Small ground footprints, not sprite bounding boxes. Numbers are expansion UX.
 const PERSONAL_SPACE=10;
