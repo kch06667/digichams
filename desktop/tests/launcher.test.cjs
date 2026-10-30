@@ -104,3 +104,33 @@ test('Electron bootstrap creates a window even when loaded as a required module'
     delete require.cache[mainPath];
   }
 });
+
+test('Windows local Phaser loader pins the already-used renderer without CDN',()=>{
+  const originalApp=electron.app;
+  electron.app={isPackaged:false};
+  Module._load=function(request,parent,isMain){
+    if(request==='electron')return electron;
+    return originalLoad.call(this,request,parent,isMain);
+  };
+  try{
+    delete require.cache[mainPath];
+    const launcher=require(mainPath);
+    const cdn=launcher.PHASER_CDN;
+    const html='<script defer src="'+cdn+'"></script>';
+    assert.equal(launcher.offlinePhaserPage(html),
+      '<script defer src="./vendor/phaser.min.js"></script>');
+    assert.equal(launcher.PHASER_CDN,
+      'https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js');
+    assert.equal(launcher.OFFLINE_PHASER,
+      '/phaser-lab/vendor/phaser.min.js');
+    assert.ok(launcher.offlinePhaserPath().endsWith(
+      path.join('desktop','node_modules','phaser','dist','phaser.min.js')));
+    for(const input of ['',html+html,'<script src="https://evil.com/a.js"></script>']){
+      assert.throws(()=>launcher.offlinePhaserPage(input));
+    }
+  }finally{
+    Module._load=originalLoad;
+    electron.app=originalApp;
+    delete require.cache[mainPath];
+  }
+});
