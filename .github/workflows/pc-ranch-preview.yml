@@ -11,6 +11,7 @@ on:
       - feature/ranch-life-routine-20261030
       - feature/ranch-ambient-dwell-20261030
       - quality/pc-sprite-integrity-20261030
+      - fix/pc-evolution-ranch-transition-20261030
     paths:
       - 'src/pc-continuous-ranch-preview.js'
       - 'src/pc-ranch-walkability.js'
@@ -19,6 +20,9 @@ on:
       - 'src/pc-ranch-facade-occlusion.js'
       - 'src/pc-ranch-free-roam.js'
       - 'src/pc-ranch-sprite-guard.js'
+      - 'src/pc-ranch-evolution-fx.js'
+      - 'src/evolution-core.js'
+      - 'src/hex-farm-ui.js'
       - 'src/pc-continuous-ranch.css'
       - 'src/pc-playability-guide.js'
       - 'assets/farm/continuous_ranch_preview.svg'
@@ -28,6 +32,7 @@ on:
       - 'tests/pc-ranch-ambient-dwell.cjs'
       - 'tests/sprite-gif-integrity.cjs'
       - 'tests/pc-ranch-sprite-guard.cjs'
+      - 'tests/pc-evolution-ranch-return.cjs'
       - 'assets/sprite-index.json'
       - 'assets/sprite-action-map.json'
       - '.github/workflows/pc-ranch-preview.yml'
@@ -41,6 +46,9 @@ on:
       - 'src/pc-ranch-facade-occlusion.js'
       - 'src/pc-ranch-free-roam.js'
       - 'src/pc-ranch-sprite-guard.js'
+      - 'src/pc-ranch-evolution-fx.js'
+      - 'src/evolution-core.js'
+      - 'src/hex-farm-ui.js'
       - 'src/pc-continuous-ranch.css'
       - 'assets/farm/continuous_ranch_preview.svg'
       - 'tests/pc-ranch-preview.cjs'
@@ -49,6 +57,7 @@ on:
       - 'tests/pc-ranch-ambient-dwell.cjs'
       - 'tests/sprite-gif-integrity.cjs'
       - 'tests/pc-ranch-sprite-guard.cjs'
+      - 'tests/pc-evolution-ranch-return.cjs'
       - 'assets/sprite-index.json'
       - 'assets/sprite-action-map.json'
 permissions:
@@ -71,6 +80,10 @@ jobs:
           node --check src/pc-ranch-facade-occlusion.js
           node --check src/pc-ranch-free-roam.js
           node --check src/pc-ranch-sprite-guard.js
+          node --check src/pc-ranch-evolution-fx.js
+          node --check src/evolution-core.js
+          node --check src/hex-farm-ui.js
+          node --check tests/pc-evolution-ranch-return.cjs
           node --check tests/sprite-gif-integrity.cjs
           node --check tests/pc-ranch-sprite-guard.cjs
           node --check tests/pc-ranch-free-roam.cjs
@@ -78,7 +91,7 @@ jobs:
           node --check tests/pc-ranch-ambient-dwell.cjs
           node --check src/pc-playability-guide.js
           node --check tests/pc-ranch-preview.cjs
-          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs tests/pc-ranch-free-roam.cjs tests/pc-ranch-life-routine.cjs tests/pc-ranch-ambient-dwell.cjs tests/sprite-gif-integrity.cjs tests/pc-ranch-sprite-guard.cjs
+          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs tests/pc-ranch-free-roam.cjs tests/pc-ranch-life-routine.cjs tests/pc-ranch-ambient-dwell.cjs tests/sprite-gif-integrity.cjs tests/pc-ranch-sprite-guard.cjs tests/pc-evolution-ranch-return.cjs
       - name: Install browser dependencies
         run: |
           npm install --ignore-scripts --no-save --no-package-lock playwright@1.62.1
