@@ -36,7 +36,7 @@ def check(page, entry, mobile):
     if not mobile:
         # The PC honeycomb must NOT leave the baked-in radial WebP beneath
         # the new adjacent cells. Verify the actual connected pixel pasture.
-        assert page.evaluate('window.DCFarm.PC_HONEYCOMB is true'), entry
+        assert page.evaluate('window.DCFarm.PC_HONEYCOMB === true'), entry
         assert 'radial-gradient' in bg, f"Missing PC honeycomb ground in {entry}: {bg[:100]}"
         visible = page.locator('#farmWorld .hexTile').evaluate_all(
             "(nodes) => nodes.filter(n => getComputedStyle(n).visibility !== 'hidden').length"
@@ -58,6 +58,10 @@ def check(page, entry, mobile):
             return [image.naturalWidth, image.naturalHeight];
         }""", url)
         assert dimensions == EXPECTED_DIMS, f"Wrong/missing original backdrop {dimensions}"
+
+    if not mobile:
+        page.locator('#dc-pc-drawer-toggle').click()
+        assert page.locator('#dc-pc-live-commands #hexDrop').count() == 1
 
     before = page.evaluate('state.food')
     action = 'tap' if mobile else 'click'
