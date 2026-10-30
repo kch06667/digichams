@@ -60,7 +60,7 @@ test('wandering hungry Digimon is interrupted for food',()=>{
  assert.equal(s.farm.actors['mon-1'].goal?.kind,'eat');
 });
 test('feeding does not cancel requested training',()=>{
- const s=initial();farm.command(s,'mon-1','attack');farm.placeFood(s,25,35);farm.advance(s,.1);
+ const s=initial();farm.command(s,'mon-1','attack');farm.placeFood(s,44,103);farm.advance(s,.1);
  assert.equal(s.farm.actors['mon-1'].goal.kind,'attack');
  assert.equal(s.farm.foods[0].claim,undefined);
 });
@@ -86,5 +86,36 @@ test('stale food reservation from missing Digimon is released',()=>{
 test('invalid coordinates do not spend food',()=>{
  const s=initial();assert.equal(farm.placeFood(s,NaN,55),false);assert.equal(s.food,5);
  assert.equal(farm.placeFood(s,Infinity,55),false);assert.equal(s.food,5);
+});
+test('seven hexes form two contiguous connected rows without locked corridors',()=>{
+ const rows=[...new Set(Object.values(farm.HEX_CENTERS).map(p=>p[1]))].sort();
+ assert.deepEqual(rows,[252,421]);
+ assert.equal(Object.values(farm.HEX_CENTERS).filter(p=>p[1]===252).length,4);
+ assert.equal(Object.values(farm.HEX_CENTERS).filter(p=>p[1]===421).length,3);
+ assert.ok(farm.HEX_EDGES.length>=8);
+ const s=initial();farm.ensure(s);
+ assert.equal(s.farm.layoutVersion,2);
+ assert.equal(farm.walkable(s,(350-369)/1.82,(252-262)/1.56),false);
+ s.facilities.training=true;
+ assert.equal(farm.walkable(s,(350-369)/1.82,(252-262)/1.56),true);
+});
+test('old radial farm save converts once, preserves training and inventories',()=>{
+ const s=initial();s.facilities={core:true,training:true};
+ s.farm={actors:{'mon-1':{x:50,y:-76,mode:'moving',
+  goal:{x:50,y:-76,zone:'training',kind:'attack'},pose:2,remaining:1}},
+  foods:[{id:1,x:50,y:65,age:0}],nextFood:2,completed:7};
+ const oldStats=JSON.stringify(s.team),oldFood=s.food;
+ farm.ensure(s);
+ const a=s.farm.actors['mon-1'];
+ assert.equal(s.farm.layoutVersion,2);
+ assert.ok(farm.walkable(s,a.x,a.y));
+ assert.ok(farm.walkable(s,a.goal.x,a.goal.y));
+ assert.ok(farm.foodGround(s,s.farm.foods[0].x,s.farm.foods[0].y));
+ assert.equal(s.farm.completed,7);
+ assert.equal(s.food,oldFood);
+ assert.equal(JSON.stringify(s.team),oldStats);
+ const previous=JSON.stringify(s.farm.actors['mon-1']);
+ farm.ensure(s);
+ assert.equal(JSON.stringify(s.farm.actors['mon-1']),previous);
 });
 console.log(JSON.stringify({results},null,2));require('node:fs').writeFileSync(require('node:path').join(__dirname,'farm-core-results.json'),JSON.stringify(results,null,2));if(results.some(x=>x.status==='FAIL'))process.exitCode=1;
