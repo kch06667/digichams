@@ -44,9 +44,8 @@ def check(page, entry, mobile):
         assert visible == 1, f"new PC ranch should show its one built core, got {visible}"
     else:
         assert bg.startswith('url('), f"Missing original mobile background in {entry}: {bg[:100]}"
-        match = re.fullmatch(r'url\\(["\\x27]?(.*?)["\\x27]?\\)', bg)
-        assert match, f"Unexpected original CSS background: {bg[:100]}"
-        url = match.group(1)
+        assert bg.startswith('url(') and bg.endswith(')'), bg[:100]
+        url = bg[4:-1].strip(chr(34) + chr(39))
         if entry == 'standalone.html':
             assert url.startswith("data:image/webp;base64,"), "Standalone must embed its WebP"
         else:
