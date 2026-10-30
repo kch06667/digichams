@@ -212,6 +212,15 @@
       if(!drawerOpen && returnFocus) (lastDrawerFocus||toggle).focus({preventScroll:true});
       if(drawerOpen) {lastDrawerFocus=document.activeElement;close.focus({preventScroll:true});}
     }
+    // Food placement needs the full map after the command is armed.
+    // Close the drawer without cancelling the original food-placement mode.
+    for(const id of ['hexDrop','feed']){
+      const control=rail.querySelector('#'+id);
+      control?.addEventListener('click',()=>queueMicrotask(()=>{
+        if(farmPanel.querySelector('.farmWorld')?.classList.contains('foodPlacement'))
+          setDrawer(false);
+      }));
+    }
     toggle.addEventListener('click',()=>setDrawer(!drawerOpen,true));
     close.addEventListener('click',()=>setDrawer(false,true));
     // Selecting an existing actor/facility on the game map reveals controls.
