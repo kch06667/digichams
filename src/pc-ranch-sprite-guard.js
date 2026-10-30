@@ -5,7 +5,7 @@
 (function(root){
 'use strict';
 function fallbackUrlFor(url){
- if(typeof url!=='string'||!url.includes('/assets/sprites/'))return null;
+ if(typeof url!=='string'||!/(?:^|\/)assets\/sprites\//.test(url))return null;
  const match=url.match(/_(\d{1,2})(\.gif)([?#].*)?$/i);
  if(!match||Number(match[1])===0)return null;
  return url.slice(0,match.index)+'_0'+match[2]+(match[3]||'');
