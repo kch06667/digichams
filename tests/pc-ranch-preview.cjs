@@ -70,8 +70,13 @@ async function measure(page){
       const roamButton=page.locator('#dc-ranch-free-roam-toggle');
       assert.equal(await roamButton.count(),1);
       assert.equal(await roamButton.getAttribute('aria-pressed'),'false');
+      const lifeStatus=page.locator('#dc-ranch-life-status');
+      assert.equal(await lifeStatus.count(),1);
+      assert.match(await lifeStatus.textContent(),/자유 산책 꺼짐/);
       await roamButton.click();
       assert.equal(await roamButton.getAttribute('aria-pressed'),'true');
+      assert.match(await lifeStatus.textContent(),/산책 .*식사 .*휴식 .*훈련 /,
+        'live life counts must be visible with the optional behavior enabled');
       const isolatedWalk=await page.evaluate(()=>{
         const s={day:3,food:4,ropes:1,points:0,logs:[],
           facilities:{training:true},
@@ -91,6 +96,7 @@ async function measure(page){
         'real game core must take a safe unlocked-zone ambient walk');
       await roamButton.click();
       assert.equal(await roamButton.getAttribute('aria-pressed'),'false');
+      assert.match(await lifeStatus.textContent(),/자유 산책 꺼짐/);
       assert.equal((await measure(page)).save,original.save,
         'roaming toggle and isolated test cannot mutate the paused player save');
       assert.deepEqual(original.worldSize,{width:920,height:690});
@@ -410,6 +416,8 @@ async function measure(page){
       'front facade layers must not load on mobile/touch');
     assert.equal(await page.evaluate(()=>!!window.DCRanchFreeRoam),false,
       'free roaming extension must not load on mobile/touch');
+    assert.equal(await page.locator('#dc-ranch-life-status').count(),0,
+      'PC life-status UI must never load on mobile/touch');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{
