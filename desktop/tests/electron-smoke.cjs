@@ -140,6 +140,41 @@ async function run(){
     });
     assert.equal(after,before,'graphics preview must never touch save state');
 
+    // A closed Phaser overlay may stay mounted after combat. It must NOT
+    // disable PC farm/hunt/battle navigation for the rest of the session.
+    const flow=await page.evaluate(()=>{
+      if(!window.DCPCGuide)throw Error('PC original-game guide missing');
+      const existing=document.getElementById('dc-phaser-overlay');
+      if(existing)throw Error('Fresh game unexpectedly has active Phaser overlay');
+      const ghost=document.createElement('div');
+      ghost.id='dc-phaser-overlay';ghost.style.cssText=
+        'display:none;position:fixed;width:22px;height:22px';
+      document.body.append(ghost);
+      try{
+        const hunt=DCPCGuide.navigate('hunt');
+        const huntActive=document.querySelector('nav.tabs button.active')?.dataset.tab;
+        ghost.style.display='block';
+        const blocked=DCPCGuide.navigate('battle');
+        const battleNotEntered=document.querySelector('nav.tabs button.active')?.dataset.tab;
+        ghost.hidden=true;
+        const battle=DCPCGuide.navigate('battle');
+        const nursery=DCPCGuide.navigate('nursery');
+        return {hunt,huntActive,blocked,battleNotEntered,battle,nursery,
+          final:document.querySelector('nav.tabs button.active')?.dataset.tab};
+      }finally{ghost.remove();}
+    });
+    assert.deepEqual(flow,{
+      hunt:true,huntActive:'hunt',blocked:false,battleNotEntered:'hunt',
+      battle:true,nursery:true,final:'nursery'
+    },'hidden Phaser overlay must not trap user out of game tabs');
+    const afterNavigation=await page.evaluate(()=>{
+      const s=eval('state');return JSON.stringify({
+        team:s.team,facilities:s.facilities,food:s.food,
+        farm:s.farm,wins:s.wins,championship:s.championship
+      });
+    });
+    assert.equal(afterNavigation,before,'PC navigation must never change player save');
+
     // Use a *separate* probe key: do not mutate or overwrite game saves.
     const key='__dc_electron_validation_v1';
     await page.evaluate(k=>localStorage.setItem(k,'desktop-persist-ok'),key);
