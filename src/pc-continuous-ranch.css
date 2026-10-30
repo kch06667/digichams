@@ -368,3 +368,21 @@
     min-width:18px;
   }
 }
+
+/* PR81: keep original and free-roam buttons plus readable live status inside
+ * the compact Windows 1024px/1366px ranch header without horizontal overflow. */
+@media (min-width:900px) and (pointer:fine) {
+  #dc-ranch-view-switch {flex-wrap:wrap;justify-content:flex-start;}
+  #dc-ranch-view-switch #dc-ranch-life-status {
+    flex:1 1 100%;min-width:0;max-width:100%;
+    padding:3px 5px;border-top:1px solid #456958;
+    color:#e5f3de;font-size:11px;line-height:1.5;
+    overflow-wrap:anywhere;
+  }
+  #dc-ranch-view-switch #dc-ranch-free-roam-toggle {
+    background:#1f5548;border-color:#a5cfb2;
+  }
+  #dc-ranch-view-switch #dc-ranch-free-roam-toggle[aria-pressed="true"] {
+    background:#53613a;border-color:#e2d38d;
+  }
+}
