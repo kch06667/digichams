@@ -5,6 +5,8 @@
  */
 const assert=require('node:assert/strict');
 const path=require('node:path');
+const fs=require('node:fs');
+const os=require('node:os');
 const {_electron}=require('playwright');
 
 const desktopRoot=path.resolve(__dirname,'..');
@@ -14,12 +16,19 @@ const target=packaged?'packaged Windows game':'desktop development game';
 async function run(){
   let app;
   const errors=[];
+  // Never run a visual test against the player's real Electron save profile.
+  const profile=fs.mkdtempSync(path.join(os.tmpdir(),'digichamp-ui-test-'));
   try{
     app=await _electron.launch({
       cwd:desktopRoot,
+      env:{...process.env,DC_TEST_USER_DATA:profile},
       args:packaged?[]:['.'],
       ...(packaged?{executablePath:path.resolve(packaged)}:{})
     });
+    const actualProfile=await app.evaluate(({app})=>app.getPath('userData'));
+    assert.equal(path.resolve(actualProfile).toLowerCase(),
+      path.resolve(profile).toLowerCase(),
+      'automated UI test must not use a real player save profile');
     const page=await app.firstWindow({timeout:60000});
     page.on('pageerror',e=>errors.push(e.message));
     await page.waitForLoadState('domcontentloaded');
@@ -122,6 +131,8 @@ async function run(){
     console.log('PASS local resources',localAssets.map(a=>a.url).join(', '));
   }finally{
     if(app)await app.close();
+    try{fs.rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:250});}
+    catch(e){console.warn('Could not clean disposable Electron test profile',e.message);}
   }
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
