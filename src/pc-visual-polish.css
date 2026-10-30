@@ -876,6 +876,46 @@
   body:not(.mode-nds) #dc-pc-facility-picker button:focus-visible {
     outline:2px solid #ffe39d;outline-offset:2px;
   }
+  /* The old 0.23 map WebP has SEVEN radial baked-in pads. Keeping it behind
+   * the new 4+3 positions would make the whole redesign look broken.
+   * Use a discrete pixel-grid pasture and self-painted cells for PC only.
+   * The opt-in terrain preview still overrides this via its inline style. */
+  body:not(.mode-nds) #farmPanel .farmWorld {
+    background-color:#112f33;
+    background-image:
+      radial-gradient(ellipse at 53% 46%,#2a6856 0%,#1d4a43 55%,#0b2436 100%),
+      repeating-linear-gradient(0deg,transparent 0 7px,#c2f5bf08 7px 8px),
+      repeating-linear-gradient(90deg,transparent 0 7px,#c2f5bf08 7px 8px);
+    background-size:100% 100%,8px 8px,8px 8px;
+    background-repeat:repeat;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked {
+    background:
+      repeating-linear-gradient(0deg,transparent 0 9px,#eaffc407 9px 10px),
+      linear-gradient(155deg,#6eb47d 0%,#32715c 45%,#194938 100%) !important;
+    box-shadow:inset 0 0 0 5px #e3bd6f;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.core {
+    background:linear-gradient(145deg,#90c889,#42866b 56%,#205746) !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked .hexInner {
+    border:3px solid #e2cb86;
+    border-radius:0;
+    box-shadow:inset 0 0 20px #153d2f92;
+    background:radial-gradient(ellipse at 50% 33%,#ceef9e38,transparent 70%);
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked.selected .hexInner {
+    border-color:#fff4a9;
+    box-shadow:inset 0 0 18px #eac36e55;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked .hexInner strong {
+    border-color:#f0c97d;
+    border-radius:3px;
+    background:#123b4bed;
+    color:#fff3cc;
+    font-size:13px;
+    letter-spacing:.02em;
+  }
   /* The map is the main stage, not a left-aligned block on widescreen PCs. */
   body:not(.mode-nds) #farmPanel .farmWorld {
     margin-inline:auto;
