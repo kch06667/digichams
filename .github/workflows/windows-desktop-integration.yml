@@ -1,0 +1,73 @@
+name: Windows desktop integration (local review only)
+
+on:
+  push:
+    branches:
+      - integration/windows-ranch-review-20261030
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/windows-desktop-integration.yml'
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/windows-desktop-integration.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  launcher-unit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check launcher syntax and sandboxed protocol
+        run: |
+          node --check desktop/main.cjs
+          node --check desktop/tests/launcher.test.cjs
+          node --check desktop/tests/electron-smoke.cjs
+          npm --prefix desktop test
+
+  windows-native:
+    runs-on: windows-latest
+    needs: launcher-unit
+    timeout-minutes: 35
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Electron, builder and Playwright locally
+        run: npm --prefix desktop install --no-audit --no-fund --no-package-lock
+      - name: Verify launcher protocol and path containment
+        run: npm --prefix desktop test
+      - name: Launch the real source game in Electron and test saving/reload
+        run: npm --prefix desktop run test:ui
+      - name: Package unpacked Windows app (no upload)
+        run: npm --prefix desktop run build:dir
+      - name: Verify locally packaged EXE resources and UI
+        shell: pwsh
+        run: |
+          $exe = Join-Path $env:GITHUB_WORKSPACE 'dist\desktop\win-unpacked\Digimon Championship.exe'
+          $root = Join-Path $env:GITHUB_WORKSPACE 'dist\desktop\win-unpacked\resources\game'
+          if (!(Test-Path $exe)) { throw "Unpacked Windows EXE missing: $exe" }
+          @('index.html','src\farm-core.js','assets\farm\continuous_ranch_preview.svg','phaser-lab\index.html') | ForEach-Object {
+            if (!(Test-Path (Join-Path $root $_))) { throw "Packaged resource missing: $_" }
+          }
+          $env:DC_PACKAGED_EXE = $exe
+          npm --prefix desktop run test:ui
+      - name: Verify portable Windows EXE can be built without publishing
+        shell: pwsh
+        run: |
+          npm --prefix desktop run build:win
+          if ($LASTEXITCODE -ne 0) { throw 'Portable EXE builder failed' }
+          $portable = Get-ChildItem 'dist\desktop' -Filter 'Digimon-Championship-*-Windows-x64.exe'
+          if (!$portable) { throw 'Portable Windows EXE not generated' }
+          Write-Host "PASS local-only portable EXE build: $($portable.Count) file(s). No artifacts uploaded."
