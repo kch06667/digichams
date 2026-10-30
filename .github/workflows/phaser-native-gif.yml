@@ -1,0 +1,47 @@
+name: Native 216-species Phaser GIF integration
+
+on:
+  pull_request:
+    paths:
+      - 'phaser-lab/native-gif-layer.js'
+      - 'phaser-lab/game.js'
+      - 'phaser-lab/index.html'
+      - 'tests/phaser-native-gif.cjs'
+      - 'tests/phaser-native-gif-browser.cjs'
+      - '.github/workflows/phaser-native-gif.yml'
+  push:
+    branches:
+      - feature/pc-phaser-native-gif-216-20261030
+    paths:
+      - 'phaser-lab/native-gif-layer.js'
+      - 'phaser-lab/game.js'
+      - 'phaser-lab/index.html'
+      - 'tests/phaser-native-gif.cjs'
+      - 'tests/phaser-native-gif-browser.cjs'
+      - '.github/workflows/phaser-native-gif.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  native-gif:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Native GIF source and local asset integrity
+        run: |
+          node --check phaser-lab/game.js
+          node --check phaser-lab/native-gif-layer.js
+          node --check tests/phaser-native-gif-browser.cjs
+          node --test tests/phaser-native-gif.cjs
+          node --test tests/sprite-gif-integrity.cjs
+      - name: Install pinned offline Phaser renderer and Chromium
+        run: |
+          npm install --ignore-scripts --no-save --no-package-lock playwright@1.62.1 phaser@3.90.0
+          npx playwright install --with-deps chromium
+      - name: Actual 3v3 -> native GIF attacks -> 1v1 -> KO on desktop and touch
+        run: node tests/phaser-native-gif-browser.cjs
