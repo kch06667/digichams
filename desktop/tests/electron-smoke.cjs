@@ -79,6 +79,10 @@ async function run(){
     await page.waitForFunction(()=>
       Boolean(window.DCContinuousRanchPreview&&window.DCRanchFacadeOcclusion),
       {timeout:30000});
+    // The actual farm simulation runs continuously. Freeze *only for this
+    // visual A/B assertion*, otherwise hunger/idle timers change naturally
+    // while Playwright clicks the preview button.
+    await page.evaluate(()=>{eval('state').world.paused=true;});
     const before=await page.evaluate(()=>{
       const s=eval('state');
       return JSON.stringify({
