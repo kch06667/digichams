@@ -3,6 +3,14 @@ const assert=require('node:assert/strict');
 const farm=require('../src/farm-core.js');
 const mon=(id='mon-1')=>({instanceId:id,name:'코로몬',hp:50,maxHp:50,atk:7,def:5,spd:7,hunger:20,fatigue:0,training:0,exp:0,friendship:20,level:1});
 const initial=()=>({day:1,food:5,ropes:2,points:0,logs:[],team:[mon()]});
+// Exercise the PC-only topology separately. Node and mobile keep the
+// original radial geometry by design, including their old save coordinates.
+const pcFarm=(()=>{
+ const mod={exports:{}},win={document:{},matchMedia:()=>({matches:true})};
+ const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','src','farm-core.js'),'utf8');
+ new Function('window','module',source)(win,mod);
+ return mod.exports;
+})();
 const results=[];
 function test(name,cb){try{cb();results.push({name,status:'PASS'});}catch(e){results.push({name,status:'FAIL',message:e.message});}}
 test('first migration and unique actor',()=>{const s=initial();farm.ensure(s);assert.equal(s.saveVersion,3);assert.ok(s.farm.actors['mon-1']);farm.ensure(s);assert.equal(Object.keys(s.farm.actors).length,1);});
@@ -88,16 +96,16 @@ test('invalid coordinates do not spend food',()=>{
  assert.equal(farm.placeFood(s,Infinity,55),false);assert.equal(s.food,5);
 });
 test('seven hexes form two contiguous connected rows without locked corridors',()=>{
- const rows=[...new Set(Object.values(farm.HEX_CENTERS).map(p=>p[1]))].sort();
+ const rows=[...new Set(Object.values(pcFarm.HEX_CENTERS).map(p=>p[1]))].sort();
  assert.deepEqual(rows,[252,421]);
- assert.equal(Object.values(farm.HEX_CENTERS).filter(p=>p[1]===252).length,4);
- assert.equal(Object.values(farm.HEX_CENTERS).filter(p=>p[1]===421).length,3);
- assert.ok(farm.HEX_EDGES.length>=8);
- const s=initial();s.facilities={core:true};farm.ensure(s);
+ assert.equal(Object.values(pcFarm.HEX_CENTERS).filter(p=>p[1]===252).length,4);
+ assert.equal(Object.values(pcFarm.HEX_CENTERS).filter(p=>p[1]===421).length,3);
+ assert.ok(pcFarm.HEX_EDGES.length>=8);
+ const s=initial();s.facilities={core:true};pcFarm.ensure(s);
  assert.equal(s.farm.layoutVersion,2);
- assert.equal(farm.walkable(s,(350-369)/1.82,(252-262)/1.56),false);
+ assert.equal(pcFarm.walkable(s,(350-369)/1.82,(252-262)/1.56),false);
  s.facilities.training=true;
- assert.equal(farm.walkable(s,(350-369)/1.82,(252-262)/1.56),true);
+ assert.equal(pcFarm.walkable(s,(350-369)/1.82,(252-262)/1.56),true);
 });
 test('old radial farm save converts once, preserves training and inventories',()=>{
  const s=initial();s.facilities={core:true,training:true};
@@ -105,17 +113,17 @@ test('old radial farm save converts once, preserves training and inventories',()
   goal:{x:50,y:-76,zone:'training',kind:'attack'},pose:2,remaining:1}},
   foods:[{id:1,x:50,y:65,age:0}],nextFood:2,completed:7};
  const oldStats=JSON.stringify(s.team),oldFood=s.food;
- farm.ensure(s);
+ pcFarm.ensure(s);
  const a=s.farm.actors['mon-1'];
  assert.equal(s.farm.layoutVersion,2);
- assert.ok(farm.walkable(s,a.x,a.y));
- assert.ok(farm.walkable(s,a.goal.x,a.goal.y));
- assert.ok(farm.foodGround(s,s.farm.foods[0].x,s.farm.foods[0].y));
+ assert.ok(pcFarm.walkable(s,a.x,a.y));
+ assert.ok(pcFarm.walkable(s,a.goal.x,a.goal.y));
+ assert.ok(pcFarm.foodGround(s,s.farm.foods[0].x,s.farm.foods[0].y));
  assert.equal(s.farm.completed,7);
  assert.equal(s.food,oldFood);
  assert.equal(JSON.stringify(s.team),oldStats);
  const previous=JSON.stringify(s.farm.actors['mon-1']);
- farm.ensure(s);
+ pcFarm.ensure(s);
  assert.equal(JSON.stringify(s.farm.actors['mon-1']),previous);
 });
 console.log(JSON.stringify({results},null,2));require('node:fs').writeFileSync(require('node:path').join(__dirname,'farm-core-results.json'),JSON.stringify(results,null,2));if(results.some(x=>x.status==='FAIL'))process.exitCode=1;
