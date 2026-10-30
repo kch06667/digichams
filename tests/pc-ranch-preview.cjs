@@ -64,6 +64,52 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(window.DCRanchFacadeOcclusion),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
+      // Real PC flow: hidden Phaser battle remnants must NOT trap the player
+      // outside the nursery. Active battle overlays must still block escape.
+      const pcFlow=await page.evaluate(()=>{
+        const tab=()=>document.querySelector('nav.tabs button.active[data-tab]')?.dataset.tab;
+        const overlay=document.getElementById('dc-phaser-overlay');
+        const artificial=!overlay;
+        const node=overlay||document.createElement('div');
+        const former={
+          style:node.getAttribute('style'),
+          hidden:node.hidden,aria:node.getAttribute('aria-hidden')
+        };
+        if(artificial){node.id='dc-phaser-overlay';document.body.append(node);}
+        try{
+          node.hidden=false;node.removeAttribute('aria-hidden');
+          node.style.cssText='display:none;position:fixed;top:3px;left:3px;width:30px;height:30px';
+          const hiddenBlock=DCPCGuide.blocked;
+          const wentHunt=DCPCGuide.navigate('hunt');
+          const inHunt=tab()==='hunt';
+          node.style.display='block';
+          const visibleBlock=DCPCGuide.blocked;
+          const denied=DCPCGuide.navigate('battle');
+          const stillHunt=tab()==='hunt';
+          node.hidden=true;
+          const wentBattle=DCPCGuide.navigate('battle');
+          const inBattle=tab()==='battle';
+          const returned=DCPCGuide.navigate('nursery');
+          return {hiddenBlock,wentHunt,inHunt,visibleBlock,denied,stillHunt,
+            wentBattle,inBattle,returned,final:tab()};
+        }finally{
+          if(artificial)node.remove();
+          else {
+            if(former.style===null)node.removeAttribute('style');
+            else node.setAttribute('style',former.style);
+            node.hidden=former.hidden;
+            if(former.aria===null)node.removeAttribute('aria-hidden');
+            else node.setAttribute('aria-hidden',former.aria);
+          }
+        }
+      });
+      assert.deepEqual(pcFlow,{
+        hiddenBlock:false,wentHunt:true,inHunt:true,
+        visibleBlock:true,denied:false,stillHunt:true,
+        wentBattle:true,inBattle:true,returned:true,final:'nursery'
+      },'real original-tab routing must recover after a hidden fight overlay');
+      assert.equal((await measure(page)).save,original.save,
+        'changing farm/hunt/battle views must never modify actual game save');
       // Drive the actual production ranch renderer against a reversible
       // name-change probe, without altering evolution rules or real saves.
       await page.waitForFunction(()=>Boolean(window.DCRanchEvolutionFX),{timeout:12000});
