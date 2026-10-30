@@ -64,6 +64,58 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(window.DCRanchFacadeOcclusion),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
+      // Exercise real local GIF HTTP loads without mutating player actors.
+      // The recovery guard may ONLY retry an animation as the same species'
+      // native idle frame. If that is also absent, the broken image is hidden.
+      await page.waitForFunction(()=>Boolean(window.DCRanchSpriteGuard),{timeout:12000});
+      const spriteCheck=await page.evaluate(()=>DCRanchSpriteGuard.fallbackUrlFor(
+        'assets/sprites/rookie/m201_agumon_main_14.gif'));
+      assert.equal(spriteCheck,'assets/sprites/rookie/m201_agumon_main_0.gif');
+      await page.evaluate(()=>{
+        const world=document.querySelector('#farmPanel .farmWorld');
+        for(const [id,stem,pose] of [
+          ['dc-sprite-success-probe','m201_agumon_main',99],
+          ['dc-sprite-missing-probe','invalid_species_animation',18]
+        ]){
+          const actor=document.createElement('button');
+          actor.type='button';actor.className='hexActor';actor.id=id;
+          actor.dataset.mon='아구몬';
+          const img=document.createElement('img');
+          img.alt='아구몬 GIF 테스트';
+          actor.append(img,document.createElement('span'));
+          world.appendChild(actor);
+          img.src='assets/sprites/rookie/'+stem+'_'+pose+'.gif';
+        }
+      });
+      await page.waitForFunction(()=>{
+        const el=document.querySelector('#dc-sprite-success-probe');
+        return el?.dataset.dcSpriteRecovery==='retry-idle' &&
+          el.querySelector('img')?.naturalWidth>0;
+      },{timeout:12000});
+      await page.waitForFunction(()=>{
+        const el=document.querySelector('#dc-sprite-missing-probe');
+        return el?.dataset.dcSpriteRecovery==='missing' &&
+          el.querySelector('img')?.style.visibility==='hidden';
+      },{timeout:12000});
+      const spriteResult=await page.evaluate(()=>{
+        const good=document.querySelector('#dc-sprite-success-probe');
+        const broken=document.querySelector('#dc-sprite-missing-probe');
+        return {
+          recovered:good.querySelector('img').getAttribute('src'),
+          missing:broken.querySelector('img').style.visibility,
+          warnings:DCRanchSpriteGuard.missing,
+          caught:DCRanchSpriteGuard.recovered
+        };
+      });
+      assert.match(spriteResult.recovered,/m201_agumon_main_0\.gif$/);
+      assert.equal(spriteResult.missing,'hidden');
+      assert.ok(spriteResult.caught>=2&&spriteResult.warnings>=1);
+      await page.evaluate(()=>{
+        document.getElementById('dc-sprite-success-probe')?.remove();
+        document.getElementById('dc-sprite-missing-probe')?.remove();
+      });
+      assert.equal((await measure(page)).save,original.save,
+        'test-only GIF failures and fallback never touch actual player save');
       // Opt-in ambient walks must be separate from the graphics preview and
       // never alter a paused real player save simply by toggling a button.
       await page.waitForFunction(()=>Boolean(window.DCRanchFreeRoam),{timeout:12000});
@@ -418,6 +470,8 @@ async function measure(page){
       'free roaming extension must not load on mobile/touch');
     assert.equal(await page.locator('#dc-ranch-life-status').count(),0,
       'PC life-status UI must never load on mobile/touch');
+    assert.equal(await page.evaluate(()=>!!window.DCRanchSpriteGuard),false,
+      'PC-only original GIF recovery must not load on mobile/touch');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{
