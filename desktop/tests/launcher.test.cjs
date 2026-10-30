@@ -58,3 +58,49 @@ test('protocol path resolver enforces exact game origin and root',()=>{
     'digichamp://game/%2f%2fserver'
   ])assert.equal(resolve(url),null,url);
 });
+
+test('Electron bootstrap creates a window even when loaded as a required module',async()=>{
+  const originalApp=electron.app;
+  const originalProtocol=electron.protocol;
+  const originalWindow=electron.BrowserWindow;
+  let booted=0,handled=0,loaded='';
+  electron.app={
+    isPackaged:false,
+    whenReady:()=>Promise.resolve(),
+    on:()=>{},
+    quit:()=>{throw Error('unexpected app quit during bootstrap');}
+  };
+  electron.protocol={
+    registerSchemesAsPrivileged:()=>{},
+    handle:()=>{handled++;}
+  };
+  electron.BrowserWindow=function(){
+    booted++;
+    this.webContents={
+      setWindowOpenHandler:()=>{},
+      on:()=>{}
+    };
+    this.once=()=>{};
+    this.loadURL=url=>{loaded=url;};
+  };
+  electron.BrowserWindow.getAllWindows=()=>[];
+  Module._load=function(request,parent,isMain){
+    if(request==='electron')return electron;
+    return originalLoad.call(this,request,parent,isMain);
+  };
+  try{
+    delete require.cache[mainPath];
+    // This is a require(), not a Node main module. Electron must still boot.
+    require(mainPath);
+    await new Promise(resolve=>setImmediate(resolve));
+    assert.equal(booted,1);
+    assert.equal(handled,1);
+    assert.equal(loaded,'digichamp://game/index.html');
+  } finally {
+    Module._load=originalLoad;
+    electron.app=originalApp;
+    electron.protocol=originalProtocol;
+    electron.BrowserWindow=originalWindow;
+    delete require.cache[mainPath];
+  }
+});
