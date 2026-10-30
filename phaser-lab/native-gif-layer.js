@@ -66,10 +66,10 @@
       });
       container.appendChild(this.root);
     }
-    _request(n,pose){
+    _request(n,pose,fallback=false){
       const src=gifPath(n.entry,pose);
       if(!src)return;
-      n.pose=pose;
+      if(!fallback)n.pose=pose;
       n.failedPose=null;
       n.sequence++;
       const seq=n.sequence;
@@ -78,11 +78,11 @@
       n.sprite.setVisible(true);
       n.img.onload=()=>{
         if(this.disposed||seq!==n.sequence)return;
+        if(!n.img.naturalWidth||!n.img.naturalHeight)return;
         if(!n.baseScale){
           n.baseScale=Math.min(64/n.img.naturalWidth,
             69/n.img.naturalHeight,2.4);
         }
-        if(!n.img.naturalWidth||!n.img.naturalHeight)return;
         n.ready=true;
         n.img.style.visibility='visible';
         n.sprite.setVisible(false);
@@ -91,7 +91,7 @@
         if(this.disposed||seq!==n.sequence)return;
         // Retry the actual species' ORIGINAL idle GIF once, never a
         // different Digimon or a URL outside our validated sprite index.
-        if(pose!==0){this._request(n,0);return;}
+        if(pose!==0){this._request(n,0,true);return;}
         n.failedPose=0;
         n.ready=false;
         n.img.style.visibility='hidden';
