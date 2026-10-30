@@ -23,7 +23,7 @@ test('valid idle frames are not re-requested and unrelated images are untouched'
 });
 test('a fallback never crosses to another monster or invents pose art',()=>{
  for(const src of [
-  'assets/sprites/mega/m601_omegamon_main_12.gif',
+  'assets/sprites/rookie/m208_gabumon_main_12.gif',
   'assets/sprites/champion/m357_unimon_main_5.gif'
  ]){
   const next=fallbackUrlFor(src);
