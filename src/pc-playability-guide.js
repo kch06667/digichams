@@ -75,6 +75,14 @@
   spriteGuardScript.src=new URL('pc-ranch-sprite-guard.js',document.currentScript.src).href;
   document.head.appendChild(spriteGuardScript);
 
+  // A live Digimon species change should animate the original GIF in place.
+  // The transition observes the existing farm renderer only; it never edits
+  // evolution rules, sprite mappings or the player's saved state.
+  const evolutionFxScript=document.createElement('script');
+  evolutionFxScript.async=false;
+  evolutionFxScript.src=new URL('pc-ranch-evolution-fx.js',document.currentScript.src).href;
+  document.head.appendChild(evolutionFxScript);
+
   const style=document.createElement('style');
   style.id='dc-pc-guide-styles';
   style.textContent=`
