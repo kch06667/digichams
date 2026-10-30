@@ -42,6 +42,15 @@ def check(page, entry, mobile):
             "(nodes) => nodes.filter(n => getComputedStyle(n).visibility !== 'hidden').length"
         )
         assert visible == 1, f"new PC ranch should show its one built core, got {visible}"
+        art = page.locator('#farmWorld .hexTile[data-hex="core"]').evaluate(
+            """node => ({
+                image:getComputedStyle(node).backgroundImage,
+                position:getComputedStyle(node).backgroundPosition
+            })"""
+        )
+        assert 'hex_farm_v0232.webp' in art['image'], f"PC must reuse the source tile artwork: {art}"
+        assert art['position'] == '-350px -227px', f"Wrong original core crop: {art}"
+
     else:
         assert bg.startswith('url('), f"Missing original mobile background in {entry}: {bg[:100]}"
         assert bg.startswith('url(') and bg.endswith(')'), bg[:100]
