@@ -1,0 +1,43 @@
+name: Original battle motion presentation regression
+
+on:
+  push:
+    branches:
+      - fix/pc-original-battle-ko-presentation-20261030
+    paths:
+      - 'phaser-lab/game.js'
+      - 'phaser-lab/logic.js'
+      - 'tests/phaser-ko-presentation.cjs'
+      - '.github/workflows/battle-pose-presentation.yml'
+  pull_request:
+    paths:
+      - 'phaser-lab/game.js'
+      - 'phaser-lab/logic.js'
+      - 'tests/phaser-ko-presentation.cjs'
+      - '.github/workflows/battle-pose-presentation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  original-motion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax of original battle and visual-only Phaser layers
+        run: |
+          node --check src/arena-original-core.js
+          node --check src/battle-core.js
+          node --check phaser-lab/logic.js
+          node --check phaser-lab/game.js
+          node --check tests/phaser-ko-presentation.cjs
+      - name: Test real original action IDs and KO render invariants
+        run: |
+          node --test tests/phaser-ko-presentation.cjs
+          node tests/battle-core.cjs
+      - name: Confirm all 216 species use intact native GIF poses
+        run: node --test tests/sprite-gif-integrity.cjs
