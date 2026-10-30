@@ -7,16 +7,19 @@ on:
       - feature/ranch-ground-paths-20261030
       - feature/ranch-actor-depth-20261030
       - feature/ranch-facade-occlusion-20261030
+      - feature/pc-ranch-free-roam-20261030
     paths:
       - 'src/pc-continuous-ranch-preview.js'
       - 'src/pc-ranch-walkability.js'
       - 'src/pc-ranch-ground-paths.js'
       - 'src/pc-ranch-actor-depth.js'
       - 'src/pc-ranch-facade-occlusion.js'
+      - 'src/pc-ranch-free-roam.js'
       - 'src/pc-continuous-ranch.css'
       - 'src/pc-playability-guide.js'
       - 'assets/farm/continuous_ranch_preview.svg'
       - 'tests/pc-ranch-preview.cjs'
+      - 'tests/pc-ranch-free-roam.cjs'
       - '.github/workflows/pc-ranch-preview.yml'
   workflow_dispatch:
   pull_request:
@@ -26,9 +29,11 @@ on:
       - 'src/pc-ranch-ground-paths.js'
       - 'src/pc-ranch-actor-depth.js'
       - 'src/pc-ranch-facade-occlusion.js'
+      - 'src/pc-ranch-free-roam.js'
       - 'src/pc-continuous-ranch.css'
       - 'assets/farm/continuous_ranch_preview.svg'
       - 'tests/pc-ranch-preview.cjs'
+      - 'tests/pc-ranch-free-roam.cjs'
 permissions:
   contents: read
 jobs:
@@ -47,9 +52,11 @@ jobs:
           node --check src/pc-ranch-ground-paths.js
           node --check src/pc-ranch-actor-depth.js
           node --check src/pc-ranch-facade-occlusion.js
+          node --check src/pc-ranch-free-roam.js
+          node --check tests/pc-ranch-free-roam.cjs
           node --check src/pc-playability-guide.js
           node --check tests/pc-ranch-preview.cjs
-          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs
+          node --test tests/farm-navigation.cjs tests/farm-avoidance.cjs tests/farm-offmap-recovery.cjs tests/pc-ranch-free-roam.cjs
       - name: Install browser dependencies
         run: |
           npm install --ignore-scripts --no-save --no-package-lock playwright@1.62.1
