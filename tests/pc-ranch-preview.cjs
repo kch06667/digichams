@@ -80,7 +80,7 @@ async function measure(page){
         if(!originalActor)throw Error('No original actor rendered for '+old);
         mon.name=next;
         DCHexFarm.tick(0); // actual production DOM paint, zero gameplay seconds
-        return {id,old,next,actor:originalActor};
+        return {id,old,next};
       });
       const transition=await page.evaluate(()=>{
         const name=eval('state').team.find(m=>m.instanceId===
