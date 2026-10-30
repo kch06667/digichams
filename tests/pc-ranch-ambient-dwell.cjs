@@ -89,7 +89,15 @@ test('a JSON backup made mid-pause produces deterministic future gaze',()=>{
   const copy=JSON.parse(JSON.stringify(s));
   assert.equal(copy.farm.actors['pause-a'].idleTime,a.idleTime);
   const initial=copy.farm.actors['pause-a'].face;
-  for(let i=0;i<85;i++){core.advance(s,.05);core.advance(copy,.05);}
+  let glanced=false;
+  for(let i=0;i<120;i++){
+   core.advance(s,.05);core.advance(copy,.05);
+   if(s.farm.actors['pause-a'].mode==='idle' &&
+      s.farm.actors['pause-a'].idleTime>-1.95){
+    glanced=true;break;
+   }
+  }
+  assert.ok(glanced,'the saved pause must reach its glance frame');
   assert.deepEqual(copy,s,'saved idleTime and face must resume identically');
   assert.notEqual(s.farm.actors['pause-a'].face,initial);
  }finally{roam.restore();}
