@@ -56,7 +56,10 @@ function createGameWindow() {
   });
   return win;
 }
-if (require.main === module) {
+// Electron may load its app entry through a bootstrap module, in which
+// case require.main !== module. The real Electron app must initialize even
+// when that is true; plain Node unit tests provide no app.whenReady().
+if (typeof app.whenReady === 'function') {
   app.whenReady().then(() => {
     protocol.handle('digichamp', request => {
       const file = resolveGamePath(request.url);
@@ -68,6 +71,9 @@ if (require.main === module) {
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createGameWindow();
     });
+  }).catch(error=>{
+    console.error('[Desktop] initialization failed',error);
+    app.quit();
   });
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
