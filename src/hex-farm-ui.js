@@ -28,6 +28,28 @@ function drawDetails(){const f=byId[selected]||byId.core,owned=!!state.facilitie
  el.innerHTML=`<strong>${owned?'✅':'🔒'} ${f.label}</strong><p>${f.desc}</p>${owned?f.id==='clinic'?'<button type="button" data-hex-heal>💚 80 Bit · HP·부상·질병 전체 치료</button>':'<span class="small">선택한 시설이 열려 있어.</span>':`<p>건설 비용: <b>${format(f.cost)} Bit</b> · 보유 ${format(state.facilityCredits)} Bit</p><p class="farmReq">${needs.length?'해금 조건: '+needs.join(' · '):state.facilityCredits<f.cost?'돈 '+format(f.cost-state.facilityCredits)+' Bit 부족':'건설 가능'}</p><button type="button" data-hex-buy="${f.id}" ${canBuy(f)?'':'disabled'}>🔨 건설</button>`}`;
 }
 function centerOn(id='core',smooth=false){const f=byId[id]||byId.core,v=$('farmViewport');v.scrollTo({left:Math.max(0,f.x-v.clientWidth/2),top:Math.max(0,f.y-v.clientHeight/2),behavior:smooth?'smooth':'instant'});}
+// Desktop map panning: drag empty ground to scroll the continuous farm world.
+// Touchscreens retain native pan gestures; tiles, actors and food placement keep their clicks.
+(()=>{
+ const viewport=$('farmViewport');
+ let drag=null;
+ viewport.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch'||e.button!==0||foodPlacement||e.target.closest('button,.hexActor,.hexFood,input,select,a'))return;
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,left:viewport.scrollLeft,top:viewport.scrollTop,moved:false};
+ });
+ viewport.addEventListener('pointermove',e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
+  if(!drag.moved&&Math.hypot(dx,dy)<6)return;
+  drag.moved=true;
+  viewport.scrollLeft=drag.left-dx;viewport.scrollTop=drag.top-dy;
+  viewport.classList.add('farmDragging');
+ });
+ const end=()=>{drag=null;viewport.classList.remove('farmDragging');};
+ viewport.addEventListener('pointerup',end);
+ viewport.addEventListener('pointercancel',end);
+ viewport.addEventListener('pointerleave',end);
+})();
 function choose(id){if(!byId[id])return;selected=id;document.querySelectorAll('.hexTile').forEach(t=>t.classList.toggle('selected',t.dataset.hex===id));drawDetails();centerOn(id,true);}
 let foodPlacement=false;
 function armFoodPlacement(){if(state.food<=0)return toast('먹이가 없어.');if(state.farm.foods.length>=12)return toast('바닥에 먹이를 더 놓을 수 없어.');foodPlacement=true;$('hexDrop').textContent='🍖 먹이 위치 선택 중 · 취소';$('feed').textContent='🍖 위치 선택 취소';$('farmWorld').classList.add('foodPlacement');toast('지도에서 먹이 위치를 선택해 줘. 버튼을 다시 누르거나 Esc로 취소할 수 있어.');$('farmViewport').scrollIntoView({behavior:'smooth',block:'center'});}
