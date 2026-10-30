@@ -120,7 +120,7 @@ test('UI snapshot reads only existing live activities and never alters state',()
  a.d.goal={kind:'attack',zone:'training',x:50,y:-76};
  const old=JSON.stringify(s);
  assert.deepEqual(activitySnapshot(s),{
-  roaming:1,eating:1,resting:1,training:1,other:1,zoneCounts:{forest:1}
+  roaming:1,dwelling:0,eating:1,resting:1,training:1,other:1,zoneCounts:{forest:1}
  });
  assert.equal(JSON.stringify(s),old);
 });
