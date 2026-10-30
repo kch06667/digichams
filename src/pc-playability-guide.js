@@ -173,6 +173,11 @@
     btn.addEventListener('click',()=>goTab(btn.dataset.dcPcTab));
   }
   jump.addEventListener('click',()=>{
+    // Training controls are inside the selected room, not on the new
+    // two-row overview. Reuse the original room before scrolling.
+    if(activeTab()==='nursery'&&
+       window.DCRemakeCages?.snapshot()?.mode==='overview')
+      window.DCRemakeCages.open('base');
     const el=document.querySelector(jump.dataset.target) ||
       document.querySelector(activeTab()==='battle'?'#championshipPanel':
         activeTab()==='hunt'?'#huntStage':'#farmPanel');
