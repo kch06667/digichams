@@ -64,6 +64,35 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(window.DCRanchFacadeOcclusion),{timeout:12000});
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
+      // Opt-in ambient walks must be separate from the graphics preview and
+      // never alter a paused real player save simply by toggling a button.
+      await page.waitForFunction(()=>Boolean(window.DCRanchFreeRoam),{timeout:12000});
+      const roamButton=page.locator('#dc-ranch-free-roam-toggle');
+      assert.equal(await roamButton.count(),1);
+      assert.equal(await roamButton.getAttribute('aria-pressed'),'false');
+      await roamButton.click();
+      assert.equal(await roamButton.getAttribute('aria-pressed'),'true');
+      const isolatedWalk=await page.evaluate(()=>{
+        const s={day:3,food:4,ropes:1,points:0,logs:[],
+          facilities:{training:true},
+          team:[{instanceId:'roam-ui-probe',name:'테스트',
+            hp:300,maxHp:300,hunger:0,fatigue:0,training:0,
+            atk:7,def:5,spd:7,friendship:0,exp:0}]};
+        DCFarm.ensure(s);
+        s.farm.actors['roam-ui-probe'].idleTime=3;
+        DCFarm.advance(s,.05);
+        const a=s.farm.actors['roam-ui-probe'];
+        return {zone:a.goal?.zone,kind:a.goal?.kind,
+          onGround:DCFarm.foodGround(s,a.goal?.x,a.goal?.y),
+          training:s.team[0].training,points:s.points};
+      });
+      assert.deepEqual(isolatedWalk,{zone:'training',kind:'wander',
+        onGround:true,training:0,points:0},
+        'real game core must take a safe unlocked-zone ambient walk');
+      await roamButton.click();
+      assert.equal(await roamButton.getAttribute('aria-pressed'),'false');
+      assert.equal((await measure(page)).save,original.save,
+        'roaming toggle and isolated test cannot mutate the paused player save');
       assert.deepEqual(original.worldSize,{width:920,height:690});
       assert.equal(original.tileCount,7);
       assert.equal(await page.locator('#dc-ranch-preview-toggle').getAttribute('aria-pressed'),'false');
@@ -379,6 +408,8 @@ async function measure(page){
       'desktop actor depth polish must not load on mobile/touch');
     assert.equal(await page.evaluate(()=>!!window.DCRanchFacadeOcclusion),false,
       'front facade layers must not load on mobile/touch');
+    assert.equal(await page.evaluate(()=>!!window.DCRanchFreeRoam),false,
+      'free roaming extension must not load on mobile/touch');
     console.log('PASS touch/mobile ranch preview is absent');
     await ctx.close();
   }finally{
