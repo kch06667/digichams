@@ -42,6 +42,7 @@ npm run build:win
 - `npm test`: Electron 프로토콜·경로/권한 격리 검사
 - `npm run test:ui`: **실제 Electron**에서 사육장·원본/연결형 지형 전환·
   게임 리소스·로컬스토리지 저장/재시작 유지 검사
+  (테스트는 임시 사용자 프로필을 사용하므로 **기존 플레이 세이브와 완전히 분리**됨)
 - `npm run build:dir`: 압축되지 않은 실행 파일 구조를 `dist/desktop/win-unpacked/`에 생성
 - `npm run build:win`: portable Windows EXE를 `dist/desktop/`에 생성
 - Windows 자동 검사는 GitHub Actions
