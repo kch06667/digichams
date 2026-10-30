@@ -69,7 +69,11 @@ jobs:
           }
           $env:DC_PACKAGED_EXE = $exe
           npm --prefix desktop run test:ui
+      # Unpacked Windows EXE is the normal smoke-test target. A portable
+      # single-file EXE additionally invokes slow NSIS tooling; opt in manually.
       - name: Verify portable Windows EXE can be built without publishing
+        if: github.event_name == 'workflow_dispatch'
+        timeout-minutes: 15
         shell: pwsh
         run: |
           npm --prefix desktop run build:win
