@@ -144,7 +144,8 @@ async function run(){
         'Windows bundled Phaser must show all six REAL original Digimon GIFs');
       assert.equal(offlineBattle.srcs.length,6);
       for(const src of offlineBattle.srcs)
-        assert.match(src,/^\\.\\.\\/assets\\/sprites\\/.+\\.gif$/);
+        assert.ok(src?.startsWith('../assets/sprites/')&&src.endsWith('.gif'),
+          'native original GIF path missing: '+String(src));
     }finally{
       await page.evaluate(()=>document.querySelector(
         '#dc-desktop-offline-phaser-probe')?.remove());
