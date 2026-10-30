@@ -6,10 +6,14 @@ on:
       - integration/windows-ranch-review-20261030
     paths:
       - 'desktop/**'
+      - 'src/pc-ranch-sprite-guard.js'
+      - 'src/pc-playability-guide.js'
       - '.github/workflows/windows-desktop-integration.yml'
   pull_request:
     paths:
       - 'desktop/**'
+      - 'src/pc-ranch-sprite-guard.js'
+      - 'src/pc-playability-guide.js'
       - '.github/workflows/windows-desktop-integration.yml'
   workflow_dispatch:
 

@@ -82,12 +82,35 @@ async function run(){
         'empty bundled game resource: '+asset.url);
     }
 
+    // Verify actual species animation GIFs through the same secure local
+    // protocol in both development mode and the packaged Windows EXE.
+    const nativeGifs=await page.evaluate(async()=>{
+      const urls=['assets/sprites/rookie/m201_agumon_main_0.gif',
+        'assets/sprites/champion/m357_unimon_main_4.gif'];
+      return Promise.all(urls.map(async url=>{
+        const response=await fetch(url,{cache:'no-store'});
+        const data=new Uint8Array(await response.arrayBuffer());
+        return {url,status:response.status,length:data.byteLength,
+          signature:String.fromCharCode(...data.slice(0,6))};
+      }));
+    });
+    for(const gif of nativeGifs){
+      assert.equal(gif.status,200,'missing original species GIF: '+gif.url);
+      assert.ok(gif.length>32,'empty/corrupt GIF: '+gif.url);
+      assert.equal(gif.signature,'GIF89a','invalid GIF: '+gif.url);
+    }
+
     // The ranch preview remains optional and the canonical game stays intact.
     if(!(await page.evaluate(()=>Boolean(window.DCContinuousRanchPreview))))
       await page.addScriptTag({url:'digichamp://game/src/pc-playability-guide.js'});
     await page.waitForFunction(()=>
-      Boolean(window.DCContinuousRanchPreview&&window.DCRanchFacadeOcclusion),
+      Boolean(window.DCContinuousRanchPreview&&window.DCRanchFacadeOcclusion&&
+        window.DCRanchSpriteGuard),
       {timeout:30000});
+    const sameSpecies=await page.evaluate(()=>DCRanchSpriteGuard.fallbackUrlFor(
+      'assets/sprites/rookie/m201_agumon_main_14.gif'));
+    assert.equal(sameSpecies,'assets/sprites/rookie/m201_agumon_main_0.gif',
+      'Windows native game must use identical-species GIF fallback');
     // The actual farm simulation runs continuously. Freeze *only for this
     // visual A/B assertion*, otherwise hunger/idle timers change naturally
     // while Playwright clicks the preview button.
