@@ -391,84 +391,26 @@ async function measure(page){
         'hidden drawer still keeps the original facility details updated');
       assert.equal((await measure(page)).save,original.save,
         'facility selection must not touch gameplay state');
-      // Front facade occlusion QA: the original atlas should cover actors
-      // standing BEHIND an unlocked facility, never those in front.
-      assert.equal(await page.locator('.dc-ranch-facade-front').count(),0,
-        'the preview must not show locked building facades');
-      const facadesSaved=await page.evaluate(()=>
-        JSON.parse(JSON.stringify(eval('state').facilities)));
-      const occlusion=await page.evaluate(()=>{
-        const s=eval('state'),id='training';
-        s.facilities[id]=true;
+      // The old radial WebP facility facades do NOT align with the PC 4+3
+      // grid. Showing them here would paint unrelated structures over actors.
+      const facadeIsolation=await page.evaluate(()=>{
+        const s=eval('state'),previous=JSON.parse(JSON.stringify(s.facilities));
         const tile=document.querySelector('.hexTile[data-hex="training"]');
-        const was={locked:tile.classList.contains('locked'),
-          unlocked:tile.classList.contains('unlocked')};
-        tile.classList.add('unlocked');
-        tile.classList.remove('locked');
-        const active=window.DCRanchFacadeOcclusion.refresh();
-        const facade=document.querySelector(
-          '.dc-ranch-facade-front[data-zone="training"]');
-        const style=getComputedStyle(facade);
-        return {was,active,left:facade.style.left,top:facade.style.top,
-          z:Number(facade.style.zIndex),offset:facade.style.getPropertyValue(
-            '--dc-facade-offset'),pointerEvents:style.pointerEvents,
-          display:style.display,mask:style.maskImage,
-          background:style.backgroundImage};
-      });
-      assert.ok(occlusion.active.includes('training'));
-      assert.equal(occlusion.left,'460px');
-      assert.equal(occlusion.top,'128px');
-      assert.equal(occlusion.z,260);
-      assert.equal(occlusion.offset,'-350px -15px');
-      assert.equal(occlusion.pointerEvents,'none',
-        'visible original building art must never block clicks');
-      assert.equal(occlusion.display,'block');
-      assert.match(occlusion.mask,/radial-gradient/);
-      assert.match(occlusion.background,/hex_farm_v0232.webp/);
-      const facilityDepth=await page.evaluate(()=>{
-        const world=document.getElementById('farmWorld');
-        const create=(id,y)=>{
-          const node=document.createElement('button');
-          node.id=id;node.type='button';node.className='hexActor';
-          node.style.left='460px';node.style.top=y+'px';
-          const image=document.createElement('img');
-          image.width=50;image.height=40;
-          const label=document.createElement('span');
-          label.textContent=id;
-          node.append(image,label);
-          world.appendChild(node);
-        };
-        create('dc-test-behind',133);
-        create('dc-test-ahead',198);
-        DCRanchActorDepth.refresh();
-        const behind=document.getElementById('dc-test-behind');
-        const ahead=document.getElementById('dc-test-ahead');
-        return {behind:Number(behind.style.zIndex),
-          ahead:Number(ahead.style.zIndex),
-          facade:Number(document.querySelector(
-            '.dc-ranch-facade-front[data-zone="training"]').style.zIndex),
-          shadowWidth:behind.style.getPropertyValue('--dc-ground-shadow-width')};
-      });
-      assert.ok(facilityDepth.behind<facilityDepth.facade &&
-        facilityDepth.facade<facilityDepth.ahead,
-        'facility must hide a rear actor but not a front actor');
-      assert.equal(facilityDepth.shadowWidth,'34px',
-        'actor contact shadow scales to its real rendered image width');
-      await page.evaluate(saved=>{
-        const s=eval('state');
-        s.facilities=saved;
-        const tile=document.querySelector('.hexTile[data-hex="training"]');
-        tile.classList.remove('unlocked');
-        tile.classList.add('locked');
+        s.facilities.training=true;
+        tile.classList.add('unlocked');tile.classList.remove('locked');
+        const active=DCRanchFacadeOcclusion.refresh();
+        const result={active,count:document.querySelectorAll(
+          '.dc-ranch-facade-front').length};
+        s.facilities=previous;
+        tile.classList.remove('unlocked');tile.classList.add('locked');
         DCRanchFacadeOcclusion.refresh();
-        document.getElementById('dc-test-behind')?.remove();
-        document.getElementById('dc-test-ahead')?.remove();
-      },facadesSaved);
-      assert.equal(await page.locator(
-        '.dc-ranch-facade-front[data-zone="training"]').count(),0,
-        'unbuilt building facades must disappear after lock restore');
+        return result;
+      });
+      assert.deepEqual(facadeIsolation.active,[]);
+      assert.equal(facadeIsolation.count,0,
+        'the remastered two-row map must never show a radial atlas building crop');
       assert.equal((await measure(page)).save,original.save,
-        'the facade comparison must preserve the complete farm save');
+        'preview facade isolation must not write save data');
       // Visual-depth QA: Y determines front-to-back sprite stacking. In a
       // cluster only redundant nameplates collapse; sprites are never hidden.
       await page.evaluate(()=>{
