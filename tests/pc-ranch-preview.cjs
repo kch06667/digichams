@@ -201,7 +201,7 @@ async function measure(page){
       // training/battle cycle. A successful fallback resets the retry guard.
       await page.evaluate(()=>{
         const img=document.querySelector('#dc-sprite-success-probe img');
-        img.src='assets/sprites/rookie/m201_agumon_main_98.gif';
+        img.src='assets/sprites/rookie/m201_agumon_main_99.gif';
       });
       await page.waitForFunction(()=>{
         const el=document.querySelector('#dc-sprite-success-probe');
