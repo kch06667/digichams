@@ -99,6 +99,32 @@ async function run(){
     assert.ok(shell.stageHeight>250&&shell.stageHeight<=shell.viewportHeight,
       'ranch viewport should fit inside the one-window PC game shell');
 
+    // Regressions from the user's first PC playtest: the old training/AP
+    // controls were clipped under the ranch and the seven tiles were radial.
+    const ranchStage=await page.evaluate(()=>{
+      const c=window.DCFarm,controls=document.querySelector('.hexControls');
+      const positions=Object.values(c.HEX_CENTERS);
+      const rows=[...new Set(positions.map(p=>p[1]))].sort((a,b)=>a-b);
+      const tiles=[...document.querySelectorAll('#farmPanel .hexTile')];
+      const visible=tiles.filter(t=>getComputedStyle(t).visibility!=='hidden');
+      return {rows,upper:positions.filter(p=>p[1]===rows[0]).length,
+        lower:positions.filter(p=>p[1]===rows[1]).length,
+        commandsInDrawer:!!controls?.closest('#dc-pc-control-drawer'),
+        hiddenLocked:tiles.filter(t=>t.classList.contains('locked')&&
+          getComputedStyle(t).visibility==='hidden').length,
+        pickerButtons:document.querySelectorAll('#dc-pc-facility-picker button').length,
+        visibleTiles:visible.length};
+    });
+    assert.deepEqual(ranchStage.rows,[252,421]);
+    assert.equal(ranchStage.upper,4);
+    assert.equal(ranchStage.lower,3);
+    assert.equal(ranchStage.commandsInDrawer,true,
+      'actual training, AP and care inputs must live in the management drawer');
+    assert.equal(ranchStage.pickerButtons,7);
+    assert.equal(ranchStage.visibleTiles,1,
+      'new save should start with only its unlocked central ranch');
+    assert.equal(ranchStage.hiddenLocked,6);
+
     // Verify actual species animation GIFs through the same secure local
     // protocol in both development mode and the packaged Windows EXE.
     const nativeGifs=await page.evaluate(async()=>{
