@@ -131,6 +131,8 @@ def capture(page,mobile):
 
 def farm_and_goal(page,identity):
     page.locator('[data-tab="nursery"]').click()
+    if not page.locator('#hexMon').is_visible() and page.locator('#dc-pc-drawer-toggle').count():
+        page.locator('#dc-pc-drawer-toggle').click()
     page.locator('#hexMon').select_option(identity['captured'])
     before=page.evaluate("""(id) => {
       const m=state.team.find(x=>x.instanceId===id);
