@@ -72,7 +72,7 @@ body.mode-nds #farmPanel .farmViewport{height:330px;min-height:330px;}
 #farmPanel .farmWorld.foodPlacement .hexActor{pointer-events:none;}
 
 /* Walkable connectors use the same core-to-plot graph as the simulation. */
-#farmPanel .hexPath{position:absolute;z-index:0;height:28px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
+#farmPanel .hexPath{position:absolute;z-index:0;height:48px;transform-origin:0 50%;pointer-events:none;background:repeating-linear-gradient(90deg,#9c8756 0 12px,#827044 12px 14px);border-block:3px solid #544c35;box-sizing:border-box;}
 
 /* v0.23.2 map visual skin (presentation only): independent of simulation code */
 #farmPanel .farmIntro h2{color:#d7fbff;text-shadow:0 0 13px #35bcfb58;letter-spacing:.025em;}
