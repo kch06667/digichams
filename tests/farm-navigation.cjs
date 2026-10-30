@@ -81,3 +81,14 @@ test('shared expanded attack/defense queues reserve unique positions',()=>{
  assert.equal(new Set(waiting.map(a=>JSON.stringify(a.waitPosition))).size,4);
  for(const a of waiting)assert.ok(farm.foodGround(s,a.waitPosition.x,a.waitPosition.y));
 });
+
+test('visible connectors match unlocked walkable world paths',()=>{
+ const s=state();s.facilities={training:true,garden:true};farm.ensure(s);
+ assert.ok(farm.openCorridors(s).some(([a,b])=>[a,b].includes('training')&&[a,b].includes('garden')));
+ const a=farm.HEX_CENTERS.training,b=farm.HEX_CENTERS.garden;
+ const midpoint={x:(a[0]+b[0])/2,y:(a[1]+b[1])/2};
+ assert.ok(farm.walkable(s,(midpoint.x-369)/1.82,(midpoint.y-262)/1.56));
+ const locked=state();farm.ensure(locked);
+ assert.equal(farm.openCorridors(locked).length,0);
+ assert.equal(farm.walkable(locked,(midpoint.x-369)/1.82,(midpoint.y-262)/1.56),false);
+});
