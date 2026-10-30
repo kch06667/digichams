@@ -1,0 +1,35 @@
+name: Temporary private Unimon GIF alias sync for PR87
+on:
+  push:
+    branches:
+      - fix/original-battle-pose-consistency-20261030
+    paths:
+      - '.github/workflows/pr87-sync-unimon.yml'
+permissions:
+  contents: write
+jobs:
+  sync-original-playable-pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/original-battle-pose-consistency-20261030
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Correct only original Unimon action 5 graphics in both game HTMLs
+        run: |
+          python tools/sync-original-unimon-hit.py
+          python tools/sync-original-unimon-hit.py --check
+          git diff --check
+      - name: Commit only playable game HTML changes to draft branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- index.html standalone.html
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(gfx): use original Unimon action 5 GIF in both playable HTMLs"
+            git push origin HEAD:fix/original-battle-pose-consistency-20261030
+          fi
