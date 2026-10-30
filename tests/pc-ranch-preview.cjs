@@ -62,6 +62,20 @@ async function measure(page){
       await page.waitForFunction(()=>Boolean(window.DCRanchGroundPaths),{timeout:12000});
       await page.waitForFunction(()=>Boolean(window.DCRanchActorDepth),{timeout:12000});
       await page.waitForFunction(()=>Boolean(window.DCRanchFacadeOcclusion),{timeout:12000});
+      // The actual 216-species game renderer must use Unimon's original
+      // action-5 filename, not the earlier unrelated action-4 fallback.
+      const unimonHit=await page.evaluate(async()=>{
+        const src=spriteUrl('유니몬',5);
+        const img=new Image();
+        img.src=src;
+        await new Promise((resolve,reject)=>{
+          if(img.complete){if(img.naturalWidth)return resolve();return reject(Error('unimon GIF failed'));}
+          img.onload=resolve;img.onerror=()=>reject(Error('unimon GIF load failed'));
+        });
+        return {src,w:img.naturalWidth,h:img.naturalHeight};
+      });
+      assert.match(unimonHit.src,/m357_unimon_main_5_1\.gif$/);
+      assert.ok(unimonHit.w>0&&unimonHit.h>0);
       await page.evaluate(()=>{eval('state').world.paused=true;});
       const original=await measure(page);
       // Real PC flow: hidden Phaser battle remnants must NOT trap the player
