@@ -170,12 +170,20 @@
     // nodes into the drawer, so the main farm view has no lower control strip.
     const farmNavigation=farmPanel.querySelector('.farmNav');
     const farmDetails=farmPanel.querySelector('#farmDetails');
+    // Actual training/AP/health controls were still below the map and
+    // silently clipped by the fixed-height one-screen shell in PR #91.
+    // Reparent the LIVE DOM nodes: existing handlers and player state survive.
+    const farmCommands=farmPanel.querySelector('.hexControls');
     const farmTools=document.createElement('section');
     farmTools.id='dc-pc-farm-tools';
     farmTools.setAttribute('aria-label','맵 탐색 및 시설 정보');
     if(farmNavigation)farmTools.appendChild(farmNavigation);
     if(farmDetails)farmTools.appendChild(farmDetails);
     rail.insertBefore(farmTools,close.nextSibling);
+    if(farmCommands){
+      farmCommands.id='dc-pc-live-commands';
+      rail.insertBefore(farmCommands,farmTools.nextSibling);
+    }
     function setDrawer(open,returnFocus=false){
       drawerOpen=!!open;
       nursery.classList.toggle('dc-pc-drawer-open',drawerOpen);
@@ -272,7 +280,7 @@
       '훈련 또는 휴식을 지정할 수 있어.';
     return {title:'사육장',detail:name+' · '+time+' · '+
       (s?.world?.paused?'일시정지':'진행 중')+' · '+action,
-      label:'훈련 설정으로',selector:'#farmPanel .hexControls'};
+      label:'훈련 설정으로',selector:'#dc-pc-live-commands'};
   }
   function updateGraphicWarning(id){
     const sel=id==='hunt'?'#wildArt':'#farmPanel .hexActor img';
@@ -321,6 +329,11 @@
     btn.addEventListener('click',()=>goTab(btn.dataset.dcPcTab));
   }
   jump.addEventListener('click',()=>{
+    if(activeTab()==='nursery' && window.DCPCDrawer){
+      window.DCPCDrawer.open();
+      document.querySelector('#dc-pc-live-commands #hexMon')?.focus({preventScroll:true});
+      return;
+    }
     const el=document.querySelector(jump.dataset.target) ||
       document.querySelector(activeTab()==='battle'?'#championshipPanel':
         activeTab()==='hunt'?'#huntStage':'#farmPanel');
