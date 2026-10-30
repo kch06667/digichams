@@ -39,7 +39,7 @@ const server=http.createServer((req,res)=>{
    page.on('pageerror',e=>errors.push(e.message));
    await page.route('https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js',
      route=>route.fulfill({path:vendor,contentType:'application/javascript'}));
-   await page.goto('http://127.0.0.1:'+server.address().port+'/phaser-lab/',
+   await page.goto('http://127.0.0.1:'+server.address().port+'/phaser-lab/index.html',
      {waitUntil:'domcontentloaded'});
    await page.waitForFunction(()=>window.DigiPhaserLab?.stageStatus()?.fighters===6,
      {timeout:25000});
