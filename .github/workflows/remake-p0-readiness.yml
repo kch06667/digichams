@@ -1,0 +1,24 @@
+name: Remake P0 static startup audit
+on:
+  pull_request:
+    paths:
+      - 'tools/remake-p0-readiness.cjs'
+      - 'tests/remake-p0-readiness.cjs'
+      - 'docs/REMAKE_P0_EXECUTION_BASELINE_20261031.md'
+      - '.github/workflows/remake-p0-readiness.yml'
+  push:
+    paths:
+      - 'tools/remake-p0-readiness.cjs'
+      - 'tests/remake-p0-readiness.cjs'
+jobs:
+  startup-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test read-only startup diagnosis
+        run: node --test tests/remake-p0-readiness.cjs
+      - name: Report current startup readiness (not a release gate)
+        run: node tools/remake-p0-readiness.cjs
