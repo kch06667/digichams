@@ -1,22 +1,32 @@
 /* user_design topology/time; numeric balance provisional, not ROM-verified. */
 (function(root){
 'use strict';
-// Four upper and three lower contiguous hexes (PC expansion, not ROM geometry).
-const HEX_CENTERS={garden:[130,252],training:[350,252],track:[570,252],forest:[790,252],
- rest:[240,421],core:[460,421],clinic:[680,421]};
-const HEX_EDGES=[];
-for(const [from,a] of Object.entries(HEX_CENTERS))for(const [to,b] of Object.entries(HEX_CENTERS)){
- if(from>=to)continue;
- if(Math.hypot(a[0]-b[0],a[1]-b[1])<=225)HEX_EDGES.push([from,to]);
-}
-const SLOTS={attack:{x:33,y:103},defense:{x:50,y:85},speed:{x:67,y:103},
- rest:{x:62,y:121},cage:{x:50,y:103}};
-const PLOTS={training:{x:(350-369)/1.82,y:(252-262)/1.56,zone:'training'},
- track:{x:(570-369)/1.82,y:(252-262)/1.56,zone:'track'},
- rest:{x:(240-369)/1.82,y:(421-262)/1.56,zone:'rest'},
- forest:{x:(790-369)/1.82,y:(252-262)/1.56,zone:'forest'}};
+// The 4+3 honeycomb is for Windows PC; original mobile/NDS terrain
+// and pure Node battle/farm simulation retain their old coordinates.
+const PC_HONEYCOMB=typeof root.matchMedia==='function' &&
+  !!root.document && root.matchMedia('(min-width:900px) and (pointer:fine)').matches;
 const OLD_HEX_CENTERS={core:[460,340],training:[460,128],garden:[270,234],
  track:[650,234],rest:[270,446],clinic:[650,446],forest:[460,552]};
+const HEX_CENTERS=PC_HONEYCOMB?
+ {garden:[130,252],training:[350,252],track:[570,252],forest:[790,252],
+  rest:[240,421],core:[460,421],clinic:[680,421]}:OLD_HEX_CENTERS;
+const HEX_EDGES=[];
+if(PC_HONEYCOMB){
+ for(const [from,a] of Object.entries(HEX_CENTERS))for(const [to,b] of Object.entries(HEX_CENTERS)){
+  if(from>=to)continue;
+  if(Math.hypot(a[0]-b[0],a[1]-b[1])<=225)HEX_EDGES.push([from,to]);
+ }
+}else for(const id of Object.keys(HEX_CENTERS))if(id!=='core')HEX_EDGES.push(['core',id]);
+const SLOTS=PC_HONEYCOMB?
+ {attack:{x:33,y:103},defense:{x:50,y:85},speed:{x:67,y:103},rest:{x:62,y:121},cage:{x:50,y:103}}:
+ {attack:{x:25,y:35},defense:{x:50,y:22},speed:{x:75,y:35},rest:{x:73,y:68},cage:{x:50,y:35}};
+const PLOTS=PC_HONEYCOMB?
+ {training:{x:(350-369)/1.82,y:(252-262)/1.56,zone:'training'},
+  track:{x:(570-369)/1.82,y:(252-262)/1.56,zone:'track'},
+  rest:{x:(240-369)/1.82,y:(421-262)/1.56,zone:'rest'},
+  forest:{x:(790-369)/1.82,y:(252-262)/1.56,zone:'forest'}}:
+ {training:{x:50,y:-76,zone:'training'},track:{x:154,y:-18,zone:'track'},
+  rest:{x:-54,y:118,zone:'rest'},forest:{x:50,y:198,zone:'forest'}};
 function foodGround(s,x,y){
  if(!Number.isFinite(x)||!Number.isFinite(y))return false;
  const px=369+x*1.82,py=262+y*1.56;
@@ -39,6 +49,11 @@ function walkable(s,x,y){
 }
 // Follow neighboring unlocked cells; never travel through a locked tile.
 function routeTo(s,a,target){
+ if(!PC_HONEYCOMB){
+  const from=zoneAt(s,a),to=zoneAt(s,target),points=[];
+  if(from!==to){if(from!=='core')points.push(center(from));points.push(center('core'));if(to!=='core')points.push(center(to));}
+  points.push({x:target.x,y:target.y});return points;
+ }
  const from=zoneAt(s,a),to=zoneAt(s,target),seen=new Set([from]);
  const queue=[[from]],opened=new Set(openZones(s));let route=null;
  while(queue.length){
@@ -166,7 +181,7 @@ function ensure(s){
  if(![1,2,4].includes(s.world.speed))s.world.speed=1;
  // Legacy radial-map save coordinates: reanchor each position once while
  // preserving HP, inventory, training targets, and elapsed progress.
- if(s.farm.layoutVersion!==2){
+ if(PC_HONEYCOMB && s.farm.layoutVersion!==2){
   const convert=p=>{
    if(!p||!Number.isFinite(p.x)||!Number.isFinite(p.y))return;
    const px=369+p.x*1.82,py=262+p.y*1.56;
@@ -302,7 +317,7 @@ function step(s,dt,hooks={}){
    a.idleTime+=dt;
    // When no specific order is active, fatigued or injured Digimon rest by themselves.
    if(m.fatigue>=65||m.hp<m.maxHp*.4){a.goal=destination(s,'rest');a.mode='moving';a.pose=2;}
-   else if(a.idleTime>3){a.idleTime=0;a.goal={x:35+rnd(s)*30,y:79+rnd(s)*51,kind:'wander'};a.mode='moving';a.pose=2;}
+   else if(a.idleTime>3){a.idleTime=0;a.goal=PC_HONEYCOMB?{x:35+rnd(s)*30,y:79+rnd(s)*51,kind:'wander'}:{x:23+rnd(s)*54,y:27+rnd(s)*49,kind:'wander'};a.mode='moving';a.pose=2;}
   }
   if(a.mode==='moving'||a.mode==='waiting'){
    if(!a.goal){clear(s,a);continue;}
@@ -418,5 +433,5 @@ function trainingStatus(s,id){
   fatigue:Math.max(0,Number(m.fatigue)||0),autoRest:a.autoRest!==false
  };
 }
-const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,trainingStatus,HEX_CENTERS,HEX_EDGES,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
+const api={ensure,command,placeFood,step,advance,SLOTS,PLOTS,destination,CFG,trainingStatus,HEX_CENTERS,HEX_EDGES,PC_HONEYCOMB,foodGround,walkable};if(typeof module!=='undefined'&&module.exports)module.exports=api;root.DCFarm=api;
 })(typeof globalThis!=='undefined'?globalThis:this);
