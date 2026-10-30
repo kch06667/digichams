@@ -47,7 +47,10 @@ npm run build:win
 - `npm run build:win`: portable Windows EXE를 `dist/desktop/`에 생성
 - Windows 자동 검사는 GitHub Actions
   `Windows desktop integration (local review only)`에서 실제 실행 및 빌드를
-  시도합니다. **GitHub에 EXE나 게임 자산을 다운로드 아티팩트로 업로드하지 않습니다.**
+  시도합니다. **일반 PR 검사는 실행 가능한 win-unpacked EXE까지 검증**하고,
+  단일 파일 portable EXE 빌드는 긴 NSIS 압축 절차이므로 Actions의
+  `workflow_dispatch`에서 수동 실행하거나 로컬 `npm run build:win`으로
+  별도 검증합니다. **GitHub에 EXE나 게임 자산을 다운로드 아티팩트로 업로드하지 않습니다.**
   자동 검사 성공과 사용자의 실제 PC 화면이 만족스러운지는 서로 별개의 기준입니다.
 
 ## 저장 데이터·권한
