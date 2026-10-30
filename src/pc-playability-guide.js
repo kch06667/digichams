@@ -178,6 +178,27 @@
     farmTools.id='dc-pc-farm-tools';
     farmTools.setAttribute('aria-label','맵 탐색 및 시설 정보');
     if(farmNavigation)farmTools.appendChild(farmNavigation);
+    // Locked expansion sites are selectable from this drawer, while the
+    // starting stage visibly contains only the one owned hex and Digimon egg.
+    const sitePicker=document.createElement('div');
+    sitePicker.id='dc-pc-facility-picker';
+    sitePicker.setAttribute('aria-label','사육장 구역 및 건설 선택');
+    const sites=[['core','중앙'],['training','훈련장'],['garden','정원'],
+      ['track','주행장'],['rest','휴식'],['clinic','치료소'],['forest','숲']];
+    for(const [id,label] of sites){
+      const button=document.createElement('button');
+      button.type='button';
+      button.dataset.site=id;
+      button.textContent=label;
+      button.addEventListener('click',()=>{
+        window.DCHexFarm?.choose(id);
+        for(const item of sitePicker.querySelectorAll('button'))
+          item.setAttribute('aria-pressed',String(item===button));
+      });
+      button.setAttribute('aria-pressed',String(id==='core'));
+      sitePicker.appendChild(button);
+    }
+    farmTools.appendChild(sitePicker);
     if(farmDetails)farmTools.appendChild(farmDetails);
     rail.insertBefore(farmTools,close.nextSibling);
     if(farmCommands){
