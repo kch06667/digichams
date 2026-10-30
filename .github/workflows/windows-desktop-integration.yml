@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - integration/windows-ranch-review-20261030
+      - release/windows-pc-rc-20261030
     paths:
       - 'desktop/**'
       - 'src/pc-ranch-sprite-guard.js'
@@ -41,6 +42,7 @@ jobs:
           node --check desktop/tests/launcher.test.cjs
           node --check desktop/tests/electron-smoke.cjs
           npm --prefix desktop test
+          npm --prefix desktop run test:release
 
   windows-native:
     runs-on: windows-latest
@@ -71,17 +73,29 @@ jobs:
           @('index.html','src\farm-core.js','assets\farm\continuous_ranch_preview.svg','phaser-lab\index.html') | ForEach-Object {
             if (!(Test-Path (Join-Path $root $_))) { throw "Packaged resource missing: $_" }
           }
+          $env:DC_TEST_PACKAGE_ROOT = $root
+          npm --prefix desktop run test:release
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged original game asset audit failed' }
           $env:DC_PACKAGED_EXE = $exe
           npm --prefix desktop run test:ui
-      # Unpacked Windows EXE is the normal smoke-test target. A portable
-      # single-file EXE additionally invokes slow NSIS tooling; opt in manually.
-      - name: Verify portable Windows EXE can be built without publishing
-        if: github.event_name == 'workflow_dispatch'
-        timeout-minutes: 15
+          if ($LASTEXITCODE -ne 0) { throw 'Packaged Electron gameplay smoke failed' }
+      # RC is tested in GitHub's Windows runner, but is NEVER uploaded as a
+      # publicly downloadable Actions artifact. Only the user may build a
+      # private Windows copy from their extracted source tree.
+      - name: Build and verify private Windows portable RC (no upload)
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'release/windows-pc-rc-20261030')
+        timeout-minutes: 20
         shell: pwsh
         run: |
           npm --prefix desktop run build:win
-          if ($LASTEXITCODE -ne 0) { throw 'Portable EXE builder failed' }
-          $portable = Get-ChildItem 'dist\desktop' -Filter 'Digimon-Championship-*-Windows-x64.exe'
-          if (!$portable) { throw 'Portable Windows EXE not generated' }
-          Write-Host "PASS local-only portable EXE build: $($portable.Count) file(s). No artifacts uploaded."
+          if ($LASTEXITCODE -ne 0) { throw 'Portable NSIS EXE builder failed' }
+          $portable = @(Get-ChildItem 'dist\desktop' -Filter 'Digimon-Championship-*-Windows-x64.exe' -File)
+          if ($portable.Count -ne 1) { throw "Expected exactly 1 portable EXE; found $($portable.Count)" }
+          if ($portable[0].Length -lt 10000000) { throw 'Portable EXE is unexpectedly small' }
+          $file = [IO.File]::OpenRead($portable[0].FullName)
+          try {
+            if ($file.ReadByte() -ne 77 -or $file.ReadByte() -ne 90) { throw 'Portable EXE has no MZ/PE executable header' }
+          } finally { $file.Dispose() }
+          $sha = (Get-FileHash $portable[0].FullName -Algorithm SHA256).Hash
+          Write-Host "PASS private portable Windows RC: $($portable[0].Name) SHA256=$sha"
+          Write-Host 'No asset, ROM or executable artifact uploaded.'
