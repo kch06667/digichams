@@ -17,6 +17,9 @@ test('native attacker -> hit -> KO stages use the actual original GIF IDs',()=>{
  const attack=fighter({act:'attack',pose:9});
  const hurt=fighter({act:'hurt',pose:5,hp:9,flash:.22,knockVX:-140});
  const dead=fighter({act:'ko',pose:37,hp:0,flash:.22,knockVX:-140});
+ for(const action of [7,8,9,10])
+  assert.equal(L.motionAction({...attack,pose:action},allActions),action,
+   'original attack pose '+action+' must not be remapped');
  assert.equal(L.motionAction(attack,allActions),9);
  assert.equal(L.motionAction(hurt,allActions),5);
  assert.equal(L.motionAction(dead,allActions),37);
