@@ -166,6 +166,26 @@
     return clamp(f.knockVX * 0.075, -14, 14);
   }
 
+  // Pure, renderer-only pose styling. Keep the last native KO GIF frame
+  // upright and fully visible instead of continuously bobbing/ghosting it.
+  // When there is NO original KO action in the fighter's local atlas, keep
+  // the prior collapsed procedural pose (including its distinct opacity).
+  // This never advances the battle clock or changes an actor's HP/AI/save.
+  function fighterPresentation(f, useArt, hasNativeKo, time=0) {
+    const knockedOut=f.hp<=0;
+    const faintFallback=knockedOut&&(!useArt||!hasNativeKo);
+    const bob=knockedOut?0:
+      (f.act==='walk'||f.act==='evade'
+        ?Math.sin(time*.012+f.slot)*1.7
+        :Math.sin(time*.003+f.slot)*.4);
+    const knockLean=knockbackTilt(f);
+    const angle=knockedOut
+      ?(faintFallback?(f.side===0?-78:78):0)
+      :(knockLean||(!useArt&&f.act==='hurt'?(f.side===0?-12:12):0));
+    const alpha=knockedOut?(faintFallback?.5:1):f.flash>0?.65:1;
+    return {bob,faintFallback,angle,alpha};
+  }
+
   function playableAction(manifest, action) {
     if (!validateManifest(manifest)) return null;
     const entry = manifest.actions[String(action)];
@@ -174,6 +194,6 @@
 
   return Object.freeze({ ACTION, STATES, selectAction, validateManifest,
     knockbackForDamage, gainTrainingStat, playableAction, motionAction,
-    specialPhase, knockbackTilt, gifFrameTiming, validateLocalCatalog,
+    specialPhase, knockbackTilt, fighterPresentation, gifFrameTiming, validateLocalCatalog,
     projectileShape, hitCue });
 });
