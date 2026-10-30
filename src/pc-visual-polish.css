@@ -858,6 +858,24 @@
     outline:2px solid #ffe6a4;
     outline-offset:2px;
   }
+  /* Only the core is visible at the beginning. New connected hexes appear
+   * as they are unlocked; locked site construction stays in the drawer. */
+  body:not(.mode-nds) #farmPanel .hexTile.locked {visibility:hidden;pointer-events:none;}
+  body:not(.mode-nds) #dc-pc-facility-picker {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;padding-bottom:9px;border-bottom:1px solid #52717c;
+  }
+  body:not(.mode-nds) #dc-pc-facility-picker button {
+    min-height:34px;padding:5px 7px;font-size:12px;
+    border-radius:5px;border:1px solid #729bad;
+    color:#e7f3ef;background:#244659;cursor:pointer;
+  }
+  body:not(.mode-nds) #dc-pc-facility-picker button[aria-pressed=true] {
+    border-color:#f9da8e;background:#466079;color:#fff2cd;
+  }
+  body:not(.mode-nds) #dc-pc-facility-picker button:focus-visible {
+    outline:2px solid #ffe39d;outline-offset:2px;
+  }
   /* The map is the main stage, not a left-aligned block on widescreen PCs. */
   body:not(.mode-nds) #farmPanel .farmWorld {
     margin-inline:auto;
