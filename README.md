@@ -1,3 +1,5 @@
+> **현재 개발 지시 — 2026-10-31 (최우선):** 이 프로젝트는 **1차 원작 《디지몬 월드 챔피언십》 충실 재현 / 2차 별도 확장판**으로 방향을 확정했다. Phase 1은 원작 두 줄 케이지 관리·포획·훈련·분기 진화·실시간 AI 대회·해금을 하나의 Windows 게임에서 재현한다. 추가 궁극체·초궁극체·캡슐은 Phase 2 전용. 대형 자유 배치 사육장/육각형 복도 실험은 보류. **[최신 개발 기준](docs/REMAKE_ROADMAP_20261031.md)** / **[1차 플레이 검수표](docs/PHASE1_PLAYTEST_GATE_20261031.md)** 를 먼저 읽어야 한다. 아래 v0.23.x·육각형 관련 내용은 기존 구현의 역사적 기록이며 더 이상 제품 방향을 결정하지 않는다.
+
 > 개발 작업 안내 (2026-10-28): 최신 GitHub `main`을 기준으로 진행하고 매 수정마다 ZIP을 만들지 않습니다. `node tools/build-dev-page.cjs`로 가벼운 `index.dev.html`을 생성하여 개발·테스트하고, 기존 배포용 HTML은 그대로 유지합니다. `docs/DEVELOPMENT_WORKFLOW.md` 참고. 아래 v0.23.0 설명은 과거 기능 기록입니다.
 
 # Digimon World Championship · Browser Expansion Prototype v0.23.0
