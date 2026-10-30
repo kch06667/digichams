@@ -22,6 +22,16 @@
     document.head.appendChild(css);
   }
 
+  const intro=panel.querySelector('.farmIntro');
+  if(intro){
+    const title=intro.querySelector('h2');
+    const summary=intro.querySelector('p');
+    const tag=intro.querySelector('.tag');
+    if(title)title.textContent='🏡 사육장 · 케이지 관리';
+    if(summary)summary.textContent='케이지를 선택하여 돌봄·훈련하고, 대회와 성장에 따라 새 시설을 해금해 보세요.';
+    if(tag)tag.textContent='원작형 목록 화면 · 1차';
+  }
+
   const slots=[
     {id:'base',label:'기본 사육장',
       description:'디지몬의 생활·먹이·휴식·기본 훈련을 담당하는 공간.'},
@@ -123,7 +133,9 @@
     }else{
       select.value=id;
       select.dispatchEvent(new Event('change',{bubbles:true}));
-      farm.choose(farm.state?.facilities?.training?'training':'core');
+      // Even before construction, show the ORIGINAL special-training
+      // zone details so its prerequisite purchase remains reachable.
+      farm.choose('training');
     }
     render();
     return true;
