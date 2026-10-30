@@ -305,10 +305,12 @@
       this.refreshActors();
       this.updateHud();
       say('준비 완료 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
-        ' 기존 게임 전투 판정 · '+(nativeCatalog.size===216?
-          '원본 GIF 216종 색인 연결 · 출전 종족만 자동 재생':
-          this.loadedActions.size?
-            ('개인 모션 '+this.loadedActions.size+'종 로드 · 미등록 종은 임시 그래픽'):
+        ' 기존 게임 전투 판정 · '+(this.loadedActions.size?
+          ('개인 모션 '+this.loadedActions.size+'종 로드 · '+
+            (nativeCatalog.size===216?'미등록 종은 원본 GIF 자동 사용':
+              '미등록 종은 임시 그래픽')):
+          nativeCatalog.size===216?
+            '원본 GIF 216종 색인 연결 · 출전 종족만 자동 재생':
             '원본 GIF 미확인 · 임시 도형 그래픽')+
         (embeddedBattle?' · 본게임 전투 준비 완료':' · 본게임 전투가 아님'));
       window.DigiPhaserLab={
