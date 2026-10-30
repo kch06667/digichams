@@ -1,0 +1,33 @@
+name: Sync embedded PC farm sources in review branch
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+permissions:
+  contents: write
+jobs:
+  sync:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'fix/pc-ranch-two-row-map-drawer-20261031' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: true
+          fetch-depth: 0
+      - name: Refresh canonical embedded farm JS only
+        run: |
+          python3 tools/sync-embedded-farm.py
+          python3 tools/sync-embedded-farm.py --check
+          python3 tools/sync-embedded-hunt.py --check
+          python3 tools/sync-embedded-evolution.py --check
+      - name: Commit synchronized original HTML pages to PR head
+        run: |
+          if git diff --quiet -- index.html standalone.html; then
+            echo "Already synchronized"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- index.html standalone.html
+          git commit -m "chore(farm): synchronize canonical 4+3 map into executable HTML pages"
+          git push origin HEAD:refs/heads/fix/pc-ranch-two-row-map-drawer-20261031
