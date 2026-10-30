@@ -6,10 +6,10 @@ const initial=()=>({day:1,food:5,ropes:2,points:0,logs:[],team:[mon()]});
 // Exercise the PC-only topology separately. Node and mobile keep the
 // original radial geometry by design, including their old save coordinates.
 const pcFarm=(()=>{
- const mod={exports:{}},win={document:{},matchMedia:()=>({matches:true})};
+ const sandbox={document:{},matchMedia:()=>({matches:true}),module:{exports:{}}};
  const source=require('node:fs').readFileSync(require('node:path').join(__dirname,'..','src','farm-core.js'),'utf8');
- new Function('window','module',source)(win,mod);
- return mod.exports;
+ require('node:vm').runInNewContext(source,sandbox);
+ return sandbox.module.exports;
 })();
 const results=[];
 function test(name,cb){try{cb();results.push({name,status:'PASS'});}catch(e){results.push({name,status:'FAIL',message:e.message});}}
