@@ -75,7 +75,7 @@ async function measure(page){
       assert.match(await lifeStatus.textContent(),/자유 산책 꺼짐/);
       await roamButton.click();
       assert.equal(await roamButton.getAttribute('aria-pressed'),'true');
-      assert.match(await lifeStatus.textContent(),/산책 .*식사 .*휴식 .*훈련 /,
+      assert.match(await lifeStatus.textContent(),/산책 .*구경 .*식사 .*휴식 .*훈련 /,
         'live life counts must be visible with the optional behavior enabled');
       const isolatedWalk=await page.evaluate(()=>{
         const s={day:3,food:4,ropes:1,points:0,logs:[],

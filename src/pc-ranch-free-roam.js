@@ -72,8 +72,14 @@ function pickDestination(core,s,m,a){
  }
  return null;
 }
+// The base engine keeps idleTime as the canonical, saved idle counter.
+ // Negative seconds reserve a short ambient pause without changing the schema.
+function dwellSeconds(id,zone,seconds){
+ const phase=Math.floor(Math.max(0,Number(seconds)||0)/7);
+ return 3+(hash(id+':'+zone+':'+phase)%4); // 3-6 seconds
+}
 function activitySnapshot(s){
- const result={roaming:0,eating:0,resting:0,training:0,other:0,zoneCounts:{}};
+ const result={roaming:0,dwelling:0,eating:0,resting:0,training:0,other:0,zoneCounts:{}};
  for(const m of s?.team||[]){
   if(m.egg||m.lost||m.location==='storage')continue;
   const a=s.farm?.actors?.[m.instanceId];
@@ -82,7 +88,8 @@ function activitySnapshot(s){
   if(isAmbient(a)){
    result.roaming++;
    result.zoneCounts[a.goal.zone]=(result.zoneCounts[a.goal.zone]||0)+1;
-  }else if(kind==='eat')result.eating++;
+  }else if(a.mode==='idle'&&a.idleTime<0&&!a.goal)result.dwelling++;
+  else if(kind==='eat')result.eating++;
   else if(kind==='rest')result.resting++;
   else if(['attack','defense','speed','cage'].includes(kind))result.training++;
   else result.other++;
@@ -122,8 +129,40 @@ function createRoaming(core){
   return changed;
  }
  function patched(s,delta,hooks){
+  // Observe ONLY 8th-pass ambient goals. Never pause training, feeding,
+  // facility rest, legacy center wandering or the evolution pipeline.
+  const eligible=active&&Number.isFinite(delta)&&delta>0&&s?.farm?.actors&&
+    !s.world?.paused&&!s.pendingBattle;
+  const arrivals=eligible
+    ? (s.team||[]).filter(m=>!m.egg&&!m.lost&&m.location!=='storage')
+      .map(m=>({id:m.instanceId,goal:s.farm.actors[m.instanceId]?.goal}))
+      .filter(o=>o.goal?.kind==='wander'&&o.goal.zone&&
+        o.goal.zone!=='core'&&Object.hasOwn(ZONE_LABELS,o.goal.zone))
+    : [];
+  const glances=eligible
+    ? (s.team||[]).filter(m=>!m.egg&&!m.lost&&m.location!=='storage')
+      .map(m=>({id:m.instanceId,a:s.farm.actors[m.instanceId]}))
+      .filter(o=>o.a?.mode==='idle'&&!o.a.goal&&o.a.idleTime<=-2)
+      .map(o=>o.id)
+    : [];
   prepare(s,delta);
-  return original.call(this,s,delta,hooks);
+  const result=original.call(this,s,delta,hooks);
+  if(!eligible||s.world?.paused||s.pendingBattle)return result;
+  // Crossing -2 happens only once per pause, including across JSON reload.
+  // The existing mirrored idle GIF (pose 0) becomes a quick glance.
+  for(const id of glances){
+   const a=s.farm.actors?.[id];
+   if(a?.mode==='idle'&&!a.goal&&a.idleTime>-2&&a.idleTime<2){
+    a.face=a.face===1?-1:1;
+   }
+  }
+  for(const {id,goal} of arrivals){
+   const a=s.farm.actors?.[id];
+   if(!a||a.mode!=='idle'||a.goal)continue;
+   a.idleTime=-dwellSeconds(id,goal.zone,s.world?.seconds);
+   a.pose=0; // canonical species-specific idle animation
+  }
+  return result;
  }
  core.advance=patched;
  return Object.freeze({
@@ -160,7 +199,7 @@ function refreshStatus(){
  const q=roam.snapshot(gameState);
  const zones=Object.keys(q.zoneCounts).map(zone=>
   (ZONE_LABELS[zone]||zone)+' '+q.zoneCounts[zone]).join(', ');
- status.textContent='산책 '+q.roaming+' · 식사 '+q.eating+
+ status.textContent='산책 '+q.roaming+' · 구경 '+q.dwelling+' · 식사 '+q.eating+
   ' · 휴식 '+q.resting+' · 훈련 '+q.training+
   (zones?' | 방문: '+zones:'');
 }
