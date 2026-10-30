@@ -97,7 +97,7 @@ function transform(g,m,target,lookUp){const base=lookUp?.(target);if(!base)retur
   for(const food of g.farm?.foods||[])if(food.claim===m.instanceId)delete food.claim;
   a.goal=null;a.mode='idle';a.pose=0;a.remaining=0;
   a.resume=null;a.resumeTarget=null;a.resumeOptions=null;a.target=null;
-  a.route=null;a.routeKey=null;a.station=undefined;a.waitPosition=null;
+  a.route=null;a.routeKey=null;delete a.station;a.waitPosition=null;
   a.foodId=null;a.repositioning=false;a.trafficWait=0;a.idleTime=0;
  }
  log(g,`${old} → ${target} 진화! (누적 전투 ${e.battles}회, AP 새 단계 초기화)`);return true;
