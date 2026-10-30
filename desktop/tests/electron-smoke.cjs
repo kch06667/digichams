@@ -125,9 +125,36 @@ async function run(){
     const saved=await page.evaluate(k=>localStorage.getItem(k),key);
     assert.equal(saved,'desktop-persist-ok',
       'standalone window failed to preserve localStorage across reload');
-    await page.evaluate(k=>localStorage.removeItem(k),key);
+
+    // A reload is not the same as closing and reopening a Windows EXE.
+    // Reuse the disposable profile after fully terminating Electron so the
+    // actual disk-backed storage survives a true application cold start.
+    await app.close();
+    app=null;
+    app=await _electron.launch({
+      cwd:desktopRoot,
+      env:{...process.env,DC_TEST_USER_DATA:profile},
+      args:packaged?[]:['.'],
+      ...(packaged?{executablePath:path.resolve(packaged)}:{})
+    });
+    const coldProfile=await app.evaluate(({app})=>app.getPath('userData'));
+    assert.equal(path.resolve(coldProfile).toLowerCase(),
+      path.resolve(profile).toLowerCase(),
+      'cold-start run used a different profile than the first app launch');
+    const coldPage=await app.firstWindow({timeout:60000});
+    coldPage.on('pageerror',e=>errors.push(e.message));
+    await coldPage.waitForLoadState('domcontentloaded');
+    await coldPage.waitForFunction(()=>
+      !!document.querySelector('#farmPanel .farmWorld'),
+      {timeout:60000});
+    assert.match(coldPage.url(),/^digichamp:\/\/game\//,
+      'cold-start app must restore the same local game origin');
+    const coldSaved=await coldPage.evaluate(k=>localStorage.getItem(k),key);
+    assert.equal(coldSaved,'desktop-persist-ok',
+      'app close and reopen lost the persisted localStorage value');
+    await coldPage.evaluate(k=>localStorage.removeItem(k),key);
     assert.deepEqual(errors,[],'uncaught desktop renderer errors');
-    console.log('PASS',target,'local protocol, 920x690 ranch, optional skin, secure renderer, assets, reload-safe storage');
+    console.log('PASS',target,'local protocol, 920x690 ranch, optional skin, secure renderer, assets, reload and cold-restart storage');
     console.log('PASS local resources',localAssets.map(a=>a.url).join(', '));
   }finally{
     if(app)await app.close();
