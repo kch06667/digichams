@@ -73,10 +73,20 @@ def run(browser,base):
             assert status["stage"]["version"]=="retro-field-v1",status
             assert status["stage"]["originalArt"]>=1,status
             expected=init["wins"]+init["losses"]+i+1
+            # Commit persists the save BEFORE the full original game
+            # completes its location.reload(). An already-correct storage
+            # value alone can race the old in-memory state after the overlay
+            # disappears. Require BOTH states to agree; never weaken the
+            # original battle settlement or give synthetic wins.
             page.wait_for_function("""total => {
-              const v=JSON.parse(localStorage.getItem('dc_recreation_save')||'{}');
-              return (v.wins||0)+(v.losses||0)===total &&
-                !v.pendingBattle && !document.getElementById('dc-phaser-overlay');
+              try {
+                const v=JSON.parse(localStorage.getItem('dc_recreation_save')||'{}');
+                const s=eval('state');
+                return (v.wins||0)+(v.losses||0)===total &&
+                  (s.wins||0)+(s.losses||0)===total &&
+                  !v.pendingBattle && !s.pendingBattle &&
+                  !document.getElementById('dc-phaser-overlay');
+              } catch (_) {return false;}
             }""",arg=expected,timeout=30000)
             page.locator("#dc-phaser-engine").wait_for(state="attached")
             state=page.evaluate("""() => {

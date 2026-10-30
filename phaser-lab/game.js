@@ -28,13 +28,15 @@
   const status=document.getElementById('status');
   const say=message=>{status.textContent=message;};
   const L=window.DigiPhaserLabLogic, B=window.DigiDomainBridge,
-        RT=window.DCOriginalArenaCore, Art=window.DigiPrivateArtLoader;
+        RT=window.DCOriginalArenaCore, Art=window.DigiPrivateArtLoader,
+        Native=window.DigiNativeBattleGIF;
   const buttons=['battle','duel','train','reset','sound','cups','speed'];
   if(!window.Phaser||!L||!B||!RT||!Art){
     say('원본 전투 계산 모듈을 불러오지 못했어. 새로고침하거나 네트워크를 확인해.');
     return;
   }
   let manifest=null, localDuelPacks=[],localSpeciesCatalog=null,
+      nativeCatalog=new Map(),
       soundEnabled=false,simSpeed=2,
       savePreview=B.previewSample(), rosterChosen=null, trainingBonus=10,
       latestSpecies=null;
@@ -293,12 +295,23 @@
       // are generated: each entry corresponds to an original RT.step hit.
       this.hitEffectHistory=[];
       for(const actor of this.sim.fighters)this.addActor(actor);
+      // Original indexed GIFs are already bundled with the PC game.
+      // This optional HTML image layer does not change the Phaser engine,
+      // save state or private PNG-atlas priority. Only active fighters load.
+      this.nativeGifLayer=Native?.create(document.getElementById('game'),
+        this.game.canvas,nativeCatalog)||null;
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN,
+        ()=>this.nativeGifLayer?.dispose());
       this.refreshActors();
       this.updateHud();
       say('준비 완료 · '+RT.alive(this.sim,0).length+':'+RT.alive(this.sim,1).length+
         ' 기존 게임 전투 판정 · '+(this.loadedActions.size?
-          ('개인 모션 '+this.loadedActions.size+'종 로드 · 미등록 종은 임시 그래픽'):
-          '저작권 없는 임시 도형 그래픽')+
+          ('개인 모션 '+this.loadedActions.size+'종 로드 · '+
+            (nativeCatalog.size===216?'미등록 종은 원본 GIF 자동 사용':
+              '미등록 종은 임시 그래픽')):
+          nativeCatalog.size===216?
+            '원본 GIF 216종 색인 연결 · 출전 종족만 자동 재생':
+            '원본 GIF 미확인 · 임시 도형 그래픽')+
         (embeddedBattle?' · 본게임 전투 준비 완료':' · 본게임 전투가 아님'));
       window.DigiPhaserLab={
         battle:()=>this.battle(),
@@ -333,8 +346,16 @@
         stageStatus:()=>({
           version:this.stageVersion,
           fighters:this.sim.fighters.length,
-          originalArt:[...this.visuals.values()].filter(v=>v.useArt).length,
-          fallback:[...this.visuals.values()].filter(v=>!v.useArt).length,
+          originalArt:[...this.sim.fighters].filter(f=>{
+            const v=this.visuals.get(f.id);
+            return v?.useArt||this.nativeGifLayer?.status(f.id)?.ready;
+          }).length,
+          nativeArt:[...this.sim.fighters].filter(f=>
+            this.nativeGifLayer?.status(f.id)?.ready).length,
+          fallback:[...this.sim.fighters].filter(f=>{
+            const v=this.visuals.get(f.id);
+            return !v?.useArt&&!this.nativeGifLayer?.status(f.id)?.ready;
+          }).length,
           stageLabel:this.foot.text
         }),
         motionEvidence:()=>({...this.motionEvidence}),
@@ -414,6 +435,9 @@
               v.sprite.displayHeight:null,
             phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37),
+            nativeArt:!!this.nativeGifLayer?.status(f.id)?.ready,
+            nativeGif:this.nativeGifLayer?.status(f.id)?.src||null,
+            nativePose:this.nativeGifLayer?.status(f.id)?.pose??null,
             opacity:v?.sprite?.alpha??null,
             // During scene.restart(), Phaser may already have disposed an
             // old sprite's AnimationState before the new scene is created.
@@ -579,6 +603,9 @@
         v.label.setText(f.name);
         v.label.setAlpha(f.hp<=0?.5:1);
       }
+      // Native GIF images use the identical original actor coordinates;
+      // the Phaser canvas still owns HP, effects and actual hit judgment.
+      this.nativeGifLayer?.sync(this.sim.fighters,this.visuals,L,time);
       this.graphics.clear();
       this.projectileGraphics.clear();
       for(const f of this.sim.fighters){
@@ -893,6 +920,9 @@
   }
   async function boot(){
     for(const id of buttons)document.getElementById(id).disabled=true;
+    // This catalog is only a validated mapping to EXISTING local GIF files.
+    // Do not pre-download/convert all 8,640 images at startup.
+    if(Native)nativeCatalog=await Native.loadCatalog(url=>fetch(url));
     try{
       const resp=await fetch('./local-assets/manifest.json',{cache:'no-store'});
       if(resp.ok){

@@ -18,9 +18,9 @@ const important=[
  'src/pc-playability-guide.js','src/pc-ranch-free-roam.js',
  'src/pc-ranch-sprite-guard.js','src/pc-ranch-evolution-fx.js',
  'src/pc-continuous-ranch.css','src/pc-visual-polish.css',
- 'assets/sprite-index.json','assets/sprite-action-map.json',
+ 'assets/sprite-index.json','assets/species-catalog.json','assets/sprite-action-map.json',
  'assets/farm/hex_farm_v0232.webp','assets/farm/continuous_ranch_preview.svg',
- 'phaser-lab/index.html'
+ 'phaser-lab/index.html','phaser-lab/native-gif-layer.js'
 ];
 test('the real original game, farm, battle, evolution and PC shells are bundled',()=>{
  for(const relative of important){

@@ -37,6 +37,7 @@ a{color:#a8d8ff}
 <script defer src="./logic.js"></script>
 <script defer src="./arena-techniques.js"></script>
 <script defer src="./private-art-loader.js"></script>
+<script defer src="./native-gif-layer.js"></script>
 <script defer src="../src/arena-original-core.js"></script>
 <script defer src="./realtime-core.js"></script>
 <script defer src="./game.js"></script>
@@ -74,7 +75,7 @@ a{color:#a8d8ff}
 <button id="sound" type="button" aria-pressed="false">타격음 켜기</button>
 <button id="speed" type="button">속도 2×</button>
 </nav>
-<p><small>원작 GIF를 자신의 PC에서 <code>python tools/export-phaser-duel.py</code>로 변환하면, 이 화면을 다시 열 때 아구몬·가부몬 스프라이트가 자동 적용돼. 변환 파일은 서버에 업로드하지 않아. 두 종 중 하나라도 누락되면 임시 캐릭터로 실행돼.</small></p>
+<p><small>전체 게임에 포함된 원본 GIF를 별도 변환 없이 자동 사용해. 전투 참가 종족의 원본 파일만 불러오며, 누락된 경우에만 임시 캐릭터로 표시해. 기존 PNG atlas를 개인 PC에서 변환한 경우에는 그 애니메이션을 우선 사용하고, 파일은 서버에 업로드하지 않아.</small></p>
 <section aria-label="내 디지몬 그래픽 가져오기">
 <label for="artFiles">내 PC·휴대폰의 변환된 디지몬 모션 파일 적용 (manifest.json + PNG들, 서버 전송 없음)</label>
 <input id="artFiles" type="file" multiple accept=".json,.png,application/json,image/png">
