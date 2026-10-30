@@ -485,7 +485,7 @@ async function measure(page){
         'static winding route must not falsely display locked paths');
       await page.locator('#dc-ranch-preview-toggle').click();
       const reverted=await measure(page);
-      assert.ok(reverted.background.includes('hex_farm_v0232.webp'));
+      assert.ok(reverted.background.includes('radial-gradient'));
       await page.evaluate(()=>{
         DCRanchActorDepth.refresh();
         DCRanchFacadeOcclusion.refresh();
