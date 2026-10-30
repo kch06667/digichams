@@ -82,6 +82,23 @@ async function run(){
         'empty bundled game resource: '+asset.url);
     }
 
+    // The EXE should present one ranch viewport and two menu rows, not
+    // a long webpage with separate lower management windows.
+    await page.waitForFunction(()=>!!document.querySelector('#dc-pc-visual-polish')?.sheet,
+      null,{timeout:30000});
+    const shell=await page.evaluate(()=>{
+      const nav=document.querySelector('.wrap > nav.tabs');
+      const css=getComputedStyle(nav);
+      return {columns:css.gridTemplateColumns.split(' ').length,
+        rows:css.gridTemplateRows.split(' ').length,
+        stageHeight:document.querySelector('#nursery.active #farmPanel')?.clientHeight,
+        viewportHeight:innerHeight};
+    });
+    assert.equal(shell.columns,3,'PC menu should occupy 3 columns');
+    assert.equal(shell.rows,2,'PC menu must be exactly two rows');
+    assert.ok(shell.stageHeight>250&&shell.stageHeight<=shell.viewportHeight,
+      'ranch viewport should fit inside the one-window PC game shell');
+
     // Verify actual species animation GIFs through the same secure local
     // protocol in both development mode and the packaged Windows EXE.
     const nativeGifs=await page.evaluate(async()=>{
@@ -99,6 +116,18 @@ async function run(){
       assert.ok(gif.length>32,'empty/corrupt GIF: '+gif.url);
       assert.equal(gif.signature,'GIF89a','invalid GIF: '+gif.url);
     }
+
+    // The original farm launcher used /phaser-lab/ (a folder). Electron
+    // must serve the actual local HTML there, not a 404 Not Found page.
+    const directoryAlias=await page.evaluate(async()=>{
+      const response=await fetch('phaser-lab/?farmHandoff=route-check');
+      const html=await response.text();
+      return {status:response.status,
+        local:html.includes('./vendor/phaser.min.js'),
+        valid:html.includes('id="game"')};
+    });
+    assert.deepEqual(directoryAlias,{status:200,local:true,valid:true},
+      'production Phaser folder URL must never return Not Found');
 
     // The ACTUAL packaged Windows game must start a real 216-species
     // Phaser battle with the network disconnected. Previous checks only
@@ -185,6 +214,7 @@ async function run(){
     });
     const toggle=page.locator('#dc-ranch-preview-toggle');
     assert.equal(await toggle.count(),1);
+    await page.locator('#dc-pc-drawer-toggle').click();
     assert.equal(await toggle.getAttribute('aria-pressed'),'false');
     await toggle.click();
     assert.equal(await toggle.getAttribute('aria-pressed'),'true');
@@ -192,6 +222,7 @@ async function run(){
       getComputedStyle(el).backgroundImage),/continuous_ranch_preview\.svg/);
     await toggle.click();
     assert.equal(await toggle.getAttribute('aria-pressed'),'false');
+    await page.locator('#dc-pc-drawer-close').click();
     const after=await page.evaluate(()=>{
       const s=eval('state');
       return JSON.stringify({

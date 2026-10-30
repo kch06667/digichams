@@ -76,11 +76,12 @@ def verify_pc_layout(page,section,viewport):
     assert result["cssReady"],result
     assert result["width"]==viewport,result
     assert result["documentWidth"]<=viewport+2,result
-    # Five original tabs must be on ONE row, each with a proper mouse
-    # target. Before PR68 the fifth ROM tab wrapped to a separate row.
+    # Windows remaster uses exactly two deliberate nav rows: 3+2.
+    # Unlike accidental wrapping, both rows retain equal-size game buttons.
     assert len(result["buttons"])==5,result
-    assert max(x["top"] for x in result["buttons"]) - min(
-        x["top"] for x in result["buttons"])<3,result
+    positions=[round(x["top"]) for x in result["buttons"]]
+    rows=sorted(set(positions))
+    assert len(rows)==2 and positions.count(rows[0])==3 and positions.count(rows[1])==2,result
     # Compact PC shell uses 34px game tabs rather than the previous 45px web tabs.\n    assert min(x["height"] for x in result["buttons"])>=32,result
     assert min(x["width"] for x in result["buttons"])>=80,result
     if section=="nursery":
@@ -102,7 +103,7 @@ def verify_pc_layout(page,section,viewport):
         assert len(result["cupCards"])>=1,result
         assert min(x["width"] for x in result["cupCards"])>=235,result
     print("PASS PC",viewport,section,"visual geometry: "
-          "single-row 5 tabs, readable buttons, no page overflow",
+          "two-row 3+2 tabs, readable buttons, no page overflow",
           flush=True)
     return result
 

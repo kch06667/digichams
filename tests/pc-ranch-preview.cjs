@@ -238,6 +238,8 @@ async function measure(page){
       // Opt-in ambient walks must be separate from the graphics preview and
       // never alter a paused real player save simply by toggling a button.
       await page.waitForFunction(()=>Boolean(window.DCRanchFreeRoam),{timeout:12000});
+      // Ranch extras are now kept inside the existing management drawer.
+      await page.locator('#dc-pc-drawer-toggle').click();
       const roamButton=page.locator('#dc-ranch-free-roam-toggle');
       assert.equal(await roamButton.count(),1);
       assert.equal(await roamButton.getAttribute('aria-pressed'),'false');

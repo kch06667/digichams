@@ -23,7 +23,10 @@
   const notice = document.createElement('div');
   notice.id = 'dc-phaser-farm-status';
   notice.setAttribute('role','status');
-  notice.style.cssText = 'position:fixed;right:12px;bottom:66px;z-index:9999;' +
+  notice.style.cssText = production ?
+    'margin:6px 0;padding:7px 10px;border:1px solid #416579;' +
+    'border-radius:7px;background:#102f3f;color:#fff;font:12px/1.5 sans-serif' :
+    'position:fixed;right:12px;bottom:66px;z-index:9999;' +
     'max-width:85vw;padding:5px;background:#102f3f;color:#fff;font:13px sans-serif';
   notice.textContent = production?
     'Phaser 자동전투 기본 · 결과 검증 후 자동 백업/저장':
@@ -342,7 +345,8 @@
     const random = new Uint8Array(16);
     crypto.getRandomValues(random);
     const token = [...random].map(x => x.toString(16).padStart(2,'0')).join('');
-    const target = new URL('phaser-lab/',location.href);
+    // Explicit file path works in both HTTP preview and digichamp:// Electron.
+    const target = new URL('phaser-lab/index.html',location.href);
     target.searchParams.set('farmHandoff',token); // only random nonce, no game data
     let view;
     if(production){
@@ -504,7 +508,14 @@
   // The production-layout opt-in entry calls this from the original arena's
   // real lbStart click. It is inert unless an explicit opt-in URL was used.
   window.DCDevPhaserLaunch=Object.freeze({launch});
-  if(arenaChoice)document.body.append(notice,apply,cancel,restore);
+  if(production){
+    // Keep status in the game's existing battle panel, never a floating
+    // extra window over the ranch or its controls.
+    const battlePanel=document.querySelector('#battle > .layout > article.panel');
+    if(battlePanel)battlePanel.append(notice);
+    else document.body.append(notice);
+    document.body.append(apply,cancel,restore);
+  }else if(arenaChoice)document.body.append(notice,apply,cancel,restore);
   else document.body.append(button,notice,apply,cancel,restore);
   if(production)restoreInterrupted(false);
 })();

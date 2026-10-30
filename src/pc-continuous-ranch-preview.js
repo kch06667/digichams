@@ -28,8 +28,9 @@
   button.setAttribute('aria-pressed','false');
   button.textContent='🏞 연결형 지형 시험 보기';
   bar.append(message,button);
-  const drawerToggle=panel.querySelector('#dc-pc-drawer-toggle');
-  if(drawerToggle)drawerToggle.insertAdjacentElement('afterend',bar);
+  const drawer=panel.parentElement?.querySelector('#dc-pc-control-drawer');
+  const drawerClose=drawer?.querySelector('#dc-pc-drawer-close');
+  if(drawerClose)drawerClose.insertAdjacentElement('afterend',bar);
   else panel.insertBefore(bar,panel.firstChild);
 
   const setPreview=enabled=>{

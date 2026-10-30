@@ -26,7 +26,10 @@ function resolveGamePath(requestUrl, root = gameRoot()) {
   catch (_) { return null; }
   if (pathname.startsWith('//')) return null;
   if (pathname.includes('\\') || pathname.includes('\0')) return null;
-  const relative = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+  // A browser server serves /phaser-lab/ as /phaser-lab/index.html.
+  // Electron's custom protocol does not implicitly resolve directory indices.
+  const relative = pathname === '/' ? 'index.html' :
+    pathname.replace(/^\/+/, '') + (pathname.endsWith('/') ? 'index.html' : '');
   const resolved = path.resolve(root, relative);
   if (!resolved.startsWith(path.resolve(root) + path.sep)) return null;
   return resolved;
@@ -86,12 +89,13 @@ if (typeof app.whenReady === 'function') {
   app.whenReady().then(() => {
     protocol.handle('digichamp', request => {
       const pathname=new URL(request.url).pathname;
+      const documentPath=pathname.endsWith('/') ? pathname+'index.html' : pathname;
       // The vendor path is explicit; never expose the rest of node_modules.
-      const file=pathname===OFFLINE_PHASER ? offlinePhaserPath()
+      const file=documentPath===OFFLINE_PHASER ? offlinePhaserPath()
         : resolveGamePath(request.url);
       if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile())
         return new Response('Not found', {status:404});
-      if (pathname==='/phaser-lab/index.html') {
+      if (documentPath==='/phaser-lab/index.html') {
         try {
           const original=fs.readFileSync(file,'utf8');
           return new Response(offlinePhaserPage(original),{

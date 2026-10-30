@@ -46,6 +46,10 @@ test('protocol path resolver enforces exact game origin and root',()=>{
   const resolve=u=>launcher.resolveGamePath(u,root);
   assert.equal(resolve('digichamp://game/'),path.join(root,'index.html'));
   assert.equal(resolve('digichamp://game/index.html'),path.join(root,'index.html'));
+  assert.equal(resolve('digichamp://game/phaser-lab/?farmHandoff=abc'),
+    path.join(root,'phaser-lab','index.html'));
+  assert.equal(resolve('digichamp://game/phaser-lab/index.html?embeddedBattle=1'),
+    path.join(root,'phaser-lab','index.html'));
   assert.equal(resolve('digichamp://game/src/farm-core.js'),
     path.join(root,'src','farm-core.js'));
   assert.equal(resolve('digichamp://game/assets/farm/map.webp?x=1'),

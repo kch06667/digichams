@@ -681,6 +681,112 @@
     #farmPanel .hexControls {padding:12px;}
     #dc-pc-guide .dc-pc-links {flex-wrap:wrap;}
   }
+  /* Windows player-facing layout: ONE viewport, TWO compact menu rows.
+   * Keep all five navigation destinations available, without showing
+   * a column of legacy webpage panels below the playable ranch.
+   * Existing actor positions, facility clicks and save data stay intact. */
+  body:not(.mode-nds) { overflow:hidden; }
+  body:not(.mode-nds) > .wrap {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:24px 76px minmax(0,1fr);
+    height:100dvh;
+    max-height:100dvh;
+    min-height:0;
+    overflow:hidden;
+  }
+  body:not(.mode-nds) .wrap > header.top {
+    grid-column:1;
+    grid-row:1;
+    min-height:22px;
+    margin:0;
+  }
+  body:not(.mode-nds) .wrap > nav.tabs {
+    grid-column:1;
+    grid-row:2;
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    grid-template-rows:repeat(2,minmax(0,34px));
+    gap:4px;
+    margin:2px 0 4px;
+    min-height:0;
+    padding:0;
+  }
+  body:not(.mode-nds) .wrap > nav.tabs button {
+    height:34px;
+    min-height:34px;
+    padding:4px 7px;
+    font-size:12px;
+    line-height:1.15;
+  }
+  body:not(.mode-nds) .wrap > .section.active {
+    grid-column:1;
+    grid-row:3;
+    height:100%;
+    min-height:0;
+    margin:0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+  }
+  body:not(.mode-nds) #nursery.section.active {
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr);
+    height:100%;
+    min-height:0;
+    align-items:stretch;
+    overflow:hidden;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel {
+    grid-column:1;
+    grid-row:1;
+    display:flex;
+    flex-direction:column;
+    height:calc(100dvh - 112px)!important;
+    max-height:calc(100dvh - 112px)!important;
+    box-sizing:border-box;
+    min-height:0;
+    min-width:0;
+    overflow:hidden!important;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmEconomy {
+    flex:0 0 auto;
+    margin:3px 0 5px;
+    gap:4px;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmScrollFrame {
+    display:flex;
+    flex:1 1 auto;
+    min-height:375px;
+    width:100%;
+  }
+  body:not(.mode-nds) #nursery.active > #farmPanel .farmViewport {
+    flex:1 1 auto;
+    height:100%!important;
+    min-height:375px!important;
+    max-height:none!important;
+  }
+  body:not(.mode-nds) #nursery.active > .layout#dc-pc-control-drawer {
+    top:0;
+    bottom:0;
+    height:100%;
+    max-height:none!important;
+  }
+  /* Terrain comparison, free roam, and diagnostics belong in the existing
+   * management drawer, not as extra ribbons over the main map. */
+  body:not(.mode-nds) #dc-pc-control-drawer #dc-ranch-view-switch {
+    display:flex;
+    margin:3px 0 7px;
+    padding:7px;
+  }
+  body:not(.mode-nds) #dc-pc-control-drawer #dc-ranch-view-switch > span {
+    display:none;
+  }
+  body:not(.mode-nds) #dc-pc-control-drawer #dc-ranch-view-switch button {
+    flex:1 1 auto;
+    min-width:0;
+  }
+
   /* PR70 ranch camera slice: drag the existing scrollable world on desktop.
    * Disable inherited smooth scrolling while dragging to match the pointer. */
   body:not(.mode-nds) #farmPanel .farmViewport {
