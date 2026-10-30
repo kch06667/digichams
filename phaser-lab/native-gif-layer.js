@@ -126,7 +126,7 @@
             transformOrigin:'center bottom'
           });
           this.root.appendChild(img);
-          n={img,entry,sprite:v,pose:null,failedPose:null,
+          n={img,entry,sprite:v.sprite,pose:null,failedPose:null,
             baseScale:0,ready:false,sequence:0};
           this.nodes.set(f.id,n);
         }
