@@ -11,7 +11,7 @@ $catalog = Join-Path $root 'assets\sprite-index.json'
 if (-not (Test-Path $package) -or -not (Test-Path $index) -or -not (Test-Path $catalog)) {
     throw '게임의 모든 파일을 먼저 압축 해제해야 합니다. desktop 폴더만 따로 실행하지 마세요.'
 }
-if (-not $IsWindows -and $PSVersionTable.PSEdition -eq 'Core') {
+if ($env:OS -ne 'Windows_NT') {
     throw 'Windows PC에서 PowerShell로 실행해 주세요.'
 }
 foreach ($command in @('node.exe', 'npm.cmd')) {
