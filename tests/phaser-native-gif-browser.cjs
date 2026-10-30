@@ -41,8 +41,19 @@ const server=http.createServer((req,res)=>{
      route=>route.fulfill({path:vendor,contentType:'application/javascript'}));
    await page.goto('http://127.0.0.1:'+server.address().port+'/phaser-lab/index.html',
      {waitUntil:'domcontentloaded'});
-   await page.waitForFunction(()=>window.DigiPhaserLab?.stageStatus()?.fighters===6,
-     {timeout:25000});
+   try{
+    await page.waitForFunction(()=>window.DigiPhaserLab?.stageStatus()?.fighters===6,
+      null,{timeout:15000});
+   }catch(error){
+    const diagnostic=await page.evaluate(()=>({
+      href:location.href,status:document.querySelector('#status')?.textContent,
+      loaded:{phaser:!!window.Phaser,logic:!!window.DigiPhaserLabLogic,
+        arena:!!window.DCOriginalArenaCore,native:!!window.DigiNativeBattleGIF},
+      scene:window.DigiPhaserLab?.stageStatus?.(),
+      scripts:[...document.scripts].map(s=>s.src).slice(-13)
+    }));
+    throw Error('Original Phaser boot failed: '+JSON.stringify({diagnostic,errors}));
+   }
    await page.waitForFunction(()=>window.DigiPhaserLab?.stageStatus()?.nativeArt===6,
      {timeout:25000});
    const start=await page.evaluate(()=>({
