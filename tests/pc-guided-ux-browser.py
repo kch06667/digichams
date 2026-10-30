@@ -87,11 +87,11 @@ def verify_pc_layout(page,section,viewport):
     if section=="nursery":
         assert result["viewport"]["height"]>=375,result
         assert result["viewport"]["width"]>=680,result
-        # The original NDS-style farm atlas is not stretched/moved.
+        # PC stays at native 920x690 world geometry, but must NOT show
+        # the baked-in radial atlas behind the new 4+3 hex positions.
         assert abs(result["map"]["width"]-920)<1,result
         assert abs(result["map"]["height"]-690)<1,result
-        assert ("hex_farm_v0232.webp" in result["mapBackground"] or
-                "data:image/webp;base64," in result["mapBackground"]),result
+        assert "radial-gradient" in result["mapBackground"],result
     if section=="hunt":
         assert result["hunt"]["width"]>=440,result
         assert result["hunt"]["height"]>=260,result

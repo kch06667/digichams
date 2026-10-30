@@ -42,7 +42,11 @@
       const tile=world.querySelector('.hexTile[data-hex="'+id+'"]');
       // Original locked plot and real save unlocks are both authoritative.
       // The image layer must not reveal a not-yet-built facade.
-      const show=visible && !!s?.facilities?.[id] &&
+      // The legacy WebP atlas facade crop is radial-map-specific. On the
+      // 4+3 remaster it would paste the WRONG building fragment in the new
+      // cell. Keep the independent render layer/API, but draw no mismatched
+      // old atlas fragments until a compatible sprite has been authored.
+      const show=visible && !core.PC_HONEYCOMB && !!s?.facilities?.[id] &&
         tile?.classList.contains('unlocked');
       if(!show){
         nodes.get(id)?.remove();

@@ -290,9 +290,9 @@ async function measure(page){
       // straight line between the exact canonical 920x690 map centers.
       const pathsBefore=await page.evaluate(()=>{
         const c=DCFarm.HEX_CENTERS,s=eval('state');
-        const expected=Object.keys(c).filter(z=>z!=='core'&&s.facilities?.[z]);
+        const expected=DCFarm.HEX_EDGES.filter(([a,b])=>(a==='core'||s.facilities?.[a])&&(b==='core'||s.facilities?.[b])).map(pair=>pair[1]);
         const actual=[...document.querySelectorAll('#dc-ranch-ground-paths g[data-zone]')]
-          .map(g=>({zone:g.dataset.zone,d:g.firstElementChild?.getAttribute('d')}));
+          .map(g=>({zone:g.dataset.zone,from:g.dataset.from,to:g.dataset.to,d:g.firstElementChild?.getAttribute('d')}));
         return {expected,actual,
           visible:getComputedStyle(document.querySelector('#dc-ranch-ground-paths')).display!=='none'};
       });
@@ -300,8 +300,9 @@ async function measure(page){
       assert.deepEqual(pathsBefore.actual.map(p=>p.zone),pathsBefore.expected,
         'locked facilities must not have a decorative open route');
       for(const route of pathsBefore.actual){
-        const [x,y]=await page.evaluate(id=>DCFarm.HEX_CENTERS[id],route.zone);
-        assert.equal(route.d,`M460 340 L${x} ${y}`,
+        const {from,to}=route;
+        const [x0,y0,x,y]=await page.evaluate(ids=>[...DCFarm.HEX_CENTERS[ids[0]],...DCFarm.HEX_CENTERS[ids[1]]],[from,to]);
+        assert.equal(route.d,`M${x0} ${y0} L${x} ${y}`,
           'painted road must use DCFarm canonical straight route');
       }
       // Emulate an unlocked facility and map repaint. Only the read-only
@@ -318,7 +319,7 @@ async function measure(page){
         document.querySelector('#dc-ranch-ground-paths g[data-zone="training"]')));
       const trainingPath=await page.locator(
         '#dc-ranch-ground-paths g[data-zone="training"] path').first().getAttribute('d');
-      assert.equal(trainingPath,'M460 340 L460 128');
+      assert.equal(trainingPath,'M460 421 L350 252');
       // Old/imported saves may encode unlocked as 1 rather than true.
       // The real DCFarm.walkable uses truthiness, so the painted path must too.
       await page.evaluate(()=>{
@@ -364,10 +365,10 @@ async function measure(page){
         return {
           size:[canvas.width,canvas.height],
           samples:overlay.sampleCount,
-          centerPassable:overlay.walkableAt(460,340),
-          unopenedTrainingPassable:overlay.walkableAt(460,128),
-          centerAlpha:ctx.getImageData(460,340,1,1).data[3],
-          unopenedTrainingAlpha:ctx.getImageData(460,128,1,1).data[3]
+          centerPassable:overlay.walkableAt(460,421),
+          unopenedTrainingPassable:overlay.walkableAt(350,252),
+          centerAlpha:ctx.getImageData(460,421,1,1).data[3],
+          unopenedTrainingAlpha:ctx.getImageData(350,252,1,1).data[3]
         };
       });
       assert.deepEqual(passability.size,[920,690]);
@@ -382,7 +383,7 @@ async function measure(page){
         'walking overlay must not touch gameplay or save state');
       // The original button's click behavior must survive shrinking the
       // formerly invisible 220x226 hex bounding box.
-      await page.locator('[data-hex="training"]').click();
+      await page.locator('#dc-pc-facility-picker [data-site="training"]').click();
       assert.equal(await page.locator('[data-hex="training"]').evaluate(
         el=>el.classList.contains('selected')),true,
         'clicking the reduced facility target must select that facility');
@@ -390,84 +391,26 @@ async function measure(page){
         'hidden drawer still keeps the original facility details updated');
       assert.equal((await measure(page)).save,original.save,
         'facility selection must not touch gameplay state');
-      // Front facade occlusion QA: the original atlas should cover actors
-      // standing BEHIND an unlocked facility, never those in front.
-      assert.equal(await page.locator('.dc-ranch-facade-front').count(),0,
-        'the preview must not show locked building facades');
-      const facadesSaved=await page.evaluate(()=>
-        JSON.parse(JSON.stringify(eval('state').facilities)));
-      const occlusion=await page.evaluate(()=>{
-        const s=eval('state'),id='training';
-        s.facilities[id]=true;
+      // The old radial WebP facility facades do NOT align with the PC 4+3
+      // grid. Showing them here would paint unrelated structures over actors.
+      const facadeIsolation=await page.evaluate(()=>{
+        const s=eval('state'),previous=JSON.parse(JSON.stringify(s.facilities));
         const tile=document.querySelector('.hexTile[data-hex="training"]');
-        const was={locked:tile.classList.contains('locked'),
-          unlocked:tile.classList.contains('unlocked')};
-        tile.classList.add('unlocked');
-        tile.classList.remove('locked');
-        const active=window.DCRanchFacadeOcclusion.refresh();
-        const facade=document.querySelector(
-          '.dc-ranch-facade-front[data-zone="training"]');
-        const style=getComputedStyle(facade);
-        return {was,active,left:facade.style.left,top:facade.style.top,
-          z:Number(facade.style.zIndex),offset:facade.style.getPropertyValue(
-            '--dc-facade-offset'),pointerEvents:style.pointerEvents,
-          display:style.display,mask:style.maskImage,
-          background:style.backgroundImage};
-      });
-      assert.ok(occlusion.active.includes('training'));
-      assert.equal(occlusion.left,'460px');
-      assert.equal(occlusion.top,'128px');
-      assert.equal(occlusion.z,260);
-      assert.equal(occlusion.offset,'-350px -15px');
-      assert.equal(occlusion.pointerEvents,'none',
-        'visible original building art must never block clicks');
-      assert.equal(occlusion.display,'block');
-      assert.match(occlusion.mask,/radial-gradient/);
-      assert.match(occlusion.background,/hex_farm_v0232.webp/);
-      const facilityDepth=await page.evaluate(()=>{
-        const world=document.getElementById('farmWorld');
-        const create=(id,y)=>{
-          const node=document.createElement('button');
-          node.id=id;node.type='button';node.className='hexActor';
-          node.style.left='460px';node.style.top=y+'px';
-          const image=document.createElement('img');
-          image.width=50;image.height=40;
-          const label=document.createElement('span');
-          label.textContent=id;
-          node.append(image,label);
-          world.appendChild(node);
-        };
-        create('dc-test-behind',133);
-        create('dc-test-ahead',198);
-        DCRanchActorDepth.refresh();
-        const behind=document.getElementById('dc-test-behind');
-        const ahead=document.getElementById('dc-test-ahead');
-        return {behind:Number(behind.style.zIndex),
-          ahead:Number(ahead.style.zIndex),
-          facade:Number(document.querySelector(
-            '.dc-ranch-facade-front[data-zone="training"]').style.zIndex),
-          shadowWidth:behind.style.getPropertyValue('--dc-ground-shadow-width')};
-      });
-      assert.ok(facilityDepth.behind<facilityDepth.facade &&
-        facilityDepth.facade<facilityDepth.ahead,
-        'facility must hide a rear actor but not a front actor');
-      assert.equal(facilityDepth.shadowWidth,'34px',
-        'actor contact shadow scales to its real rendered image width');
-      await page.evaluate(saved=>{
-        const s=eval('state');
-        s.facilities=saved;
-        const tile=document.querySelector('.hexTile[data-hex="training"]');
-        tile.classList.remove('unlocked');
-        tile.classList.add('locked');
+        s.facilities.training=true;
+        tile.classList.add('unlocked');tile.classList.remove('locked');
+        const active=DCRanchFacadeOcclusion.refresh();
+        const result={active,count:document.querySelectorAll(
+          '.dc-ranch-facade-front').length};
+        s.facilities=previous;
+        tile.classList.remove('unlocked');tile.classList.add('locked');
         DCRanchFacadeOcclusion.refresh();
-        document.getElementById('dc-test-behind')?.remove();
-        document.getElementById('dc-test-ahead')?.remove();
-      },facadesSaved);
-      assert.equal(await page.locator(
-        '.dc-ranch-facade-front[data-zone="training"]').count(),0,
-        'unbuilt building facades must disappear after lock restore');
+        return result;
+      });
+      assert.deepEqual(facadeIsolation.active,[]);
+      assert.equal(facadeIsolation.count,0,
+        'the remastered two-row map must never show a radial atlas building crop');
       assert.equal((await measure(page)).save,original.save,
-        'the facade comparison must preserve the complete farm save');
+        'preview facade isolation must not write save data');
       // Visual-depth QA: Y determines front-to-back sprite stacking. In a
       // cluster only redundant nameplates collapse; sprites are never hidden.
       await page.evaluate(()=>{
@@ -542,7 +485,7 @@ async function measure(page){
         'static winding route must not falsely display locked paths');
       await page.locator('#dc-ranch-preview-toggle').click();
       const reverted=await measure(page);
-      assert.ok(reverted.background.includes('hex_farm_v0232.webp'));
+      assert.ok(reverted.background.includes('radial-gradient'));
       await page.evaluate(()=>{
         DCRanchActorDepth.refresh();
         DCRanchFacadeOcclusion.refresh();

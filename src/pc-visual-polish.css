@@ -787,6 +787,182 @@
     min-width:0;
   }
 
+  /* Live controls were accidentally clipped below the fixed ranch viewport.
+   * The original command inputs are now reparented, never duplicated. */
+  body:not(.mode-nds) #dc-pc-control-drawer #dc-pc-live-commands {
+    display:flex;
+    flex-direction:column;
+    flex:none;
+    gap:10px;
+    margin:10px 0 0;
+    padding:11px;
+    border:1px solid #b69b5b;
+    border-radius:7px;
+    background:linear-gradient(180deg,#123b51,#102939);
+    box-sizing:border-box;
+    min-width:0;
+    color:#e5f6ef;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexClock,
+  body:not(.mode-nds) #dc-pc-live-commands .hexOrders,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageActions,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCareControls,
+  body:not(.mode-nds) #dc-pc-live-commands .hexArchive,
+  body:not(.mode-nds) #dc-pc-live-commands .hexTargetControls {
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:7px;
+    min-width:0;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexClock,
+  body:not(.mode-nds) #dc-pc-live-commands .hexTargetControls,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageBox,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCareControls {
+    padding-block:8px;
+    border-bottom:1px solid #456b79;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexOrders select,
+  body:not(.mode-nds) #dc-pc-live-commands #hexCageSelect {flex:1 1 130px;min-width:0;}
+  body:not(.mode-nds) #dc-pc-live-commands button,
+  body:not(.mode-nds) #dc-pc-live-commands select,
+  body:not(.mode-nds) #dc-pc-live-commands input[type=number] {
+    min-height:36px;
+    max-width:100%;
+    padding:5px 8px;
+    border:1px solid #70979f;
+    border-radius:5px;
+    background:#1a4053;
+    color:#f5f4dd;
+    font-size:12px;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexOrders > button {
+    flex:1 1 calc(50% - 4px);
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexAutoToggle {
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    font-size:12px;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageBox > strong,
+  body:not(.mode-nds) #dc-pc-live-commands .hexCareControls > strong {
+    display:block;
+    margin-bottom:7px;
+    color:#ffdf99;
+  }
+  body:not(.mode-nds) #dc-pc-live-commands .hexCageBox > * {max-width:100%;}
+  body:not(.mode-nds) #dc-pc-live-commands button:focus-visible,
+  body:not(.mode-nds) #dc-pc-live-commands select:focus-visible {
+    outline:2px solid #ffe6a4;
+    outline-offset:2px;
+  }
+  /* Only the core is visible at the beginning. New connected hexes appear
+   * as they are unlocked; locked site construction stays in the drawer. */
+  body:not(.mode-nds) #farmPanel .hexTile.locked {visibility:hidden;pointer-events:none;}
+  body:not(.mode-nds) #dc-pc-facility-picker {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:5px;padding-bottom:9px;border-bottom:1px solid #52717c;
+  }
+  body:not(.mode-nds) #dc-pc-facility-picker button {
+    min-height:34px;padding:5px 7px;font-size:12px;
+    border-radius:5px;border:1px solid #729bad;
+    color:#e7f3ef;background:#244659;cursor:pointer;
+  }
+  body:not(.mode-nds) #dc-pc-facility-picker button[aria-pressed=true] {
+    border-color:#f9da8e;background:#466079;color:#fff2cd;
+  }
+  body:not(.mode-nds) #dc-pc-facility-picker button:focus-visible {
+    outline:2px solid #ffe39d;outline-offset:2px;
+  }
+  /* The old 0.23 map WebP has SEVEN radial baked-in pads. Keeping it behind
+   * the new 4+3 positions would make the whole redesign look broken.
+   * Use a discrete pixel-grid pasture and self-painted cells for PC only.
+   * The opt-in terrain preview still overrides this via its inline style. */
+  body:not(.mode-nds) #farmPanel .farmWorld {
+    background-color:#112f33;
+    background-image:
+      radial-gradient(ellipse at 53% 46%,#2a6856 0%,#1d4a43 55%,#0b2436 100%),
+      repeating-linear-gradient(0deg,transparent 0 7px,#c2f5bf08 7px 8px),
+      repeating-linear-gradient(90deg,transparent 0 7px,#c2f5bf08 7px 8px);
+    background-size:100% 100%,8px 8px,8px 8px;
+    background-repeat:repeat;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked {
+    background:
+      repeating-linear-gradient(0deg,transparent 0 9px,#eaffc407 9px 10px),
+      linear-gradient(155deg,#6eb47d 0%,#32715c 45%,#194938 100%) !important;
+    box-shadow:inset 0 0 0 5px #e3bd6f;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.core {
+    background:linear-gradient(145deg,#90c889,#42866b 56%,#205746) !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked .hexInner {
+    border:3px solid #e2cb86;
+    border-radius:0;
+    box-shadow:inset 0 0 20px #153d2f92;
+    background:radial-gradient(ellipse at 50% 33%,#ceef9e38,transparent 70%);
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked.selected .hexInner {
+    border-color:#fff4a9;
+    box-shadow:inset 0 0 18px #eac36e55;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked .hexInner strong {
+    border-color:#f0c97d;
+    border-radius:3px;
+    background:#123b4bed;
+    color:#fff3cc;
+    font-size:13px;
+    letter-spacing:.02em;
+  }
+  /* Reuse the player's bundled 920x690 artwork, crop the exact original
+   * painting of each site, and restack those existing hexes in the 4+3 grid.
+   * Do NOT move the 920x690 atlas itself: each tile takes only its own image
+   * fragment. This gives the remaster the original illustration instead of
+   * seven generic CSS-green placeholders. */
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked {
+    background-image:url('/assets/farm/hex_farm_v0232.webp') !important;
+    background-size:920px 690px !important;
+    background-repeat:no-repeat !important;
+    background-color:#173c46 !important;
+    box-shadow:none;
+    image-rendering:auto;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="core"] {
+    background-position:-350px -227px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="training"] {
+    background-position:-350px -15px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="garden"] {
+    background-position:-160px -121px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="track"] {
+    background-position:-540px -121px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="rest"] {
+    background-position:-160px -333px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="clinic"] {
+    background-position:-540px -333px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="forest"] {
+    background-position:-350px -439px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked .hexInner {
+    background:none !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked.selected {
+    filter:brightness(1.09) drop-shadow(0 0 12px #ffe084);
+  }
+  /* The map is the main stage, not a left-aligned block on widescreen PCs. */
+  body:not(.mode-nds) #farmPanel .farmWorld {
+    margin-inline:auto;
+  }
+
   /* PR70 ranch camera slice: drag the existing scrollable world on desktop.
    * Disable inherited smooth scrolling while dragging to match the pointer. */
   body:not(.mode-nds) #farmPanel .farmViewport {

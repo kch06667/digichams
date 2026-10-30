@@ -33,21 +33,43 @@ def check(page, entry, mobile):
     bg = page.locator('#farmWorld').evaluate(
         "(node) => getComputedStyle(node).backgroundImage"
     )
-    assert bg.startswith('url('), f"Missing farm background in {entry}: {bg[:100]}"
-    match = re.fullmatch(r'url\(["\x27]?(.*?)["\x27]?\)', bg)
-    assert match, f"Unexpected computed CSS background value: {bg[:100]}"
-    url = match.group(1)
-    if entry == 'standalone.html':
-        assert url.startswith("data:image/webp;base64,"), "Standalone must contain its own WebP data URI"
+    if not mobile:
+        # The PC honeycomb must NOT leave the baked-in radial WebP beneath
+        # the new adjacent cells. Verify the actual connected pixel pasture.
+        assert page.evaluate('window.DCFarm.PC_HONEYCOMB === true'), entry
+        assert 'radial-gradient' in bg, f"Missing PC honeycomb ground in {entry}: {bg[:100]}"
+        visible = page.locator('#farmWorld .hexTile').evaluate_all(
+            "(nodes) => nodes.filter(n => getComputedStyle(n).visibility !== 'hidden').length"
+        )
+        assert visible == 1, f"new PC ranch should show its one built core, got {visible}"
+        art = page.locator('#farmWorld .hexTile[data-hex="core"]').evaluate(
+            """node => ({
+                image:getComputedStyle(node).backgroundImage,
+                position:getComputedStyle(node).backgroundPosition
+            })"""
+        )
+        assert 'hex_farm_v0232.webp' in art['image'], f"PC must reuse the source tile artwork: {art}"
+        assert art['position'] == '-350px -227px', f"Wrong original core crop: {art}"
+
     else:
-        assert url.endswith('/' + ASSET), "Index must use the external WebP"
-    dimensions = page.evaluate("""async url => {
-        const image = new Image();
-        image.src = url;
-        await image.decode();
-        return [image.naturalWidth, image.naturalHeight];
-    }""", url)
-    assert dimensions == EXPECTED_DIMS, f"Wrong/missing backdrop {dimensions}"
+        assert bg.startswith('url('), f"Missing original mobile background in {entry}: {bg[:100]}"
+        assert bg.startswith('url(') and bg.endswith(')'), bg[:100]
+        url = bg[4:-1].strip(chr(34) + chr(39))
+        if entry == 'standalone.html':
+            assert url.startswith("data:image/webp;base64,"), "Standalone must embed its WebP"
+        else:
+            assert url.endswith('/' + ASSET), "Mobile original game must use the farm WebP"
+        dimensions = page.evaluate("""async url => {
+            const image = new Image();
+            image.src = url;
+            await image.decode();
+            return [image.naturalWidth, image.naturalHeight];
+        }""", url)
+        assert dimensions == EXPECTED_DIMS, f"Wrong/missing original backdrop {dimensions}"
+
+    if not mobile:
+        page.locator('#dc-pc-drawer-toggle').click()
+        assert page.locator('#dc-pc-live-commands #hexDrop').count() == 1
 
     before = page.evaluate('state.food')
     action = 'tap' if mobile else 'click'
