@@ -414,6 +414,7 @@
               v.sprite.displayHeight:null,
             phase:L.specialPhase(f),
             hasKoArt:!!v?.art?.actions.has(37),
+            opacity:v?.sprite?.alpha??null,
             // During scene.restart(), Phaser may already have disposed an
             // old sprite's AnimationState before the new scene is created.
             animationTimeScale:v?.useArt?(v.sprite?.anims?.timeScale??null):null};
@@ -556,22 +557,18 @@
         const v=this.visuals.get(f.id);
         if(!v)continue;
         this.pose(f,v);
-        const bob=(f.act==='walk'||f.act==='evade')?
-          Math.sin(time*.012+f.slot)*1.7:Math.sin(time*.003+f.slot)*.4;
-        const faintFallback=f.hp<=0&&
-          (!v.useArt||!v.art.actions.has(37));
+        const poseStyle=L.fighterPresentation(f,v.useArt,
+          !!v.art?.actions.has(37),time);
         v.sprite.x=f.x;
-        v.sprite.y=v.useArt?f.y-2+bob:
-          f.y-(faintFallback?14:34)+bob;
-        // When the sprite pack lacks the KO animation, show an actual
-        // collapsed fighter instead of a standing idle sprite. Keep
-        // original KO artwork upright: its own frames supply the motion.
-        const knockLean=L.knockbackTilt(f);
-        v.sprite.setAngle(faintFallback?(f.side===0?-78:78):
-          (knockLean||(!v.useArt&&f.act==='hurt'?(f.side===0?-12:12):0)));
+        v.sprite.y=v.useArt?f.y-2+poseStyle.bob:
+          f.y-(poseStyle.faintFallback?14:34)+poseStyle.bob;
+        // Native KO art contains its own fall/landing frames: keep the
+        // completed pose grounded, upright and opaque after the real hit.
+        // Imported atlases without KO frames keep the old collapsed pose.
+        v.sprite.setAngle(poseStyle.angle);
         // Original GIFs were left-facing. Flip when travelling right.
         v.sprite.setFlipX((f.visualDir??f.dir)>0);
-        v.sprite.setAlpha(f.hp<=0?.5:f.flash>0?.65:1);
+        v.sprite.setAlpha(poseStyle.alpha);
         if(!v.useArt&&f.hp>0&&
            (f.act==='walk'||f.act==='evade')&&Math.floor(time/160)%2===1){
           v.sprite.setTexture('practice-'+f.side+'-'+f.slot+'-1');
