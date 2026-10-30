@@ -47,6 +47,11 @@ function onLoad(event){
  const img=event.target;
  if(!sourceIsFarmSprite(img))return;
  const actor=img.parentElement;
+ // A failed pose's same-species idle fallback may have loaded correctly.
+ // Clear the per-attempt guard ONLY after a successful load, so another
+ // failure of this same pose later can retry (e.g. new training cycle).
+ // When the fallback itself fails, onLoad never runs, avoiding retry loops.
+ delete img.dataset.dcRanchTried;
  img.style.removeProperty('visibility');
  if(actor.dataset.dcSpriteRecovery==='missing'){
   delete actor.dataset.dcSpriteRecovery;
