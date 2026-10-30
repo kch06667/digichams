@@ -65,6 +65,19 @@ test('216 existing original Digimon have all 40 real animation GIF destinations'
  assert.equal(seen,8640);
  console.log('PASS',isPackaged?'packaged':'source','216 Digimon / 8640 original GIF poses');
 });
+test('packaged Windows game includes the pinned offline Phaser renderer',()=>{
+ if(!isPackaged)return;
+ const vendor=file('phaser-lab','vendor','phaser.min.js');
+ const st=fs.statSync(vendor,{throwIfNoEntry:false});
+ assert.ok(st?.isFile()&&st.size>200000&&st.size<2*1024*1024,
+   'offline Phaser 3.90.0 engine must be bundled inside Windows EXE');
+ const crypto=require('node:crypto');
+ const digest=crypto.createHash('sha256').update(fs.readFileSync(vendor))
+   .digest('hex');
+ assert.equal(digest,
+   'e92ddef111ba42e92d316979c732311757093688ea1810591cb7aa2858eba7a7',
+   'packaged Phaser engine must match the verified pinned 3.90.0 bytes');
+});
 test('the packaged game has no .nds ROM and does not depend on private lab files',()=>{
  if(!isPackaged)return;
  const banned=/\.(?:nds|srl|sav|srm)$/i;

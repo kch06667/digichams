@@ -15,7 +15,8 @@
   "devDependencies": {
     "electron": "^38.0.0",
     "electron-builder": "^26.0.0",
-    "playwright": "1.62.1"
+    "playwright": "1.62.1",
+    "phaser": "3.90.0"
   },
   "build": {
     "appId": "local.digimon.championship",
@@ -53,6 +54,10 @@
           "!node_modules/**",
           "!test-output/**"
         ]
+      },
+      {
+        "from": "node_modules/phaser/dist/phaser.min.js",
+        "to": "game/phaser-lab/vendor/phaser.min.js"
       }
     ],
     "directories": {

@@ -31,6 +31,21 @@ function resolveGamePath(requestUrl, root = gameRoot()) {
   if (!resolved.startsWith(path.resolve(root) + path.sep)) return null;
   return resolved;
 }
+// The public web preview intentionally uses a CDN. In the LOCAL Windows
+// application, serve the SAME pinned Phaser 3.90.0 library from the bundled
+// game resources (or the installed npm package during desktop development).
+// Do not change the public HTML or rely on internet connectivity at runtime.
+const PHASER_CDN='https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js';
+const OFFLINE_PHASER='/phaser-lab/vendor/phaser.min.js';
+function offlinePhaserPage(html) {
+  if(typeof html!=='string'||html.split(PHASER_CDN).length!==2)
+    throw new Error('Unexpected Phaser version/reference in the original battle page');
+  return html.replace(PHASER_CDN,'./vendor/phaser.min.js');
+}
+function offlinePhaserPath() {
+  return app.isPackaged ? path.join(gameRoot(),'phaser-lab','vendor','phaser.min.js')
+    : path.join(__dirname,'node_modules','phaser','dist','phaser.min.js');
+}
 function gameWindowOptions() {
   return {
     width: 1440, height: 900,
@@ -70,9 +85,24 @@ function createGameWindow() {
 if (typeof app.whenReady === 'function') {
   app.whenReady().then(() => {
     protocol.handle('digichamp', request => {
-      const file = resolveGamePath(request.url);
+      const pathname=new URL(request.url).pathname;
+      // The vendor path is explicit; never expose the rest of node_modules.
+      const file=pathname===OFFLINE_PHASER ? offlinePhaserPath()
+        : resolveGamePath(request.url);
       if (!file || !fs.existsSync(file) || !fs.statSync(file).isFile())
         return new Response('Not found', {status:404});
+      if (pathname==='/phaser-lab/index.html') {
+        try {
+          const original=fs.readFileSync(file,'utf8');
+          return new Response(offlinePhaserPage(original),{
+            status:200,headers:{'Content-Type':'text/html; charset=utf-8',
+              'Cache-Control':'no-store'}
+          });
+        }catch(err){
+          console.error('[Desktop] pinned Phaser HTML mismatch',err);
+          return new Response('Local battle engine unavailable',{status:503});
+        }
+      }
       return net.fetch(pathToFileURL(file).href);
     });
     createGameWindow();
@@ -87,4 +117,5 @@ if (typeof app.whenReady === 'function') {
     if (process.platform !== 'darwin') app.quit();
   });
 }
-module.exports = {resolveGamePath,gameWindowOptions};
+module.exports = {resolveGamePath,gameWindowOptions,offlinePhaserPage,
+  offlinePhaserPath,PHASER_CDN,OFFLINE_PHASER};

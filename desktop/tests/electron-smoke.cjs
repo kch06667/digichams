@@ -100,6 +100,67 @@ async function run(){
       assert.equal(gif.signature,'GIF89a','invalid GIF: '+gif.url);
     }
 
+    // The ACTUAL packaged Windows game must start a real 216-species
+    // Phaser battle with the network disconnected. Previous checks only
+    // exercised the Electron shell, not the imported battle engine.
+    const offlineAssets=await page.evaluate(async()=>{
+      const htmlResponse=await fetch('phaser-lab/index.html',{cache:'no-store'});
+      const html=await htmlResponse.text();
+      const engine=await fetch('phaser-lab/vendor/phaser.min.js',
+        {cache:'no-store'});
+      const bytes=(await engine.arrayBuffer()).byteLength;
+      return {htmlStatus:htmlResponse.status,engineStatus:engine.status,
+        bytes,local:html.includes('./vendor/phaser.min.js'),
+        cdn:html.includes('https://cdn.jsdelivr.net/npm/phaser@')};
+    });
+    assert.equal(offlineAssets.htmlStatus,200);
+    assert.equal(offlineAssets.engineStatus,200,
+      'packaged Windows battle must serve local Phaser with no CDN fetch');
+    assert.ok(offlineAssets.local&&!offlineAssets.cdn,
+      'Windows game battle page must NEVER load Phaser over the internet');
+    assert.ok(offlineAssets.bytes>200000&&offlineAssets.bytes<2*1024*1024);
+    // Actively block ALL external web requests, not just the known CDN.
+    // The real same-origin digichamp:// game and 216 built-in GIFs must
+    // initialize and render without any permitted external network access.
+    const externalRequests=[];
+    await page.route(/^https?:\/\//,route=>{
+      externalRequests.push(route.request().url());
+      return route.abort();
+    });
+    await page.evaluate(()=>{
+      const frame=document.createElement('iframe');
+      frame.id='dc-desktop-offline-phaser-probe';
+      frame.src='phaser-lab/index.html?embeddedBattle=1';
+      frame.style.cssText='position:fixed;left:-1400px;top:0;'+
+        'width:800px;height:500px;pointer-events:none;border:0';
+      document.body.appendChild(frame);
+    });
+    try{
+      await page.waitForFunction(()=>{
+        const frame=document.querySelector('#dc-desktop-offline-phaser-probe');
+        const child=frame?.contentWindow;
+        return child?.Phaser && child?.DigiPhaserLab?.stageStatus?.().nativeArt===6;
+      },null,{timeout:45000});
+      const offlineBattle=await page.evaluate(()=>{
+        const frame=document.querySelector('#dc-desktop-offline-phaser-probe');
+        const child=frame.contentWindow,stage=child.DigiPhaserLab.stageStatus();
+        return {stage,srcs:[...child.document.querySelectorAll(
+          '#dc-native-battle-gifs img')].map(img=>img.getAttribute('src'))};
+      });
+      assert.equal(offlineBattle.stage.fighters,6);
+      assert.equal(offlineBattle.stage.nativeArt,6,
+        'Windows bundled Phaser must show all six REAL original Digimon GIFs');
+      assert.equal(offlineBattle.srcs.length,6);
+      for(const src of offlineBattle.srcs)
+        assert.ok(src?.startsWith('../assets/sprites/')&&src.endsWith('.gif'),
+          'native original GIF path missing: '+String(src));
+      assert.deepEqual(externalRequests,[],
+        'actual Windows Phaser fight must make ZERO external HTTP(S) requests');
+    }finally{
+      await page.evaluate(()=>document.querySelector(
+        '#dc-desktop-offline-phaser-probe')?.remove());
+    }
+
     // The ranch preview remains optional and the canonical game stays intact.
     if(!(await page.evaluate(()=>Boolean(window.DCContinuousRanchPreview))))
       await page.addScriptTag({url:'digichamp://game/src/pc-playability-guide.js'});
