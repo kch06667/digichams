@@ -916,6 +916,48 @@
     font-size:13px;
     letter-spacing:.02em;
   }
+  /* Reuse the player's bundled 920x690 artwork, crop the exact original
+   * painting of each site, and restack those existing hexes in the 4+3 grid.
+   * Do NOT move the 920x690 atlas itself: each tile takes only its own image
+   * fragment. This gives the remaster the original illustration instead of
+   * seven generic CSS-green placeholders. */
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked {
+    background-image:url('/assets/farm/hex_farm_v0232.webp') !important;
+    background-size:920px 690px !important;
+    background-repeat:no-repeat !important;
+    background-color:#173c46 !important;
+    box-shadow:none;
+    image-rendering:auto;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="core"] {
+    background-position:-350px -227px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="training"] {
+    background-position:-350px -15px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="garden"] {
+    background-position:-160px -121px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="track"] {
+    background-position:-540px -121px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="rest"] {
+    background-position:-160px -333px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="clinic"] {
+    background-position:-540px -333px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked[data-hex="forest"] {
+    background-position:-350px -439px !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked .hexInner {
+    background:none !important;
+    border:0 !important;
+    box-shadow:none !important;
+  }
+  body:not(.mode-nds) #farmPanel .hexTile.unlocked.selected {
+    filter:brightness(1.09) drop-shadow(0 0 12px #ffe084);
+  }
   /* The map is the main stage, not a left-aligned block on widescreen PCs. */
   body:not(.mode-nds) #farmPanel .farmWorld {
     margin-inline:auto;
