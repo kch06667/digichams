@@ -8,9 +8,8 @@
       !matchMedia('(min-width:900px) and (pointer:fine)').matches) return;
   const world=document.querySelector('#farmPanel .farmWorld');
   const core=window.DCFarm;
-  if (!world || !core?.HEX_CENTERS) return;
+  if (!world || !core?.HEX_CENTERS || !core?.HEX_EDGES) return;
   const coords=core.HEX_CENTERS;
-  const [originX,originY]=coords.core;
   const ns='http://www.w3.org/2000/svg';
   const layer=document.createElementNS(ns,'svg');
   layer.setAttribute('id','dc-ranch-ground-paths');
@@ -51,15 +50,15 @@
     signature=key;
     active=zones;
     layer.replaceChildren();
-    for(const id of zones){
-      const [x,y]=coords[id];
+    const available=new Set(['core',...zones]);
+    for(const [from,to] of core.HEX_EDGES){
+      if(!available.has(from)||!available.has(to))continue;
+      const [x0,y0]=coords[from],[x,y]=coords[to];
       const group=document.createElementNS(ns,'g');
-      group.setAttribute('data-zone',id);
-      group.setAttribute('data-from','core');
-      group.setAttribute('data-to',id);
-      const d=`M${originX} ${originY} L${x} ${y}`;
-      // Lines mirror segmentDistance in farm-core: straight path,
-      // unlike the old static curves which crossed unwalkable grass.
+      group.setAttribute('data-zone',to);
+      group.setAttribute('data-from',from);
+      group.setAttribute('data-to',to);
+      const d=`M${x0} ${y0} L${x} ${y}`;
       group.append(
         makePath(d,'#55764f',41,.62),
         makePath(d,'#b6a071',28,.96),
